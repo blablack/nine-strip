@@ -17,11 +17,9 @@ HIGHPASS2 - High Pass
     ↓
 LOWPASS2 - Low Pass
     ↓
-BAXANDALL2 - Bass Shelf
+BAXANDALL2 - Bass and Treble Shelves
     ↓
 PARAMETRIC - Mid Band
-    ↓
-BAXANDALL2 - Treble Shelf
     ↓
 PRESSURE4 - Compressor
     ↓
