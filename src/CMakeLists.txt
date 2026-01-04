@@ -14,7 +14,7 @@ juce_add_plugin(NineStrip
     # VERSION ...                                     # Set this if the plugin version is different to the project version
     # ICON_BIG ""   # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
     #   ICON_SMALL "${CMAKE_SOURCE_DIR}/Assets/icon16.png " 
-    COMPANY_NAME "Aurlien"
+    COMPANY_NAME "no28"
     COMPANY_COPYRIGHT "no28"
     COMPANY_EMAIL "aurelien.leblond@gmail.com"
     IS_SYNTH FALSE                       # Is this a synth or an effect?
@@ -43,7 +43,7 @@ juce_add_plugin(NineStrip
     # APP_SANDBOX_INHERIT
     # DESCRIPTION "" #when i set this option, the name of AAX plugin became this description(bug?)
     MICROPHONE_PERMISSION_ENABLED TRUE
-    MICROPHONE_PERMISSION_TEXT "This applicaion requires a permission to use an audio input device of your computer. By Default, Built-In microphone will be used."
+    MICROPHONE_PERMISSION_TEXT "This application requires a permission to use an audio input device of your computer. By Default, Built-In microphone will be used."
 
     PRODUCT_NAME "NineStrip")        # The name of the final 
 
@@ -64,12 +64,15 @@ SOURCES
 ${CMAKE_SOURCE_DIR}/assets/juce-logo.svg
 )
 
+add_subdirectory(airwindows)
+
 target_sources(NineStrip PRIVATE
     PluginEditor.cpp
     PluginProcessor.cpp
 )
 
 target_link_libraries(NineStrip PUBLIC
+AirwindowsDSP
 JuceLogoBinary
 juce::juce_audio_basics
 juce::juce_audio_devices
@@ -90,3 +93,4 @@ juce::juce_product_unlocking
 )
 
 juce_generate_juce_header(NineStrip)
+

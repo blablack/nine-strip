@@ -1,12 +1,17 @@
 Checks: "clang-diagnostic-*,\
-clang-analyzer-*,\
-cppcoreguidelines-*,\
-google-*,\
-modernize-*,\
-misc-*,\
-readability-*,\
-performance-*,\
-portability-*,\
--modernize-use-trailing-return-type\
-"
+  clang-analyzer-*,\
+  cppcoreguidelines-*,\
+  google-*,\
+  modernize-*,\
+  misc-*,\
+  readability-*,\
+  performance-*,\
+  portability-*,\
+  -modernize-use-trailing-return-type,\
+  -readability-magic-numbers,\
+  -cppcoreguidelines-avoid-magic-numbers,\
+  -readability-uppercase-literal-suffix,\
+  -cppcoreguidelines-owning-memory"
+
 HeaderFilterRegex: '**/Source/*\.(hpp|h)'
+

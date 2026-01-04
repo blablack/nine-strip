@@ -39,10 +39,8 @@ OUTPUT GAIN
 ```bash
 git clone --recurse-submodules https://github.com/blablack/nine-strip.git
 cd nine-strip
-mkdir build
-cd build
-cmake -G Ninja .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-ninja
+cmake -B build -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+ninja -C build
 ```
 
 ## Usage
@@ -70,5 +68,6 @@ See the [LICENSE](./LICENSE) file for full details.
 
 Contributions are welcome! Please submit pull requests or open issues for bugs and feature requests.
 Report issues or request features at [GitHub Issues](https://github.com/blablack/nine-strip/issues).
+
 
 

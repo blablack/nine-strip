@@ -1,0 +1,8 @@
+CompileFlags:
+  Add:
+    - -DJUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
+    - -Ibuild/src/NineStrip_artefacts/JuceLibraryCode
+    - -Ilib/JUCE/modules
+    - -Isrc/airwindows
+    - -Ibuild/src/juce_binarydata_JuceLogoBinary/JuceLibraryCode
+
