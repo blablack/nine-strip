@@ -35,7 +35,8 @@ class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProce
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 #endif
 
-    void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+    void processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) override;
+    void processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &midiMessages) override;
 
     //==============================================================================
     juce::AudioProcessorEditor *createEditor() override;

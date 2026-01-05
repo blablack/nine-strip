@@ -157,6 +157,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     bassLabel.attachToComponent(&bassSlider, false);
 
     // Parametric - Treble Band
+    /*
     addAndMakeVisible(trFreqSlider);
     trFreqSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     trFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -183,6 +184,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     addAndMakeVisible(trResoLabel);
     trResoLabel.setText("Tr Q", juce::dontSendNotification);
     trResoLabel.attachToComponent(&trResoSlider, false);
+    */
 
     // Parametric - High-Mid Band
     addAndMakeVisible(hmFreqSlider);
@@ -213,6 +215,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hmResoLabel.attachToComponent(&hmResoSlider, false);
 
     // Parametric - Low-Mid Band
+    /*
     addAndMakeVisible(lmFreqSlider);
     lmFreqSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     lmFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -239,6 +242,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     addAndMakeVisible(lmResoLabel);
     lmResoLabel.setText("LM Q", juce::dontSendNotification);
     lmResoLabel.attachToComponent(&lmResoSlider, false);
+    */
 
     // Compressor
     addAndMakeVisible(pressureSlider);
@@ -330,17 +334,17 @@ void NineStripProcessorEditor::resized()
     trebleSlider.setBounds(160, 315, 80, 80);
 
     // Parametric - 3 bands
-    lmFreqSlider.setBounds(270, 315, 70, 80);
-    lmGainSlider.setBounds(345, 315, 70, 80);
-    lmResoSlider.setBounds(420, 315, 70, 80);
+    // lmFreqSlider.setBounds(270, 315, 70, 80);
+    // lmGainSlider.setBounds(345, 315, 70, 80);
+    // lmResoSlider.setBounds(420, 315, 70, 80);
 
     hmFreqSlider.setBounds(505, 315, 70, 80);
     hmGainSlider.setBounds(580, 315, 70, 80);
     hmResoSlider.setBounds(655, 315, 70, 80);
 
-    trFreqSlider.setBounds(270, 355, 70, 80);
-    trGainSlider.setBounds(345, 355, 70, 80);
-    trResoSlider.setBounds(420, 355, 70, 80);
+    // trFreqSlider.setBounds(270, 355, 70, 80);
+    // trGainSlider.setBounds(345, 355, 70, 80);
+    // trResoSlider.setBounds(420, 355, 70, 80);
 
     // Compression Section
     compressorBypassButton.setBounds(770, 465, 60, 25);

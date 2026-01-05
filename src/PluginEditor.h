@@ -137,17 +137,19 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trebleAttachment, bassAttachment;
 
     // Parametric EQ
-    juce::Slider trFreqSlider, trGainSlider, trResoSlider;
+    // juce::Slider trFreqSlider, trGainSlider, trResoSlider;
     juce::Slider hmFreqSlider, hmGainSlider, hmResoSlider;
-    juce::Slider lmFreqSlider, lmGainSlider, lmResoSlider;
+    // juce::Slider lmFreqSlider, lmGainSlider, lmResoSlider;
 
-    juce::Label trFreqLabel, trGainLabel, trResoLabel;
+    // juce::Label trFreqLabel, trGainLabel, trResoLabel;
     juce::Label hmFreqLabel, hmGainLabel, hmResoLabel;
-    juce::Label lmFreqLabel, lmGainLabel, lmResoLabel;
+    // juce::Label lmFreqLabel, lmGainLabel, lmResoLabel;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trFreqAttachment, trGainAttachment, trResoAttachment;
+    // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trFreqAttachment, trGainAttachment,
+    // trResoAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hmFreqAttachment, hmGainAttachment, hmResoAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lmFreqAttachment, lmGainAttachment, lmResoAttachment;
+    // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lmFreqAttachment, lmGainAttachment,
+    // lmResoAttachment;
 
     // Compressor
     juce::Slider pressureSlider, speedSlider, mewinessSlider;
