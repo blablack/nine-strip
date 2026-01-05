@@ -2,7 +2,6 @@
 
 #include <JuceHeader.h>
 
-#include "Lowpass2.h"
 #include "airwindows/Baxandall2.h"
 #include "airwindows/Channel9.h"
 #include "airwindows/Highpass2.h"
@@ -18,6 +17,8 @@ class NineStripProcessor : public juce::AudioProcessor {
     //==============================================================================
     NineStripProcessor();
     ~NineStripProcessor() override;
+
+    juce::AudioProcessorValueTreeState apvts;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -55,42 +56,14 @@ class NineStripProcessor : public juce::AudioProcessor {
    private:
     //==============================================================================
 
-    juce::AudioParameterFloat *inputGain;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     Channel9 channel9;
-    juce::AudioParameterChoice *channel9_consoleType;
-    juce::AudioParameterFloat *channel9_drive;
-
     Highpass2 highpass2;
-    juce::AudioParameterFloat *highpass2_hipass;
-    juce::AudioParameterFloat *highpass2_ls_tite;
-    juce::AudioParameterFloat *highpass2_poles;
-
     Lowpass2 lowpass2;
-    juce::AudioParameterFloat *lowpass2_lowpass;
-    juce::AudioParameterFloat *lowpass2_sft_hrd;
-    juce::AudioParameterFloat *lowpass2_poles;
-
     Baxandall2 baxandall2;
-    juce::AudioParameterFloat *baxandall2_treble;
-    juce::AudioParameterFloat *baxandall2_bass;
-
     Parametric parametric;
-    juce::AudioParameterFloat *parametric_tr_freq;
-    juce::AudioParameterFloat *parametric_treble;
-    juce::AudioParameterFloat *parametric_tr_reso;
-    juce::AudioParameterFloat *parametric_hm_freq;
-    juce::AudioParameterFloat *parametric_highmid;
-    juce::AudioParameterFloat *parametric_hm_reso;
-    juce::AudioParameterFloat *parametric_lm_freq;
-    juce::AudioParameterFloat *parametric_lowmid;
-    juce::AudioParameterFloat *parametric_lm_reso;
-
     Pressure4 pressure4;
-    juce::AudioParameterFloat *pressure4_pressure;
-    juce::AudioParameterFloat *pressure4_speed;
-    juce::AudioParameterFloat *pressure4_mewiness;
-    juce::AudioParameterFloat *pressure4_output_gain;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NineStripProcessor)
 };
