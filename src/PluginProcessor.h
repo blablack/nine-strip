@@ -55,6 +55,8 @@ class NineStripProcessor : public juce::AudioProcessor {
    private:
     //==============================================================================
 
+    juce::AudioParameterFloat *inputGain;
+
     Channel9 channel9;
     juce::AudioParameterChoice *channel9_consoleType;
     juce::AudioParameterFloat *channel9_drive;

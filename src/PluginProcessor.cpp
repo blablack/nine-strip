@@ -12,6 +12,8 @@ NineStripProcessor::NineStripProcessor()
       baxandall2(44100.0),
       parametric(44100.0),
       pressure4(44100.0) {
+    addParameter(inputGain = new juce::AudioParameterFloat("inputGain", "Input Gain", -12.0f, 12.0f, 0.0f));
+
     // Add parameters for Channel9
     addParameter(channel9_consoleType = new juce::AudioParameterChoice(
                      "consoleType", "Console Type", juce::StringArray{"Neve", "API", "SSL", "Teac", "Mackie"}, 0));
@@ -124,6 +126,7 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
 }
 void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
     juce::ScopedNoDenormals noDenormals;
+    float gainLinear = juce::Decibels::decibelsToGain(inputGain->get());
 
     // Update Channel9 parameters if changed
     int consoleIndex = channel9_consoleType->getIndex();
@@ -166,6 +169,8 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     pressure4.setParameter(Pressure4::kParamC, pressure4_mewiness->get());
     pressure4.setParameter(Pressure4::kParamD, pressure4_output_gain->get());
 
+    buffer.applyGain(gainLinear);
+
     // Create raw pointer arrays for Airwindows
     float *channelData[2] = {
         buffer.getWritePointer(0),  // Left
@@ -189,6 +194,9 @@ juce::AudioProcessorEditor *NineStripProcessor::createEditor() { return new Nine
 void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData) {
     // Store parameter values
     std::unique_ptr<juce::XmlElement> xml(new juce::XmlElement("NineStripSettings"));
+
+    xml->setAttribute("inputGain", static_cast<double>(inputGain->get()));
+
     xml->setAttribute("consoleType", channel9_consoleType->getIndex());
     xml->setAttribute("drive", static_cast<double>(channel9_drive->get()));
 
