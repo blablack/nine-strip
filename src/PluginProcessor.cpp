@@ -60,6 +60,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
     layout.add(std::make_unique<juce::AudioParameterFloat>("mewiness", "Mewiness", 0.0f, 1.0f, 0.5f));
     layout.add(std::make_unique<juce::AudioParameterFloat>("output_gain", "Output Gain", 0.0f, 1.0f, 1.0f));
 
+    // Output gain
+    layout.add(std::make_unique<juce::AudioParameterFloat>("outputGain", "Output Gain", -12.0f, 12.0f, 0.0f));
+
+    // Bypass switches
+    layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("saturationBypass", "Saturation Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("compressorBypass", "Compressor Bypass", false));
+
     return layout;
 }
 
@@ -78,7 +87,7 @@ const juce::String NineStripProcessor::getProgramName(int index) { return {}; }
 void NineStripProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
-void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+void NineStripProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
     channel9.setSampleRate(sampleRate);
     highpass2.setSampleRate(sampleRate);
     lowpass2.setSampleRate(sampleRate);
@@ -97,8 +106,18 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
 void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
     juce::ScopedNoDenormals noDenormals;
 
-    // Apply input gain
-    float gainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
+    // Master bypass - skip all processing
+    bool masterBypassed = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
+    if (masterBypassed) {
+        return;  // Early exit, pass audio through untouched
+    }
+
+    bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
+    bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
+    bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
+
+    // Input gain
+    float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
 
     // Set Channel9 parameters
     channel9.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
@@ -137,9 +156,13 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     pressure4.setParameter(Pressure4::kParamA, apvts.getRawParameterValue("pressure")->load());
     pressure4.setParameter(Pressure4::kParamB, apvts.getRawParameterValue("speed")->load());
     pressure4.setParameter(Pressure4::kParamC, apvts.getRawParameterValue("mewiness")->load());
-    pressure4.setParameter(Pressure4::kParamD, apvts.getRawParameterValue("output_gain")->load());
+    pressure4.setParameter(Pressure4::kParamD, 1.0f);
 
-    buffer.applyGain(gainLinear);
+    // Output gain
+    float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
+
+    // Processing
+    buffer.applyGain(inputGainLinear);
 
     // Create raw pointer arrays for Airwindows processing
     float *channelData[2] = {
@@ -148,12 +171,22 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     };
 
     // Process through the plugin chain
-    channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
-    highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-    lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-    baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
-    parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
-    pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+    if (!saturationBypass) {
+        channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
+    }
+
+    if (!eqBypass) {
+        highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+        lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+        baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
+        parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
+    }
+
+    if (!compressorBypass) {
+        pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+    }
+
+    buffer.applyGain(outputGainLinear);
 }
 
 //==============================================================================
