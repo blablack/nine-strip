@@ -306,6 +306,14 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     bool masterBypassed = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
     if (masterBypassed)
     {
+        if (getActiveEditor() != nullptr)
+        {
+            inputLevelL.store(-60.0f);
+            inputLevelR.store(-60.0f);
+            outputLevelL.store(-60.0f);
+            outputLevelR.store(-60.0f);
+        }
+
         return;  // Early exit, pass audio through untouched
     }
 
@@ -320,6 +328,16 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
 
     // Apply input gain
     buffer.applyGain(inputGainLinear);
+
+    if (getActiveEditor() != nullptr)
+    {
+        float inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        float inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        inL = std::max(inL, 0.000001f);  // Floor at -120 dB
+        inR = std::max(inR, 0.000001f);
+        inputLevelL.store(juce::Decibels::gainToDecibels(inL, -60.0f));
+        inputLevelR.store(juce::Decibels::gainToDecibels(inR, -60.0f));
+    }
 
     // Create raw pointer arrays for Airwindows processing
     float *channelData[2] = {
@@ -348,6 +366,16 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
 
     // Apply output gain
     buffer.applyGain(outputGainLinear);
+
+    if (getActiveEditor() != nullptr)
+    {
+        float outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        float outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        outL = std::max(outL, 0.000001f);
+        outR = std::max(outR, 0.000001f);
+        outputLevelL.store(juce::Decibels::gainToDecibels(outL, -60.0f));
+        outputLevelR.store(juce::Decibels::gainToDecibels(outR, -60.0f));
+    }
 }
 
 //==============================================================================
