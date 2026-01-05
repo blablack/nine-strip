@@ -58,19 +58,16 @@ class NineStripProcessor : public juce::AudioProcessor {
     Channel9 channel9;
     juce::AudioParameterChoice *channel9_consoleType;
     juce::AudioParameterFloat *channel9_drive;
-    juce::AudioParameterFloat *channel9_output;
 
     Highpass2 highpass2;
     juce::AudioParameterFloat *highpass2_hipass;
     juce::AudioParameterFloat *highpass2_ls_tite;
     juce::AudioParameterFloat *highpass2_poles;
-    juce::AudioParameterFloat *highpass2_dry_wet;
 
     Lowpass2 lowpass2;
     juce::AudioParameterFloat *lowpass2_lowpass;
     juce::AudioParameterFloat *lowpass2_sft_hrd;
     juce::AudioParameterFloat *lowpass2_poles;
-    juce::AudioParameterFloat *lowpass2_dry_wet;
 
     Baxandall2 baxandall2;
     juce::AudioParameterFloat *baxandall2_treble;
@@ -86,7 +83,6 @@ class NineStripProcessor : public juce::AudioProcessor {
     juce::AudioParameterFloat *parametric_lm_freq;
     juce::AudioParameterFloat *parametric_lowmid;
     juce::AudioParameterFloat *parametric_lm_reso;
-    juce::AudioParameterFloat *parametric_dry_wet;
 
     Pressure4 pressure4;
     juce::AudioParameterFloat *pressure4_pressure;

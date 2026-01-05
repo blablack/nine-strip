@@ -26,8 +26,6 @@ NineStripProcessor::NineStripProcessor()
                                                            return text.dropLastCharacters(1).getFloatValue() / 100.0f;
                                                        })));
 
-    addParameter(channel9_output = new juce::AudioParameterFloat("output", "Output", 0.0f, 1.0f, 1.0f));
-
     // Lowpass2 parameters
     addParameter(lowpass2_lowpass = new juce::AudioParameterFloat("lowpass", "Lowpass", 0.01f, 1.0f, 1.0f));
     addParameter(
@@ -43,8 +41,6 @@ NineStripProcessor::NineStripProcessor()
                          .withStringFromValueFunction([](float value, int) { return juce::String(value * 4.0f, 2); })
                          .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 4.0f; })));
 
-    addParameter(lowpass2_dry_wet = new juce::AudioParameterFloat("lp_dry_wet", "LP Dry/Wet", 0.0f, 1.0f, 1.0f));
-
     // Highpass2 parameters
     addParameter(highpass2_hipass = new juce::AudioParameterFloat("hipass", "Hipass", 0.0f, 1.0f, 0.0f));
     addParameter(
@@ -59,8 +55,6 @@ NineStripProcessor::NineStripProcessor()
                      juce::AudioParameterFloatAttributes()
                          .withStringFromValueFunction([](float value, int) { return juce::String(value * 4.0f, 2); })
                          .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 4.0f; })));
-
-    addParameter(highpass2_dry_wet = new juce::AudioParameterFloat("hp_dry_wet", "HP Dry/Wet", 0.0f, 1.0f, 1.0f));
 
     // Baxandall2 parameters
     addParameter(
@@ -87,7 +81,6 @@ NineStripProcessor::NineStripProcessor()
     addParameter(parametric_lm_freq = new juce::AudioParameterFloat("lm_freq", "LM Freq", 0.0f, 1.0f, 0.5f));
     addParameter(parametric_lowmid = new juce::AudioParameterFloat("lowmid", "LowMid", 0.0f, 1.0f, 0.5f));
     addParameter(parametric_lm_reso = new juce::AudioParameterFloat("lm_reso", "LM Reso", 0.0f, 1.0f, 0.5f));
-    addParameter(parametric_dry_wet = new juce::AudioParameterFloat("param_dry_wet", "Param Dry/Wet", 0.0f, 1.0f, 1.0f));
 
     // Pressure4 parameters
     addParameter(pressure4_pressure = new juce::AudioParameterFloat("pressure", "Pressure", 0.0f, 1.0f, 0.0f));
@@ -137,19 +130,19 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     channel9.setParameter(Channel9::kParamA, static_cast<float>(consoleIndex));
     channel9.setParameter(Channel9::kParamB,
                           channel9_drive->get() / 2.0f);  // Normalize to 0-1
-    channel9.setParameter(Channel9::kParamC, channel9_output->get());
+    channel9.setParameter(Channel9::kParamC, 1.0f);
 
     // Set Lowpass2 parameters
     lowpass2.setParameter(Lowpass2::kParamA, lowpass2_lowpass->get());
     lowpass2.setParameter(Lowpass2::kParamB, lowpass2_sft_hrd->get());
     lowpass2.setParameter(Lowpass2::kParamC, lowpass2_poles->get());
-    lowpass2.setParameter(Lowpass2::kParamD, lowpass2_dry_wet->get());
+    lowpass2.setParameter(Lowpass2::kParamD, 1.0f);
 
     // Set Highpass2 parameters
     highpass2.setParameter(Highpass2::kParamA, highpass2_hipass->get());
     highpass2.setParameter(Highpass2::kParamB, highpass2_ls_tite->get());
     highpass2.setParameter(Highpass2::kParamC, highpass2_poles->get());
-    highpass2.setParameter(Highpass2::kParamD, highpass2_dry_wet->get());
+    highpass2.setParameter(Highpass2::kParamD, 1.0f);
 
     // Set Baxandall2 parameters
     baxandall2.setParameter(Baxandall2::kParamA, baxandall2_treble->get());
@@ -165,7 +158,7 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     parametric.setParameter(Parametric::kParamG, parametric_lm_freq->get());
     parametric.setParameter(Parametric::kParamH, parametric_lowmid->get());
     parametric.setParameter(Parametric::kParamI, parametric_lm_reso->get());
-    parametric.setParameter(Parametric::kParamJ, parametric_dry_wet->get());
+    parametric.setParameter(Parametric::kParamJ, 1.0f);
 
     // Set Pressure4 parameters
     pressure4.setParameter(Pressure4::kParamA, pressure4_pressure->get());
@@ -198,17 +191,14 @@ void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData) {
     std::unique_ptr<juce::XmlElement> xml(new juce::XmlElement("NineStripSettings"));
     xml->setAttribute("consoleType", channel9_consoleType->getIndex());
     xml->setAttribute("drive", static_cast<double>(channel9_drive->get()));
-    xml->setAttribute("output", static_cast<double>(channel9_output->get()));
 
     xml->setAttribute("lowpass", static_cast<double>(lowpass2_lowpass->get()));
     xml->setAttribute("lp_sft_hrd", static_cast<double>(lowpass2_sft_hrd->get()));
     xml->setAttribute("lp_poles", static_cast<double>(lowpass2_poles->get()));
-    xml->setAttribute("lp_dry_wet", static_cast<double>(lowpass2_dry_wet->get()));
 
     xml->setAttribute("hipass", static_cast<double>(highpass2_hipass->get()));
     xml->setAttribute("ls_tite", static_cast<double>(highpass2_ls_tite->get()));
     xml->setAttribute("hp_poles", static_cast<double>(highpass2_poles->get()));
-    xml->setAttribute("hp_dry_wet", static_cast<double>(highpass2_dry_wet->get()));
 
     xml->setAttribute("treble", static_cast<double>(baxandall2_treble->get()));
     xml->setAttribute("bass", static_cast<double>(baxandall2_bass->get()));
@@ -222,7 +212,6 @@ void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData) {
     xml->setAttribute("lm_freq", static_cast<double>(parametric_lm_freq->get()));
     xml->setAttribute("lowmid", static_cast<double>(parametric_lowmid->get()));
     xml->setAttribute("lm_reso", static_cast<double>(parametric_lm_reso->get()));
-    xml->setAttribute("param_dry_wet", static_cast<double>(parametric_dry_wet->get()));
 
     xml->setAttribute("pressure", static_cast<double>(pressure4_pressure->get()));
     xml->setAttribute("speed", static_cast<double>(pressure4_speed->get()));
@@ -238,17 +227,14 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes) 
     if (xml.get() != nullptr && xml->hasTagName("NineStripSettings")) {
         *channel9_consoleType = xml->getIntAttribute("consoleType", 0);
         *channel9_drive = static_cast<float>(xml->getDoubleAttribute("drive", 0.0));
-        *channel9_output = static_cast<float>(xml->getDoubleAttribute("output", 1.0));
 
         *lowpass2_lowpass = static_cast<float>(xml->getDoubleAttribute("lowpass", 1.0));
         *lowpass2_sft_hrd = static_cast<float>(xml->getDoubleAttribute("lp_sft_hrd", 0.5));
         *lowpass2_poles = static_cast<float>(xml->getDoubleAttribute("lp_poles", 0.25));
-        *lowpass2_dry_wet = static_cast<float>(xml->getDoubleAttribute("lp_dry_wet", 1.0));
 
         *highpass2_hipass = static_cast<float>(xml->getDoubleAttribute("hipass", 0.0));
         *highpass2_ls_tite = static_cast<float>(xml->getDoubleAttribute("ls_tite", 0.5));
         *highpass2_poles = static_cast<float>(xml->getDoubleAttribute("hp_poles", 0.25));
-        *highpass2_dry_wet = static_cast<float>(xml->getDoubleAttribute("hp_dry_wet", 1.0));
 
         *baxandall2_treble = static_cast<float>(xml->getDoubleAttribute("treble", 0.5));
         *baxandall2_bass = static_cast<float>(xml->getDoubleAttribute("bass", 0.5));
@@ -262,7 +248,6 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes) 
         *parametric_lm_freq = static_cast<float>(xml->getDoubleAttribute("lm_freq", 0.5));
         *parametric_lowmid = static_cast<float>(xml->getDoubleAttribute("lowmid", 0.5));
         *parametric_lm_reso = static_cast<float>(xml->getDoubleAttribute("lm_reso", 0.5));
-        *parametric_dry_wet = static_cast<float>(xml->getDoubleAttribute("param_dry_wet", 1.0));
 
         *pressure4_pressure = static_cast<float>(xml->getDoubleAttribute("pressure", 0.0));
         *pressure4_speed = static_cast<float>(xml->getDoubleAttribute("speed", 0.2));
