@@ -29,7 +29,7 @@ NineStripProcessor::NineStripProcessor()
     addParameter(channel9_output = new juce::AudioParameterFloat("output", "Output", 0.0f, 1.0f, 1.0f));
 
     // Lowpass2 parameters
-    addParameter(lowpass2_lowpass = new juce::AudioParameterFloat("lowpass", "Lowpass", 0.0f, 1.0f, 0.0f));
+    addParameter(lowpass2_lowpass = new juce::AudioParameterFloat("lowpass", "Lowpass", 0.01f, 1.0f, 1.0f));
     addParameter(
         lowpass2_sft_hrd = new juce::AudioParameterFloat(
             "lp_sft_hrd", "LP Soft/Hard", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
@@ -63,8 +63,19 @@ NineStripProcessor::NineStripProcessor()
     addParameter(highpass2_dry_wet = new juce::AudioParameterFloat("hp_dry_wet", "HP Dry/Wet", 0.0f, 1.0f, 1.0f));
 
     // Baxandall2 parameters
-    addParameter(baxandall2_treble = new juce::AudioParameterFloat("treble", "Treble", 0.0f, 1.0f, 0.5f));
-    addParameter(baxandall2_bass = new juce::AudioParameterFloat("bass", "Bass", 0.0f, 1.0f, 0.5f));
+    addParameter(
+        baxandall2_treble = new juce::AudioParameterFloat(
+            "treble", "Treble", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
+            juce::AudioParameterFloatAttributes()
+                .withStringFromValueFunction([](float value, int) { return juce::String((value * 48.0f) - 24.0f, 2); })
+                .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 24.0f) / 48.0f; })));
+
+    addParameter(
+        baxandall2_bass = new juce::AudioParameterFloat(
+            "bass", "Bass", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
+            juce::AudioParameterFloatAttributes()
+                .withStringFromValueFunction([](float value, int) { return juce::String((value * 48.0f) - 24.0f, 2); })
+                .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 24.0f) / 48.0f; })));
 
     // Parametric parameters
     addParameter(parametric_tr_freq = new juce::AudioParameterFloat("tr_freq", "Tr Freq", 0.0f, 1.0f, 0.5f));
@@ -168,12 +179,12 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         buffer.getWritePointer(1)   // Right
     };
 
-    // channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
-    // lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+    channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
+    lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
     highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-    // baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
-    // parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
-    // pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+    baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
+    parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
+    pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
 }
 
 //==============================================================================
@@ -229,7 +240,7 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes) 
         *channel9_drive = static_cast<float>(xml->getDoubleAttribute("drive", 0.0));
         *channel9_output = static_cast<float>(xml->getDoubleAttribute("output", 1.0));
 
-        *lowpass2_lowpass = static_cast<float>(xml->getDoubleAttribute("lowpass", 0.0));
+        *lowpass2_lowpass = static_cast<float>(xml->getDoubleAttribute("lowpass", 1.0));
         *lowpass2_sft_hrd = static_cast<float>(xml->getDoubleAttribute("lp_sft_hrd", 0.5));
         *lowpass2_poles = static_cast<float>(xml->getDoubleAttribute("lp_poles", 0.25));
         *lowpass2_dry_wet = static_cast<float>(xml->getDoubleAttribute("lp_dry_wet", 1.0));
