@@ -12,13 +12,12 @@
 //==============================================================================
 /**
  */
-class NineStripProcessor : public juce::AudioProcessor {
+class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProcessorValueTreeState::Listener
+{
    public:
     //==============================================================================
     NineStripProcessor();
     ~NineStripProcessor() override;
-
-    juce::AudioProcessorValueTreeState apvts;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -55,8 +54,10 @@ class NineStripProcessor : public juce::AudioProcessor {
 
    private:
     //==============================================================================
-
+    juce::AudioProcessorValueTreeState apvts;
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    void parameterChanged(const juce::String &parameterID, float newValue) override;
 
     Channel9 channel9;
     Highpass2 highpass2;

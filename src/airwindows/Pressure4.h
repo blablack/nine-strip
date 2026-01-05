@@ -9,45 +9,45 @@
 
 #include <cstdint>
 
-class Pressure4 {
- public:
-  enum {
-    kParamA = 0,
-    kParamB = 1,
-    kParamC = 2,
-    kParamD = 3,
-    kNumParameters = 4
-  };  //
-  Pressure4(double sampleRate);
-  ~Pressure4();
+class Pressure4
+{
+   public:
+    enum
+    {
+        kParamA = 0,
+        kParamB = 1,
+        kParamC = 2,
+        kParamD = 3,
+        kNumParameters = 4
+    };  //
+    Pressure4(double sampleRate);
+    ~Pressure4();
 
-  void processReplacing(float** inputs, float** outputs, int sampleFrames);
-  void processDoubleReplacing(double** inputs, double** outputs,
-                              int sampleFrames);
+    void processReplacing(float** inputs, float** outputs, int sampleFrames);
+    void processDoubleReplacing(double** inputs, double** outputs, int sampleFrames);
 
-  void setParameter(int index, float value);
-  float getParameter(int index);
-  void setSampleRate(double sr) { sampleRate = sr; }
+    void setParameter(int index, float value);
+    float getParameter(int index);
+    void setSampleRate(double sr) { sampleRate = sr; }
 
- private:
-  double sampleRate;
+   private:
+    double sampleRate;
 
-  double muVary;
-  double muAttack;
-  double muNewSpeed;
-  double muSpeedA;
-  double muSpeedB;
-  double muCoefficientA;
-  double muCoefficientB;
-  uint32_t fpdL;
-  uint32_t fpdR;
-  bool flip;
+    double muVary;
+    double muAttack;
+    double muNewSpeed;
+    double muSpeedA;
+    double muSpeedB;
+    double muCoefficientA;
+    double muCoefficientB;
+    uint32_t fpdL;
+    uint32_t fpdR;
+    bool flip;
 
-  float A;
-  float B;
-  float C;  // parameters. Always 0-1, and we scale/alter them elsewhere.
-  float D;
+    float A;
+    float B;
+    float C;  // parameters. Always 0-1, and we scale/alter them elsewhere.
+    float D;
 };
 
 #endif
-
