@@ -192,7 +192,6 @@ void Lowpass2::processDoubleReplacing(double** inputs, double** outputs, int sam
 
     double iirAmount = A;
     double tight = (B * 2.0) - 1.0;
-    iirAmount += fabs(tight);
     if (iirAmount < 0.0000001) iirAmount = 0.0000001;
     if (iirAmount > 1) iirAmount = 1;
     if (tight < 0.0) tight *= 0.5;
