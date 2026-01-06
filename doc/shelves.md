@@ -1,202 +1,200 @@
-# Shelves
+# Shelves (Baxandall2)
 
-## Parameter A: Low Shelf Frequency
+The Baxandall2 is a classic tone control circuit inspired by the Baxandall equalizer found in vintage hi-fi equipment. It provides two shelving filters with fixed Q values and automatically adjusting corner frequencies that track musically with gain adjustments.
 
-**UI Label:** Low Shelf Freq
+**Important:** This is NOT a parametric shelving EQ. Frequency and Q values are fixed and adjust automatically based on gain settings for musical behavior.
 
-**Function:** Sets the center frequency for the low-shelf EQ band, controlling the transition point for bass and low-midrange shaping.
+---
 
-**Recommended Range:** 20 Hz to 500 Hz
+## Parameter A: High Shelf
 
-**Sound Character & Typical Values:**
+**UI Label:** High Shelf
 
-- **20-50 Hz:** Sub-bass region
-  - Deep low end and rumble control
-  - Useful for removing subsonic content or adding weight to bass instruments
-  
-- **50-100 Hz:** Bass fundamental region
-  - Kick drum body and warmth
-  - Bass guitar fundamental presence
-  
-- **100-200 Hz:** Lower midrange warmth
-  - Vocal body and chest resonance
-  - Guitar low-end fullness
-  
-- **200-500 Hz:** Upper low-midrange
-  - Overall warmth and body for instruments
-  - Boxiness and muddiness region (often cut)
+**Function:** Controls high-frequency shelf gain with an automatically adjusting corner frequency that becomes higher as you boost.
 
-**Interaction Notes:** Works in conjunction with Gain and Q controls to shape the low end. Shelf filters affect all frequencies below the cutoff point, not just the center frequency like parametric EQ.
+**Display Range:** -10 to +10
 
-***
+**Default Value:** 0
 
-## Parameter B: Low Shelf Gain
+**Technical Details:**
 
-**UI Label:** Low Shelf Gain
+- **Base corner frequency:** ~4.4 kHz at 44.1 kHz sample rate (scales with sample rate)
+- **Frequency behavior:** `(4410.0 * linearGain) / sampleRate` - frequency increases with boost, decreases with cut
+- **Q value:** Fixed at 0.4 (gentle, musical slope)
+- **Filter type:** Second-order lowpass-based shelf affecting frequencies above the corner
 
-**Function:** Boosts or cuts the low-shelf frequency region.
+**How It Works:**
+The Baxandall design automatically adjusts the shelf frequency based on gain:
 
-**Recommended Range:** -∞ dB to +18 dB
+- **Boosting (+):** Corner frequency moves higher, creating a gentler, more natural boost
+- **Cutting (-):** Corner frequency moves lower, creating broader darkening effect
+- **Unity (0):** Corner around 4.4 kHz baseline
 
 **Sound Character:**
 
-**Cutting:**
-- **-1 to -3 dB:** Subtle reduction of bass weight, clearing muddiness
-- **-4 to -8 dB:** Noticeable thinning, removing boxiness
-- **-10 dB and below:** Aggressive bass removal, extreme thinning
+**Cutting (-10 to 0):**
 
-**Boosting:**
-- **+1 to +3 dB:** Adding subtle warmth and body
-- **+4 to +8 dB:** Noticeable bass enhancement, increased presence
-- **+10 dB and above:** Aggressive bass boost, potential for rumble
+- **-1 to -3:** Subtle de-brightening, gentle warmth
+- **-4 to -6:** Noticeable darkening, vintage character, reducing harshness
+- **-7 to -9:** Significant darkening, lo-fi aesthetic, muffled character
+- **-10:** Extreme darkening, telephone/AM radio effect
+
+**Neutral (0):**
+
+- Transparent passthrough with no tonal coloration
+
+**Boosting (0 to +10):**
+
+- **+1 to +3:** Subtle air and clarity enhancement
+- **+4 to +6:** Noticeable brightness, increased presence and sparkle
+- **+7 to +9:** Strong brightness, enhanced attack and detail
+- **+10:** Extreme brightness (use carefully - potential harshness)
 
 **Typical Values:**
-- Kick drum warmth: +2 to +5 dB around 80-120 Hz
-- Bass guitar body: +1 to +4 dB around 100-150 Hz
-- Vocal warmth: +1 to +3 dB around 100-150 Hz
-- Mix bus: ±1 to ±2 dB maximum
-- Rumble removal: -2 to -6 dB around 20-50 Hz
 
-***
+- **Mix bus air:** +0.5 to +2 - adds subtle polish without harshness
+- **Vocal brightness:** +2 to +5 - enhances clarity and presence
+- **Acoustic guitar sparkle:** +3 to +6 - brings out string detail
+- **De-essing/warmth:** -2 to -5 - reduces sibilance and harshness
+- **Vintage/warm character:** -4 to -8 - analog warmth, tape-like sound
+- **Drum overhead air:** +2 to +4 - cymbal brightness and air
+- **Electric guitar cut:** -3 to -6 - taming harsh amp tones
 
-## Parameter C: Low Shelf Q
+---
 
-**UI Label:** Low Shelf Q
+## Parameter B: Low Shelf
 
-**Function:** Controls the transition curve of the low-shelf filter from gradual to steep.
+**UI Label:** Low Shelf
 
-**Recommended Range:** 0.0 to 1.0
+**Function:** Controls low-frequency shelf gain with an automatically adjusting corner frequency that inversely tracks with gain (lower frequency when boosting for more focused low-end enhancement).
+
+**Display Range:** -10 to +10
+
+**Default Value:** 0
+
+**Technical Details:**
+
+- **Base corner frequency:** ~8.8 kHz / gain factor at 44.1 kHz sample rate (scales with sample rate)
+- **Frequency behavior:** `(8820.0 * 10^(-dB/20)) / sampleRate` - frequency DECREASES with boost, increases with cut
+- **Q value:** Fixed at 0.2 (very gentle, broad slope - gentler than treble)
+- **Filter type:** Second-order lowpass-based shelf affecting low frequencies
+
+**How It Works:**
+The bass control has inverse frequency tracking for musical bass response:
+
+- **Boosting (+):** Corner frequency moves LOWER, creating focused deep bass enhancement
+- **Cutting (-):** Corner frequency moves HIGHER, creating broader bass reduction
+- **Unity (0):** Corner around calculated midpoint
+
+This inverse behavior ensures bass boosts feel tight and controlled rather than bloated.
 
 **Sound Character:**
 
-**Low Q (0.0-0.3):**
-- Gentle, gradual transition affecting a wide frequency range
-- Natural-sounding tonal adjustments
-- Use for: General warmth adjustments, transparent bass shaping
+**Cutting (-10 to 0):**
 
-**Medium Q (0.4-0.6):**
-- Moderate transition slope
-- Balanced between broad and focused
-- Use for: Instrument-specific low-end shaping
+- **-1 to -3:** Subtle reduction of bass weight, slight tightening
+- **-4 to -6:** Noticeable thinning, clearing muddiness and boxiness
+- **-7 to -9:** Significant bass removal, lightweight character
+- **-10:** Extreme thinning, almost no low end (transistor radio effect)
 
-**High Q (0.7-1.0):**
-- Steeper transition with more focused effect
-- More concentrated on the shelf frequency
-- Use for: Precise low-end control
+**Neutral (0):**
 
-**Typical Values:**
-- General warmth: 0.3-0.5
-- Instrument-specific shaping: 0.4-0.6
-- Precise low-end control: 0.7-0.9
+- Transparent passthrough with no bass coloration
 
-***
+**Boosting (0 to +10):**
 
-## Parameter D: High Shelf Frequency
-
-**UI Label:** High Shelf Freq
-
-**Function:** Sets the center frequency for the high-shelf EQ band, controlling the transition point for brightness and air region shaping.
-
-**Recommended Range:** 2 kHz to 20 kHz
-
-**Sound Character & Typical Values:**
-
-- **2-4 kHz:** Upper midrange presence
-  - Vocal clarity and attack
-  - Instrument definition
-  
-- **4-8 kHz:** Presence and attack region
-  - Snare crack and brightness
-  - Guitar string attack
-  - Vocal clarity and presence
-  
-- **8-15 kHz:** Brilliance and air
-  - Cymbal and hi-hat brightness
-  - Overall "air" and clarity
-  - Vocal sibilance region
-  
-- **15-20 kHz:** Ultra-high air
-  - Extremely subtle brightness enhancement
-  - "Air" and spaciousness in stereo mixes
-
-**Interaction Notes:** Shelf filters at high frequencies create a gentle brightness adjustment that becomes progressively more subtle as the shelf frequency increases above 10 kHz.
-
-***
-
-## Parameter E: High Shelf Gain
-
-**UI Label:** High Shelf Gain
-
-**Function:** Boosts or cuts the high-shelf frequency region and above.
-
-**Recommended Range:** -∞ dB to +18 dB
-
-**Sound Character:**
-
-**Cutting:**
-- **-1 to -3 dB:** Subtle de-brightening, reducing harshness
-- **-4 to -8 dB:** Noticeable darkening, de-essing effect
-- **-10 dB and below:** Aggressive darkening, vintage/warm character
-
-**Boosting:**
-- **+1 to +3 dB:** Adding subtle brightness and air
-- **+4 to +8 dB:** Noticeable brightness enhancement, increased presence
-- **+10 dB and above:** Aggressive brightening, potential for harshness
+- **+1 to +3:** Subtle warmth and body, gentle low-end enhancement
+- **+4 to +6:** Noticeable bass boost, increased weight and warmth
+- **+7 to +9:** Strong bass enhancement, substantial low-end power
+- **+10:** Extreme bass boost (watch for muddiness and speaker stress)
 
 **Typical Values:**
-- Vocal brightness: +1 to +4 dB around 5-8 kHz
-- Mix bus air/clarity: +1 to +2 dB around 10-15 kHz
-- De-essing (cutting): -2 to -6 dB around 6-10 kHz
-- Brightness enhancement: +2 to +5 dB around 4-8 kHz
-- Vintage warmth (cutting): -3 to -8 dB around 8-12 kHz
 
-***
+- **Mix bus warmth:** +0.5 to +2 - adds subtle fullness without mud
+- **Kick drum body:** +4 to +6 - enhances fundamental and punch
+- **Bass guitar warmth:** +2 to +5 - increases presence and weight
+- **Vocal body/chest:** +2 to +4 - adds warmth without muddiness
+- **Rumble removal:** -3 to -5 - cleans up excessive low end
+- **Thin/clear mix:** -2 to -4 - reduces muddiness and boxiness
+- **808 bass boost:** +5 to +8 - hip-hop/electronic bass power
+- **Acoustic guitar cut:** -2 to -4 - removes boominess
 
-## Parameter F: High Shelf Q
+---
 
-**UI Label:** High Shelf Q
+## Baxandall Design Characteristics
 
-**Function:** Controls the transition curve of the high-shelf filter from gradual to steep.
+**Key Features:**
 
-**Recommended Range:** 0.0 to 1.0
+1. **Automatic Frequency Tracking:**
 
-**Sound Character:**
+   - Frequencies adjust automatically based on gain for musical behavior
+   - High Shelf: Higher frequency when boosting (natural air enhancement)
+   - Low Shelf: Lower frequency when boosting (focused low-end power)
 
-**Low Q (0.0-0.3):**
-- Gentle, gradual transition affecting a wide frequency range
-- Natural, musical brightness adjustments
-- Use for: General air adjustments, transparent high-end shaping
+2. **Fixed Q Values:**
 
-**Medium Q (0.4-0.6):**
-- Moderate transition slope
-- Balanced between broad and focused
-- Use for: Instrument-specific high-end shaping
+   - High Shelf Q = 0.4 (moderate gentleness)
+   - Low Shelf Q = 0.2 (very gentle, broad)
+   - No resonant peaks at corner frequencies
+   - Smooth, musical transitions
 
-**High Q (0.7-1.0):**
-- Steeper transition with more focused effect
-- More concentrated around the shelf frequency
-- Use for: Precise brightness control and de-essing
+3. **Sample Rate Compensation:**
 
-**Typical Values:**
-- General air/brightness: 0.3-0.5
-- Instrument-specific shaping: 0.4-0.6
-- De-essing (cutting): 0.6-0.8
-- Precise brightness control: 0.7-0.9
+   - All frequencies scale proportionally with sample rate
+   - Maintains consistent character at 44.1k, 48k, 96k, 192k, etc.
 
-***
+4. **Classic Hi-Fi Lineage:**
+   - Based on Peter Baxandall's legendary 1952 tone control circuit
+   - Used in countless vintage hi-fi amplifiers and mixing consoles
+   - Known for extremely musical, non-fatiguing sound
 
-## General Usage Notes
+**What This Is NOT:**
 
-**Shelf vs. Parametric EQ:**
-- Shelves affect all frequencies above (high shelf) or below (low shelf) the cutoff frequency
-- Parametric bands only affect a narrow range around the center frequency
-- Use shelves for broad tonal shaping; use parametrics for targeted problem-solving
+- ❌ Not a parametric EQ with adjustable frequency
+- ❌ Not a constant-Q shelving filter
+- ❌ Not a "modern" transparent EQ
+- ❌ Cannot adjust Q or slope independently
 
-**Typical Workflow:**
-1. Use low shelf for overall bass balance and warmth
-2. Use high shelf for overall brightness and air
-3. Use the parametric band for specific frequency problems or enhancements
-4. Combine for comprehensive tonal shaping from bass to treble
+**What This IS:**
 
-**Integration with Channel Strip:**
-Position Shelves early in the EQ section for broad tonal shaping. The shelves work well before the parametric band, allowing the parametric to handle detailed problem-solving and character adjustments.
+- ✅ A vintage-style tone control with automatic frequency adaptation
+- ✅ Musical, broad tonal shaping tool
+- ✅ Ideal for overall balance and vintage character
+- ✅ Excellent for "set and forget" tone adjustments
+
+---
+
+## Usage Notes
+
+**Best Practices:**
+
+1. **Broad Strokes First:**
+
+   - Use Baxandall for overall tonal balance
+   - Think of it as a "tone shaper" not a "problem solver"
+   - Start with small adjustments (±1-3)
+
+2. **Vintage Character:**
+
+   - Perfect for adding analog warmth (bass boost, treble cut)
+   - Great for "British console" sound (slight bass and treble lift)
+   - Excellent for retro/lo-fi aesthetics
+
+3. **Complementary to Parametric:**
+
+   - Use Baxandall for general balance
+   - Use Parametric EQ for specific problem frequencies
+   - Baxandall + Parametric = comprehensive tonal control
+
+4. **Mix Bus Applications:**
+   - Very gentle adjustments (±0.5-2)
+   - Can add cohesive "glue" and character
+   - Less fatiguing than aggressive parametric EQ
+
+**Common Combinations:**
+
+- **Warm Vintage Mix:** Low Shelf +2, High Shelf -3
+- **Modern Bright Mix:** Low Shelf -1, High Shelf +2
+- **Classic British Console:** Low Shelf +1.5, High Shelf +1
+- **Lo-Fi Character:** Low Shelf +3, High Shelf -6
+- **Clean/Tight Mix:** Low Shelf -2, High Shelf +1

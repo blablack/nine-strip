@@ -18,27 +18,28 @@
 
 **Interaction Notes:** Console type affects how the Drive parameter saturates and clips. Budget consoles (Teac/Mackie) have more aggressive slew clipping with cheaper op-amp characteristics, while large format types (Neve/API/SSL) are more transparent and musical.
 
-***
+---
 
 ## Parameter B: Drive
 
 **UI Label:** Drive
 
-**Function:** Controls saturation intensity through two distinct stages - clean "Spiral" saturation from 0-100%, transitioning to thicker "Density" saturation from 100-200%.
+**Function:** Controls saturation intensity through two distinct stages - clean "Spiral" saturation from 0-5, transitioning to thicker "Density" saturation from 5-10.
 
-**Recommended Range:** 0% to 200%
+**Display Range:** 0 to 10
+
+**Default Value:** 0
 
 **Typical Values:**
 
-- **0-50%:** Subtle analog warmth and glue - use on individual tracks where you want gentle character without obvious saturation
-- **50-100%:** Increasing Spiral saturation - smooth, clean enhancement that doesn't add excessive thickness. Good starting point for vocals, acoustic guitars, mix bus
-- **100-150%:** Blending Spiral and Density - adds body and presence while maintaining clarity. Works well on drums, bass, lead instruments
-- **150-200%:** Full Density mode - maximum thickness and harmonic richness. Use sparingly on individual elements or for aggressive character on synths and drums
+- **0-2.5:** Subtle analog warmth and glue - use on individual tracks where you want gentle character without obvious saturation
+- **2.5-5:** Increasing Spiral saturation - smooth, clean enhancement that doesn't add excessive thickness. Good starting point for vocals, acoustic guitars, mix bus
+- **5-7.5:** Blending Spiral and Density - adds body and presence while maintaining clarity. Works well on drums, bass, lead instruments
+- **7.5-10:** Full Density mode - maximum thickness and harmonic richness. Use sparingly on individual elements or for aggressive character on synths and drums
 
 **Sound Character:**
 
-- **0-100% range:** Crossfades into "Spiral" algorithm - very clean, smooth saturation that enhances without obvious distortion. Lets transients through while adding harmonic content
-- **100-200% range:** Crossfades from Spiral into "Density" - traditional fuller saturation with more obvious harmonic thickness and weight
+- **0-5 range:** Crossfades into "Spiral" algorithm - very clean, smooth saturation that enhances without obvious distortion. Lets transients through while adding harmonic content
+- **5-10 range:** Crossfades from Spiral into "Density" - traditional fuller saturation with more obvious harmonic thickness and weight
 
 **Interaction Notes:** The Drive parameter works in conjunction with Console Type - budget console types (Teac/Mackie) will clip more aggressively at higher Drive settings, while large format types remain more transparent. The internal slew clipping acts like op-amp limitations, naturally controlling transients.
-
