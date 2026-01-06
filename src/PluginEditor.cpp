@@ -8,7 +8,8 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
       inputMeterL([&p]() { return p.getInputLevelL(); }),
       inputMeterR([&p]() { return p.getInputLevelR(); }),
       outputMeterL([&p]() { return p.getOutputLevelL(); }),
-      outputMeterR([&p]() { return p.getOutputLevelR(); })
+      outputMeterR([&p]() { return p.getOutputLevelR(); }),
+      grMeter([&p]() { return p.getGainReduction(); }, VUMeter::MeterType::GainReduction)
 {
     setSize(900, 700);
 
@@ -17,6 +18,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     addAndMakeVisible(inputMeterR);
     addAndMakeVisible(outputMeterL);
     addAndMakeVisible(outputMeterR);
+    addAndMakeVisible(grMeter);
 
     // Master Bypass
     addAndMakeVisible(masterBypassButton);
@@ -307,6 +309,9 @@ void NineStripProcessorEditor::resized()
     outputMeterL.setBounds(855, 50, 20, 510);
     outputMeterR.setBounds(877, 50, 20, 510);
 
+    // Gain Reduction Meter
+    grMeter.setBounds(70, 590, 80, 100);
+
     // Master Bypass
     masterBypassButton.setBounds(10, 10, 80, 30);
 
@@ -348,6 +353,7 @@ void NineStripProcessorEditor::resized()
 
     // Compression Section
     compressorBypassButton.setBounds(770, 465, 60, 25);
+    grMeter.setBounds(345, 485, 30, 70);  // Position near compressor controls
     pressureSlider.setBounds(70, 485, 80, 70);
     speedSlider.setBounds(160, 485, 80, 70);
     mewinessSlider.setBounds(250, 485, 80, 70);

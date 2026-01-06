@@ -8,6 +8,7 @@
 #define __Pressure4_H
 
 #include <cstdint>
+#include <atomic>
 
 class Pressure4
 {
@@ -29,6 +30,7 @@ class Pressure4
     void setParameter(int index, float value);
     float getParameter(int index);
     void setSampleRate(double sr) { sampleRate = sr; }
+    float getGainReduction() const { return currentGainReduction; }
 
    private:
     double sampleRate;
@@ -48,6 +50,8 @@ class Pressure4
     float B;
     float C;  // parameters. Always 0-1, and we scale/alter them elsewhere.
     float D;
+
+    std::atomic<float> currentGainReduction{1.0f};  // 1.0 = no reduction, <1.0 = reduction
 };
 
 #endif

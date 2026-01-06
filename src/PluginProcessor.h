@@ -30,6 +30,7 @@ class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProce
     float getInputLevelR() const { return inputLevelR.load(); }
     float getOutputLevelL() const { return outputLevelL.load(); }
     float getOutputLevelR() const { return outputLevelR.load(); }
+    float getGainReduction() const { return gainReduction.load(); }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
@@ -74,10 +75,12 @@ class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProce
     Parametric parametric;
     Pressure4 pressure4;
 
+    // Level meters
     std::atomic<float> inputLevelL{-60.0f};
     std::atomic<float> inputLevelR{-60.0f};
     std::atomic<float> outputLevelL{-60.0f};
     std::atomic<float> outputLevelR{-60.0f};
+    std::atomic<float> gainReduction{0.0f};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NineStripProcessor)
 };

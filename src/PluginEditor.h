@@ -20,6 +20,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor
     // VU Meters
     VUMeter inputMeterL, inputMeterR;
     VUMeter outputMeterL, outputMeterR;
+    VUMeter grMeter;
 
     // Gain Section
     juce::Slider inputGainSlider;

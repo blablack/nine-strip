@@ -518,7 +518,28 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
 
     if (!compressorBypass)
     {
+        // Measure level before compression
+        float preCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        float preCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        float preCompLevel = std::max(preCompL, preCompR);
+        
         pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+        
+        // Measure level after compression
+        float postCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        float postCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        float postCompLevel = std::max(postCompL, postCompR);
+        
+        // Calculate gain reduction in dB
+        if (getActiveEditor() != nullptr && preCompLevel > 0.000001f && postCompLevel > 0.000001f)
+        {
+            float grDb = juce::Decibels::gainToDecibels(postCompLevel / preCompLevel);
+            gainReduction.store(std::min(grDb, 0.0f)); // Negative values for reduction
+        }
+    }
+    else if (getActiveEditor() != nullptr)
+    {
+        gainReduction.store(0.0f);
     }
 
     // Apply output gain
@@ -599,6 +620,19 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::M
     if (!compressorBypass)
     {
         pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        
+        // Get gain reduction from Pressure4
+        if (getActiveEditor() != nullptr) 
+        {
+            float grCoeff = pressure4.getGainReduction();
+            // Convert coefficient to dB (coefficient <= 1.0, so result will be <= 0 dB)
+            float grDb = juce::Decibels::gainToDecibels(grCoeff);
+            gainReduction.store(grDb);
+        }
+    }
+    else if (getActiveEditor() != nullptr)
+    {
+        gainReduction.store(0.0f);
     }
 
     // Apply output gain

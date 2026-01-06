@@ -127,6 +127,9 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             coefficient = (coefficient * mewiness) + (muCoefficientA * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
+            
+            // Store the gain reduction coefficient
+            currentGainReduction.store((float)coefficient);
         }
         else
         {
@@ -137,6 +140,9 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             coefficient = (coefficient * mewiness) + (muCoefficientB * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
+            
+            // Store the gain reduction coefficient
+            currentGainReduction.store((float)coefficient);
         }
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
@@ -323,6 +329,9 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             coefficient = (coefficient * mewiness) + (muCoefficientA * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
+            
+            // Store the gain reduction coefficient
+            currentGainReduction.store((float)coefficient);
         }
         else
         {
@@ -333,6 +342,9 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             coefficient = (coefficient * mewiness) + (muCoefficientB * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
+            
+            // Store the gain reduction coefficient
+            currentGainReduction.store((float)coefficient);
         }
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound

@@ -6,7 +6,13 @@
 class VUMeter : public juce::Component, private juce::Timer
 {
    public:
-    VUMeter(std::function<float()> levelGetter);
+    enum class MeterType
+    {
+        Level,
+        GainReduction
+    };
+
+    VUMeter(std::function<float()> levelGetter, MeterType type = MeterType::Level);
 
     void paint(juce::Graphics& g) override;
     void timerCallback() override;
@@ -14,4 +20,5 @@ class VUMeter : public juce::Component, private juce::Timer
    private:
     std::function<float()> getLevelFunc;
     float currentLevel = -60.0f;
+    MeterType meterType;
 };
