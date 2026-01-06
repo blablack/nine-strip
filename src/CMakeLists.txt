@@ -69,6 +69,7 @@ add_subdirectory(airwindows)
 target_sources(NineStrip PRIVATE
     PluginEditor.cpp
     PluginProcessor.cpp
+    VUMeter.cpp
 )
 
 target_link_libraries(NineStrip PUBLIC

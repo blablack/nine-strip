@@ -31,7 +31,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     inputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
                                                                                                  "inputGain", inputGainSlider);
     addAndMakeVisible(inputGainLabel);
-    inputGainLabel.setText("INPUT", juce::dontSendNotification);
+    inputGainLabel.setText("Input Gain", juce::dontSendNotification);
     inputGainLabel.attachToComponent(&inputGainSlider, false);
     inputGainLabel.setJustificationType(juce::Justification::centredTop);
 
@@ -42,8 +42,8 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     outputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.apvts, "outputGain", outputGainSlider);
     addAndMakeVisible(outputGainLabel);
-    outputGainLabel.setText("OUTPUT", juce::dontSendNotification);
-    outputGainLabel.attachToComponent(&outputGainSlider, false);
+    outputGainLabel.setText("Output Gain", juce::dontSendNotification);
+    inputGainLabel.attachToComponent(&outputGainSlider, false);
     outputGainLabel.setJustificationType(juce::Justification::centredTop);
 
     // Section Bypasses
@@ -68,7 +68,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.apvts, "consoleType", consoleTypeCombo);
     addAndMakeVisible(consoleTypeLabel);
-    consoleTypeLabel.setText("Console", juce::dontSendNotification);
+    consoleTypeLabel.setText("Console Type", juce::dontSendNotification);
     consoleTypeLabel.attachToComponent(&consoleTypeCombo, false);
 
     // Drive
@@ -88,7 +88,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hipassAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hipass", hipassSlider);
     addAndMakeVisible(hipassLabel);
-    hipassLabel.setText("HP Freq", juce::dontSendNotification);
+    hipassLabel.setText("Hipass", juce::dontSendNotification);
     hipassLabel.attachToComponent(&hipassSlider, false);
 
     addAndMakeVisible(hpPolesSlider);
@@ -97,7 +97,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hpPolesAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hp_poles", hpPolesSlider);
     addAndMakeVisible(hpPolesLabel);
-    hpPolesLabel.setText("HP Poles", juce::dontSendNotification);
+    hpPolesLabel.setText("HP Slope", juce::dontSendNotification);
     hpPolesLabel.attachToComponent(&hpPolesSlider, false);
 
     addAndMakeVisible(hpLsTiteSlider);
@@ -116,7 +116,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     lowpassAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "lowpass", lowpassSlider);
     addAndMakeVisible(lowpassLabel);
-    lowpassLabel.setText("LP Freq", juce::dontSendNotification);
+    lowpassLabel.setText("Lowpass", juce::dontSendNotification);
     lowpassLabel.attachToComponent(&lowpassSlider, false);
 
     addAndMakeVisible(lpPolesSlider);
@@ -125,7 +125,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     lpPolesAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "lp_poles", lpPolesSlider);
     addAndMakeVisible(lpPolesLabel);
-    lpPolesLabel.setText("LP Poles", juce::dontSendNotification);
+    lpPolesLabel.setText("LP Slope", juce::dontSendNotification);
     lpPolesLabel.attachToComponent(&lpPolesSlider, false);
 
     addAndMakeVisible(lpSftHrdSlider);
@@ -144,7 +144,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     trebleAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "treble", trebleSlider);
     addAndMakeVisible(trebleLabel);
-    trebleLabel.setText("Treble", juce::dontSendNotification);
+    trebleLabel.setText("High Shelf", juce::dontSendNotification);
     trebleLabel.attachToComponent(&trebleSlider, false);
 
     addAndMakeVisible(bassSlider);
@@ -153,7 +153,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     bassAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "bass", bassSlider);
     addAndMakeVisible(bassLabel);
-    bassLabel.setText("Bass", juce::dontSendNotification);
+    bassLabel.setText("Low Shelf", juce::dontSendNotification);
     bassLabel.attachToComponent(&bassSlider, false);
 
     // Parametric - Treble Band
@@ -193,7 +193,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hmFreqAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hm_freq", hmFreqSlider);
     addAndMakeVisible(hmFreqLabel);
-    hmFreqLabel.setText("HM Freq", juce::dontSendNotification);
+    hmFreqLabel.setText("High-Mid Freq", juce::dontSendNotification);
     hmFreqLabel.attachToComponent(&hmFreqSlider, false);
 
     addAndMakeVisible(hmGainSlider);
@@ -202,7 +202,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hmGainAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "highmid", hmGainSlider);
     addAndMakeVisible(hmGainLabel);
-    hmGainLabel.setText("HM Gain", juce::dontSendNotification);
+    hmGainLabel.setText("High-Mid Gain", juce::dontSendNotification);
     hmGainLabel.attachToComponent(&hmGainSlider, false);
 
     addAndMakeVisible(hmResoSlider);
@@ -211,7 +211,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hmResoAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hm_reso", hmResoSlider);
     addAndMakeVisible(hmResoLabel);
-    hmResoLabel.setText("HM Q", juce::dontSendNotification);
+    hmResoLabel.setText("High-Mid Reso", juce::dontSendNotification);
     hmResoLabel.attachToComponent(&hmResoSlider, false);
 
     // Parametric - Low-Mid Band
