@@ -143,16 +143,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 
     // Input gain - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "inputGain", "Input Gain", 
-        juce::NormalisableRange<float>(-24.0f, 24.0f), 
-        0.0f,
+        "inputGain", "Input Gain", juce::NormalisableRange<float>(-24.0f, 24.0f), 0.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value / 24.0f) * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() / 10.0f) * 24.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value / 24.0f) * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() / 10.0f) * 24.0f; })));
 
     // Channel9
     layout.add(std::make_unique<juce::AudioParameterChoice>("consoleType", "Console Type",
@@ -160,119 +154,65 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 
     // Drive - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "drive", "Drive", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.0f,
+        "drive", "Drive", juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // Lowpass2 - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "lowpass", "Lowpass", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        1.0f,
+        "lowpass", "Lowpass", juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // LP Soft/Hard - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "lp_sft_hrd", "LP Soft/Hard", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "lp_sft_hrd", "LP Soft/Hard", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value * 20.0f) - 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() + 10.0f) / 20.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     // LP Poles - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "lp_poles", "LP Slope", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.25f,
+        "lp_poles", "LP Slope", juce::NormalisableRange<float>(0.0f, 1.0f), 0.25f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // Highpass2 - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "hipass", "Hipass", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.0f,
+        "hipass", "Hipass", juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // HP Ls/Tite - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "ls_tite", "HP Ls/Tite", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "ls_tite", "HP Ls/Tite", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value * 20.0f) - 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() + 10.0f) / 20.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     // HP Poles - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "hp_poles", "HP Slope", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.25f,
+        "hp_poles", "HP Slope", juce::NormalisableRange<float>(0.0f, 1.0f), 0.25f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // Baxandall2 - display as -10 to +10 (Pultec-style)
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "treble", "High Shelf", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "treble", "High Shelf", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value * 20.0f) - 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() + 10.0f) / 20.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "bass", "Low Shelf", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "bass", "Low Shelf", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value * 20.0f) - 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() + 10.0f) / 20.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     // Parametric - display as 0-10
     // layout.add(std::make_unique<juce::AudioParameterFloat>("tr_freq", "Tr Freq", 0.0f, 1.0f, 0.5f));
@@ -280,40 +220,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
     // layout.add(std::make_unique<juce::AudioParameterFloat>("tr_reso", "Tr Reso", 0.0f, 1.0f, 0.5f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "hm_freq", "High-Mid Freq", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "hm_freq", "High-Mid Freq", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "highmid", "High-Mid Gain", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "highmid", "High-Mid Gain", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-        .withStringFromValueFunction([](float value, int) { 
-            return juce::String((value * 20.0f) - 10.0f, 1);  
-        })
-        .withValueFromStringFunction([](const juce::String &text) { 
-            return (text.getFloatValue() + 10.0f) / 20.0f; 
-        })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "hm_reso", "High-Mid Reso", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "hm_reso", "High-Mid Q", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // layout.add(std::make_unique<juce::AudioParameterFloat>("lm_freq", "LM Freq", 0.0f, 1.0f, 0.5f));
     // layout.add(std::make_unique<juce::AudioParameterFloat>("lowmid", "LowMid", 0.0f, 1.0f, 0.5f));
@@ -321,54 +243,30 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 
     // Pressure4 - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "pressure", "Pressure", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.0f,
+        "pressure", "Pressure", juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "speed", "Speed", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.2f,
+        "speed", "Speed", juce::NormalisableRange<float>(0.0f, 1.0f), 0.2f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String(value * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return text.getFloatValue() / 10.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
     // Mewiness - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "mewiness", "Mewiness", 
-        juce::NormalisableRange<float>(0.0f, 1.0f), 
-        0.5f,
+        "mewiness", "Mewiness", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value * 20.0f) - 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() + 10.0f) / 20.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
     // Output gain - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "outputGain", "Output Gain", 
-        juce::NormalisableRange<float>(-24.0f, 24.0f), 
-        0.0f,
+        "outputGain", "Output Gain", juce::NormalisableRange<float>(-24.0f, 24.0f), 0.0f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { 
-                return juce::String((value / 24.0f) * 10.0f, 1); 
-            })
-            .withValueFromStringFunction([](const juce::String &text) { 
-                return (text.getFloatValue() / 10.0f) * 24.0f; 
-            })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value / 24.0f) * 10.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() / 10.0f) * 24.0f; })));
 
     // Bypass switches
     layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Bypass", false));
@@ -522,19 +420,19 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         float preCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
         float preCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
         float preCompLevel = std::max(preCompL, preCompR);
-        
+
         pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
-        
+
         // Measure level after compression
         float postCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
         float postCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
         float postCompLevel = std::max(postCompL, postCompR);
-        
+
         // Calculate gain reduction in dB
         if (getActiveEditor() != nullptr && preCompLevel > 0.000001f && postCompLevel > 0.000001f)
         {
             float grDb = juce::Decibels::gainToDecibels(postCompLevel / preCompLevel);
-            gainReduction.store(std::min(grDb, 0.0f)); // Negative values for reduction
+            gainReduction.store(std::min(grDb, 0.0f));  // Negative values for reduction
         }
     }
     else if (getActiveEditor() != nullptr)
@@ -620,9 +518,9 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::M
     if (!compressorBypass)
     {
         pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-        
+
         // Get gain reduction from Pressure4
-        if (getActiveEditor() != nullptr) 
+        if (getActiveEditor() != nullptr)
         {
             float grCoeff = pressure4.getGainReduction();
             // Convert coefficient to dB (coefficient <= 1.0, so result will be <= 0 dB)

@@ -82,9 +82,9 @@
 
 ---
 
-## Parameter F: High Mid Q/Resonance
+## Parameter F: High Mid Q
 
-**UI Label:** High-Mid Reso
+**UI Label:** High-Mid Q
 
 **Function:** Controls the bandwidth of the high-mid band from wide/gentle to narrow/surgical.
 

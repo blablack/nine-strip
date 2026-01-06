@@ -213,7 +213,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     hmResoAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hm_reso", hmResoSlider);
     addAndMakeVisible(hmResoLabel);
-    hmResoLabel.setText("High-Mid Reso", juce::dontSendNotification);
+    hmResoLabel.setText("High-Mid Q", juce::dontSendNotification);
     hmResoLabel.attachToComponent(&hmResoSlider, false);
 
     // Parametric - Low-Mid Band
