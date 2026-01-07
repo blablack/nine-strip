@@ -14,6 +14,10 @@ NineStripProcessor::NineStripProcessor()
       parametric(44100.0),
       pressure4(44100.0)
 {
+    presetManager = std::make_unique<PresetManager>(apvts);
+
+    apvts.state.addListener(this);
+
     // Add parameter listeners for all AirWindows plugin parameters
     // Channel9
     apvts.addParameterListener("consoleType", this);
@@ -52,6 +56,8 @@ NineStripProcessor::NineStripProcessor()
 
 NineStripProcessor::~NineStripProcessor()
 {
+    apvts.state.removeListener(this);
+
     // Remove all parameter listeners
     apvts.removeParameterListener("consoleType", this);
     apvts.removeParameterListener("drive", this);
@@ -134,6 +140,17 @@ void NineStripProcessor::parameterChanged(const juce::String &parameterID, float
         pressure4.setParameter(Pressure4::kParamB, newValue);
     else if (parameterID == "mewiness")
         pressure4.setParameter(Pressure4::kParamC, newValue);
+}
+
+void NineStripProcessor::valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &)
+{
+    if (presetManager)
+    {
+        presetManager->markAsModified();
+
+        // Notify editor to update display
+        if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetDisplay();
+    }
 }
 
 //==============================================================================
@@ -288,7 +305,7 @@ double NineStripProcessor::getTailLengthSeconds() const { return 0.0; }
 int NineStripProcessor::getNumPrograms() { return 1; }
 int NineStripProcessor::getCurrentProgram() { return 0; }
 void NineStripProcessor::setCurrentProgram(int index) {}
-const juce::String NineStripProcessor::getProgramName(int index) { return {}; }
+const juce::String NineStripProcessor::getProgramName(int /*index*/) { return {}; }
 void NineStripProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
@@ -353,7 +370,7 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() &&
            layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
 }
-void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages)
+void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer & /*midiMessages*/)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -454,7 +471,7 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     }
 }
 
-void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &midiMessages)
+void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer & /*midiMessages*/)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -487,12 +504,12 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::M
 
     if (getActiveEditor() != nullptr)
     {
-        float inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        inL = std::max(inL, 0.000001f);  // Floor at -120 dB
-        inR = std::max(inR, 0.000001f);
-        inputLevelL.store(juce::Decibels::gainToDecibels(inL, -60.0f));
-        inputLevelR.store(juce::Decibels::gainToDecibels(inR, -60.0f));
+        double inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        double inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        inL = std::max(inL, 0.000001);  // Floor at -120 dB
+        inR = std::max(inR, 0.000001);
+        inputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
+        inputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
     }
 
     // Create raw pointer arrays for Airwindows processing
@@ -538,12 +555,12 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::M
 
     if (getActiveEditor() != nullptr)
     {
-        float outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        outL = std::max(outL, 0.000001f);
-        outR = std::max(outR, 0.000001f);
-        outputLevelL.store(juce::Decibels::gainToDecibels(outL, -60.0f));
-        outputLevelR.store(juce::Decibels::gainToDecibels(outR, -60.0f));
+        double outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        double outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+        outL = std::max(outL, 0.000001);
+        outR = std::max(outR, 0.000001);
+        outputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
+        outputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
     }
 }
 
@@ -556,6 +573,11 @@ juce::AudioProcessorEditor *NineStripProcessor::createEditor() { return new Nine
 void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     auto state = apvts.copyState();
+
+    // Add current preset name to the state
+    auto presetName = presetManager->getCurrentPreset();
+    if (!presetName.isEmpty()) state.setProperty("currentPreset", presetName, nullptr);
+
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -563,8 +585,24 @@ void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData)
 void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName(apvts.state.getType())) apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
+    if (xmlState != nullptr)
+    {
+        if (xmlState->hasTagName(apvts.state.getType()))
+        {
+            auto valueTree = juce::ValueTree::fromXml(*xmlState);
+            apvts.replaceState(valueTree);
+
+            // Restore preset name
+            if (valueTree.hasProperty("currentPreset"))
+            {
+                auto presetName = valueTree.getProperty("currentPreset").toString();
+                presetManager->loadPreset(presetName);
+
+                // Notify editor to update UI
+                if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetComboBox();
+            }
+        }
+    }
 }
 
 //==============================================================================

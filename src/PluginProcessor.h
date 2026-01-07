@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 
+#include "PresetManager.h"
 #include "airwindows/Baxandall2.h"
 #include "airwindows/Channel9.h"
 #include "airwindows/Highpass2.h"
@@ -12,7 +13,9 @@
 //==============================================================================
 /**
  */
-class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProcessorValueTreeState::Listener
+class NineStripProcessor : public juce::AudioProcessor,
+                           private juce::AudioProcessorValueTreeState::Listener,
+                           private juce::ValueTree::Listener
 {
    public:
     //==============================================================================
@@ -32,9 +35,9 @@ class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProce
     float getOutputLevelR() const { return outputLevelR.load(); }
     float getGainReduction() const { return gainReduction.load(); }
 
-#ifndef JucePlugin_PreferredChannelConfigurations
+    PresetManager &getPresetManager() { return *presetManager; }
+
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
-#endif
 
     void processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) override;
     void processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &midiMessages) override;
@@ -67,6 +70,9 @@ class NineStripProcessor : public juce::AudioProcessor, private juce::AudioProce
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     void parameterChanged(const juce::String &parameterID, float newValue) override;
+    void valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &) override;
+
+    std::unique_ptr<PresetManager> presetManager;
 
     Channel9 channel9;
     Highpass2 highpass2;

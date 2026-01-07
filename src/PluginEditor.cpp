@@ -273,6 +273,30 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     addAndMakeVisible(mewinessLabel);
     mewinessLabel.setText("Mewiness", juce::dontSendNotification);
     mewinessLabel.attachToComponent(&mewinessSlider, false);
+
+    // Preset Manager
+    addAndMakeVisible(presetComboBox);
+    presetComboBox.setTextWhenNothingSelected("No Preset Selected");
+    presetComboBox.addListener(this);
+
+    addAndMakeVisible(savePresetButton);
+    savePresetButton.setButtonText("Save");
+    savePresetButton.addListener(this);
+
+    addAndMakeVisible(deletePresetButton);
+    deletePresetButton.setButtonText("Delete");
+    deletePresetButton.addListener(this);
+
+    addAndMakeVisible(previousPresetButton);
+    previousPresetButton.setButtonText("<");
+    previousPresetButton.addListener(this);
+
+    addAndMakeVisible(nextPresetButton);
+    nextPresetButton.setButtonText(">");
+    nextPresetButton.addListener(this);
+
+    // Populate the preset list
+    updatePresetComboBox();
 }
 
 NineStripProcessorEditor::~NineStripProcessorEditor() {}
@@ -297,9 +321,120 @@ void NineStripProcessorEditor::paint(juce::Graphics& g)
     g.drawText("COMPRESSION", 60, 440, 100, 20, juce::Justification::centredLeft);
 }
 
+void NineStripProcessorEditor::updatePresetComboBox()
+{
+    presetComboBox.clear(juce::dontSendNotification);
+
+    auto& presetManager = audioProcessor.getPresetManager();
+    auto presets = presetManager.getAllPresets();
+
+    int itemId = 1;
+    for (const auto& preset : presets)
+    {
+        presetComboBox.addItem(preset, itemId++);
+    }
+
+    // Select current preset and show asterisk if modified
+    auto currentPreset = presetManager.getCurrentPreset();
+    if (!currentPreset.isEmpty())
+    {
+        int index = presets.indexOf(currentPreset);
+        if (index >= 0)
+        {
+            presetComboBox.setSelectedId(index + 1, juce::dontSendNotification);
+
+            // Add asterisk if modified
+            if (presetManager.isPresetModified()) presetComboBox.setText(currentPreset + " *", juce::dontSendNotification);
+        }
+    }
+}
+
+void NineStripProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+{
+    if (comboBoxThatHasChanged == &presetComboBox)
+    {
+        auto selectedText = presetComboBox.getText();
+        if (!selectedText.isEmpty())
+        {
+            audioProcessor.getPresetManager().loadPreset(selectedText);
+        }
+    }
+}
+
+void NineStripProcessorEditor::updatePresetDisplay()
+{
+    auto& presetManager = audioProcessor.getPresetManager();
+    auto currentPreset = presetManager.getCurrentPreset();
+
+    if (!currentPreset.isEmpty())
+    {
+        auto displayText = presetManager.isPresetModified() ? currentPreset + " *" : currentPreset;
+
+        // Only update if text actually changed
+        if (presetComboBox.getText() != displayText) presetComboBox.setText(displayText, juce::dontSendNotification);
+    }
+}
+
+void NineStripProcessorEditor::buttonClicked(juce::Button* button)
+{
+    auto& presetManager = audioProcessor.getPresetManager();
+
+    if (button == &savePresetButton)
+    {
+        auto* alert = new juce::AlertWindow("Save Preset", "Enter preset name:", juce::AlertWindow::NoIcon);
+
+        alert->addTextEditor("presetName", "", "Preset Name:");
+        alert->addButton("OK", 1);
+        alert->addButton("Cancel", 0);
+
+        alert->enterModalState(true,
+                               juce::ModalCallbackFunction::create(
+                                   [this, alert](int result)
+                                   {
+                                       if (result == 1)
+                                       {
+                                           auto presetName = alert->getTextEditorContents("presetName");
+                                           if (!presetName.isEmpty())
+                                           {
+                                               audioProcessor.getPresetManager().savePreset(presetName);
+                                               updatePresetComboBox();
+                                           }
+                                       }
+                                       delete alert;
+                                   }),
+                               true);
+    }
+    else if (button == &deletePresetButton)
+    {
+        auto currentPreset = presetManager.getCurrentPreset();
+        if (!currentPreset.isEmpty())
+        {
+            presetManager.deletePreset(currentPreset);
+            updatePresetComboBox();
+        }
+    }
+    else if (button == &previousPresetButton)
+    {
+        presetManager.loadPreviousPreset();
+        updatePresetComboBox();
+    }
+    else if (button == &nextPresetButton)
+    {
+        presetManager.loadNextPreset();
+        updatePresetComboBox();
+    }
+}
+
 void NineStripProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
+
+    // Preset Management
+    previousPresetButton.setBounds(110, 10, 30, 30);
+    presetComboBox.setBounds(145, 10, 200, 30);
+    nextPresetButton.setBounds(350, 10, 30, 30);
+    savePresetButton.setBounds(390, 10, 60, 30);
+    deletePresetButton.setBounds(455, 10, 60, 30);
 
     // VU Meters - Left side
     inputMeterL.setBounds(10, 50, 20, 510);

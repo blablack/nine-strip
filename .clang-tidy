@@ -11,7 +11,8 @@ Checks: "clang-diagnostic-*,\
   -readability-magic-numbers,\
   -cppcoreguidelines-avoid-magic-numbers,\
   -readability-uppercase-literal-suffix,\
-  -cppcoreguidelines-owning-memory"
+  -cppcoreguidelines-owning-memory,\
+  -google-readability-braces-around-statements,\
+  -readability-braces-around-statements"
 
 HeaderFilterRegex: '**/Source/*\.(hpp|h)'
-

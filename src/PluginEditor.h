@@ -5,7 +5,9 @@
 #include "PluginProcessor.h"
 #include "VUMeter.h"
 
-class NineStripProcessorEditor : public juce::AudioProcessorEditor
+class NineStripProcessorEditor : public juce::AudioProcessorEditor,
+                                 public juce::ComboBox::Listener,
+                                 public juce::Button::Listener
 {
    public:
     NineStripProcessorEditor(NineStripProcessor&);
@@ -13,6 +15,9 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor
 
     void paint(juce::Graphics&) override;
     void resized() override;
+
+    void updatePresetDisplay();
+    void updatePresetComboBox();
 
    private:
     NineStripProcessor& audioProcessor;
@@ -91,6 +96,16 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor
     juce::Label pressureLabel, speedLabel, mewinessLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
         mewinessAttachment;
+
+    // Preset Management
+    juce::ComboBox presetComboBox;
+    juce::TextButton savePresetButton;
+    juce::TextButton deletePresetButton;
+    juce::TextButton previousPresetButton;
+    juce::TextButton nextPresetButton;
+
+    void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
+    void buttonClicked(juce::Button* button) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NineStripProcessorEditor)
 };
