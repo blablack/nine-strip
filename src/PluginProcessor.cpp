@@ -17,70 +17,42 @@ NineStripProcessor::NineStripProcessor()
     presetManager = std::make_unique<PresetManager>(apvts);
 
     apvts.state.addListener(this);
+    setupParameterListeners();
 
-    // Add parameter listeners for all AirWindows plugin parameters
-    // Channel9
-    apvts.addParameterListener("consoleType", this);
-    apvts.addParameterListener("drive", this);
-
-    // Highpass2
-    apvts.addParameterListener("hipass", this);
-    apvts.addParameterListener("ls_tite", this);
-    apvts.addParameterListener("hp_poles", this);
-
-    // Lowpass2
-    apvts.addParameterListener("lowpass", this);
-    apvts.addParameterListener("lp_sft_hrd", this);
-    apvts.addParameterListener("lp_poles", this);
-
-    // Baxandall2
-    apvts.addParameterListener("treble", this);
-    apvts.addParameterListener("bass", this);
-
-    // Parametric
-    // apvts.addParameterListener("tr_freq", this);
-    // apvts.addParameterListener("treble_param", this);
-    // apvts.addParameterListener("tr_reso", this);
-    apvts.addParameterListener("hm_freq", this);
-    apvts.addParameterListener("highmid", this);
-    apvts.addParameterListener("hm_reso", this);
-    // apvts.addParameterListener("lm_freq", this);
-    // apvts.addParameterListener("lowmid", this);
-    // apvts.addParameterListener("lm_reso", this);
-
-    // Pressure4
-    apvts.addParameterListener("pressure", this);
-    apvts.addParameterListener("speed", this);
-    apvts.addParameterListener("mewiness", this);
+    meterUpdateCounter = 0;
 }
 
 NineStripProcessor::~NineStripProcessor()
 {
     apvts.state.removeListener(this);
+    removeParameterListeners();
+}
 
-    // Remove all parameter listeners
-    apvts.removeParameterListener("consoleType", this);
-    apvts.removeParameterListener("drive", this);
-    apvts.removeParameterListener("hipass", this);
-    apvts.removeParameterListener("ls_tite", this);
-    apvts.removeParameterListener("hp_poles", this);
-    apvts.removeParameterListener("lowpass", this);
-    apvts.removeParameterListener("lp_sft_hrd", this);
-    apvts.removeParameterListener("lp_poles", this);
-    apvts.removeParameterListener("treble", this);
-    apvts.removeParameterListener("bass", this);
-    // apvts.removeParameterListener("tr_freq", this);
-    // apvts.removeParameterListener("treble_param", this);
-    // apvts.removeParameterListener("tr_reso", this);
-    apvts.removeParameterListener("hm_freq", this);
-    apvts.removeParameterListener("highmid", this);
-    apvts.removeParameterListener("hm_reso", this);
-    // apvts.removeParameterListener("lm_freq", this);
-    // apvts.removeParameterListener("lowmid", this);
-    // apvts.removeParameterListener("lm_reso", this);
-    apvts.removeParameterListener("pressure", this);
-    apvts.removeParameterListener("speed", this);
-    apvts.removeParameterListener("mewiness", this);
+void NineStripProcessor::setupParameterListeners()
+{
+    /*
+        tr_freq
+        treble_param
+        tr_reso
+        lm_freq
+        lowmid
+        lm_reso
+    */
+
+    const std::vector<juce::String> parameterIDs = {"consoleType", "drive",    "hipass", "ls_tite", "hp_poles", "lowpass",
+                                                    "lp_sft_hrd",  "lp_poles", "treble", "bass",    "hm_freq",  "highmid",
+                                                    "hm_reso",     "pressure", "speed",  "mewiness"};
+
+    for (const auto &id : parameterIDs) apvts.addParameterListener(id, this);
+}
+
+void NineStripProcessor::removeParameterListeners()
+{
+    const std::vector<juce::String> parameterIDs = {"consoleType", "drive",    "hipass", "ls_tite", "hp_poles", "lowpass",
+                                                    "lp_sft_hrd",  "lp_poles", "treble", "bass",    "hm_freq",  "highmid",
+                                                    "hm_reso",     "pressure", "speed",  "mewiness"};
+
+    for (const auto &id : parameterIDs) apvts.removeParameterListener(id, this);
 }
 
 void NineStripProcessor::parameterChanged(const juce::String &parameterID, float newValue)
@@ -370,13 +342,14 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() &&
            layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
 }
-void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer & /*midiMessages*/)
+
+template <typename SampleType>
+void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buffer)
 {
     juce::ScopedNoDenormals noDenormals;
 
     // Master bypass - skip all processing
-    bool masterBypassed = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
-    if (masterBypassed)
+    if (apvts.getRawParameterValue("masterBypass")->load() > 0.5f)
     {
         if (getActiveEditor() != nullptr)
         {
@@ -389,11 +362,6 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         return;  // Early exit, pass audio through untouched
     }
 
-    // Get section bypass states
-    bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
-    bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
-    bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
-
     // Get gain values
     float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
     float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
@@ -401,54 +369,64 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     // Apply input gain
     buffer.applyGain(inputGainLinear);
 
-    if (getActiveEditor() != nullptr)
+    if (getActiveEditor() != nullptr && !isNonRealtime())
     {
-        float inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        inL = std::max(inL, 0.000001f);  // Floor at -120 dB
-        inR = std::max(inR, 0.000001f);
-        inputLevelL.store(juce::Decibels::gainToDecibels(inL, -60.0f));
-        inputLevelR.store(juce::Decibels::gainToDecibels(inR, -60.0f));
+        meterUpdateCounter++;
+
+        if (meterUpdateCounter >= 4)
+        {
+            auto inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+            auto inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+            inL = std::max<SampleType>(inL, 0.000001);
+            inR = std::max<SampleType>(inR, 0.000001);
+            inputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
+            inputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
+        }
     }
 
     // Create raw pointer arrays for Airwindows processing
-    float *channelData[2] = {
-        buffer.getWritePointer(0),  // Left
-        buffer.getWritePointer(1)   // Right
-    };
+    SampleType *channelData[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
 
     // Process through the plugin chain
-    if (!saturationBypass)
+    if (apvts.getRawParameterValue("saturationBypass")->load() < 0.5f)
     {
-        channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
+        if constexpr (std::is_same_v<SampleType, float>)
+            channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
+        else
+            channel9.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
     }
 
-    if (!eqBypass)
+    if (apvts.getRawParameterValue("eqBypass")->load() < 0.5f)
     {
-        highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-        lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-        baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
-        parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
-    }
-
-    if (!compressorBypass)
-    {
-        // Measure level before compression
-        float preCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float preCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        float preCompLevel = std::max(preCompL, preCompR);
-
-        pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
-
-        // Measure level after compression
-        float postCompL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float postCompR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        float postCompLevel = std::max(postCompL, postCompR);
-
-        // Calculate gain reduction in dB
-        if (getActiveEditor() != nullptr && preCompLevel > 0.000001f && postCompLevel > 0.000001f)
+        if constexpr (std::is_same_v<SampleType, float>)
         {
-            float grDb = juce::Decibels::gainToDecibels(postCompLevel / preCompLevel);
+            highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+            lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+            baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
+            parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+        else
+        {
+            highpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            lowpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            baxandall2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            parametric.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+    }
+
+    if (apvts.getRawParameterValue("compressorBypass")->load() < 0.5f)
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+        {
+            pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+        else
+        {
+            pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+        if (getActiveEditor() != nullptr)
+        {
+            float grDb = juce::Decibels::gainToDecibels(pressure4.getGainReduction());
             gainReduction.store(std::min(grDb, 0.0f));  // Negative values for reduction
         }
     }
@@ -460,109 +438,24 @@ void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     // Apply output gain
     buffer.applyGain(outputGainLinear);
 
-    if (getActiveEditor() != nullptr)
+    if (getActiveEditor() != nullptr && !isNonRealtime())
     {
-        float outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        outL = std::max(outL, 0.000001f);
-        outR = std::max(outR, 0.000001f);
-        outputLevelL.store(juce::Decibels::gainToDecibels(outL, -60.0f));
-        outputLevelR.store(juce::Decibels::gainToDecibels(outR, -60.0f));
+        if (meterUpdateCounter >= 4)
+        {
+            auto outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+            auto outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
+            outL = std::max<SampleType>(outL, 0.000001);
+            outR = std::max<SampleType>(outR, 0.000001);
+            outputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
+            outputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
+
+            meterUpdateCounter = 0;
+        }
     }
 }
 
-void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer & /*midiMessages*/)
-{
-    juce::ScopedNoDenormals noDenormals;
-
-    // Master bypass - skip all processing
-    bool masterBypassed = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
-    if (masterBypassed)
-    {
-        if (getActiveEditor() != nullptr)
-        {
-            inputLevelL.store(-60.0f);
-            inputLevelR.store(-60.0f);
-            outputLevelL.store(-60.0f);
-            outputLevelR.store(-60.0f);
-        }
-
-        return;  // Early exit, pass audio through untouched
-    }
-
-    // Get section bypass states
-    bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
-    bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
-    bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
-
-    // Get gain values
-    float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
-    float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
-
-    // Apply input gain
-    buffer.applyGain(inputGainLinear);
-
-    if (getActiveEditor() != nullptr)
-    {
-        double inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        double inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        inL = std::max(inL, 0.000001);  // Floor at -120 dB
-        inR = std::max(inR, 0.000001);
-        inputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
-        inputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
-    }
-
-    // Create raw pointer arrays for Airwindows processing
-    double *channelData[2] = {
-        buffer.getWritePointer(0),  // Left
-        buffer.getWritePointer(1)   // Right
-    };
-
-    // Process through the plugin chain
-    if (!saturationBypass)
-    {
-        channel9.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-    }
-
-    if (!eqBypass)
-    {
-        highpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-        lowpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-        baxandall2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-        parametric.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-    }
-
-    if (!compressorBypass)
-    {
-        pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-
-        // Get gain reduction from Pressure4
-        if (getActiveEditor() != nullptr)
-        {
-            float grCoeff = pressure4.getGainReduction();
-            // Convert coefficient to dB (coefficient <= 1.0, so result will be <= 0 dB)
-            float grDb = juce::Decibels::gainToDecibels(grCoeff);
-            gainReduction.store(grDb);
-        }
-    }
-    else if (getActiveEditor() != nullptr)
-    {
-        gainReduction.store(0.0f);
-    }
-
-    // Apply output gain
-    buffer.applyGain(outputGainLinear);
-
-    if (getActiveEditor() != nullptr)
-    {
-        double outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        double outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-        outL = std::max(outL, 0.000001);
-        outR = std::max(outR, 0.000001);
-        outputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
-        outputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
-    }
-}
+void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) { processBlockInternal(buffer); }
+void NineStripProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &) { processBlockInternal(buffer); }
 
 //==============================================================================
 bool NineStripProcessor::hasEditor() const { return true; }

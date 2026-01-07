@@ -67,12 +67,19 @@ class NineStripProcessor : public juce::AudioProcessor,
 
    private:
     //==============================================================================
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-
     void parameterChanged(const juce::String &parameterID, float newValue) override;
     void valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &) override;
 
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void setupParameterListeners();
+    void removeParameterListeners();
+
+    template <typename SampleType>
+    void processBlockInternal(juce::AudioBuffer<SampleType> &buffer);
+
     std::unique_ptr<PresetManager> presetManager;
+
+    std::atomic<int> meterUpdateCounter{0};
 
     Channel9 channel9;
     Highpass2 highpass2;
