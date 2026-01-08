@@ -290,6 +290,8 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*
     parametric.setSampleRate(sampleRate);
     pressure4.setSampleRate(sampleRate);
 
+    dcBlocker.prepare(sampleRate);
+
     channel9.setParameter(Channel9::kParamC, 1.0f);    // output gain
     highpass2.setParameter(Highpass2::kParamD, 1.0f);  // wet/dry
     lowpass2.setParameter(Lowpass2::kParamD, 1.0f);    // wet/dry
@@ -334,7 +336,7 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*
     pressure4.setParameter(Pressure4::kParamC, apvts.getRawParameterValue("mewiness")->load());
 }
 
-void NineStripProcessor::releaseResources() {}
+void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
 
 bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
@@ -412,6 +414,8 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
             baxandall2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
             parametric.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
         }
+
+        dcBlocker.processStereo(channelData, buffer.getNumSamples());
     }
 
     if (apvts.getRawParameterValue("compressorBypass")->load() < 0.5f)

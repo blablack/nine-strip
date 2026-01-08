@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 
+#include "DCBlocker.h"
 #include "PresetManager.h"
 #include "airwindows/Baxandall2.h"
 #include "airwindows/Channel9.h"
@@ -9,6 +10,7 @@
 #include "airwindows/Lowpass2.h"
 #include "airwindows/Parametric.h"
 #include "airwindows/Pressure4.h"
+
 
 //==============================================================================
 /**
@@ -87,6 +89,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     Baxandall2 baxandall2;
     Parametric parametric;
     Pressure4 pressure4;
+    DCBlocker dcBlocker;
 
     // Level meters
     std::atomic<float> inputLevelL{-60.0f};

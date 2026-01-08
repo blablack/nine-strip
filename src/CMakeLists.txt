@@ -71,6 +71,7 @@ target_sources(NineStrip PRIVATE
     PluginProcessor.cpp
     PresetManager.cpp
     VUMeter.cpp
+    DCBlocker.cpp
 )
 
 target_link_libraries(NineStrip PUBLIC
