@@ -23,6 +23,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     NineStripProcessor();
     ~NineStripProcessor() override;
 
+    bool supportsDoublePrecisionProcessing() const override { return true; }
+
     //==============================================================================
     juce::AudioProcessorValueTreeState apvts;
 
