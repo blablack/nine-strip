@@ -11,7 +11,6 @@
 #include "airwindows/Parametric.h"
 #include "airwindows/Pressure4.h"
 
-
 //==============================================================================
 /**
  */
@@ -31,10 +30,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-    float getInputLevelL() const { return inputLevelL.load(); }
-    float getInputLevelR() const { return inputLevelR.load(); }
-    float getOutputLevelL() const { return outputLevelL.load(); }
-    float getOutputLevelR() const { return outputLevelR.load(); }
+    float getMeasuredLevelL() const { return measuredLevelL.load(); }
+    float getMeasuredLevelR() const { return measuredLevelR.load(); }
     float getGainReduction() const { return gainReduction.load(); }
 
     PresetManager &getPresetManager() { return *presetManager; }
@@ -92,10 +89,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     DCBlocker dcBlocker;
 
     // Level meters
-    std::atomic<float> inputLevelL{-60.0f};
-    std::atomic<float> inputLevelR{-60.0f};
-    std::atomic<float> outputLevelL{-60.0f};
-    std::atomic<float> outputLevelR{-60.0f};
+    std::atomic<float> measuredLevelL{-60.0f};
+    std::atomic<float> measuredLevelR{-60.0f};
     std::atomic<float> gainReduction{0.0f};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NineStripProcessor)

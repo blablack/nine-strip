@@ -7,7 +7,8 @@
 
 class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::ComboBox::Listener,
-                                 public juce::Button::Listener
+                                 public juce::Button::Listener,
+                                 public juce::AudioProcessorValueTreeState::Listener
 {
    public:
     NineStripProcessorEditor(NineStripProcessor&);
@@ -15,94 +16,96 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     void paint(juce::Graphics&) override;
     void resized() override;
-
     void updatePresetDisplay();
     void updatePresetComboBox();
+
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
    private:
     NineStripProcessor& audioProcessor;
 
-    // VU Meters
-    VUMeter inputMeterL, inputMeterR;
-    VUMeter outputMeterL, outputMeterR;
-    VUMeter grMeter;
+    juce::ComponentBoundsConstrainer constrainer;
 
-    // Gain Section
-    juce::Slider inputGainSlider;
-    juce::Label inputGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment;
+    // Main layout grid
+    juce::Grid mainGrid;
 
-    juce::Slider outputGainSlider;
-    juce::Label outputGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainAttachment;
-
-    // Bypass Buttons
-    juce::TextButton masterBypassButton{"BYPASS"};
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> masterBypassAttachment;
-
-    juce::TextButton saturationBypassButton{"SAT"};
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
-
-    juce::TextButton eqBypassButton{"EQ"};
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> eqBypassAttachment;
-
-    juce::TextButton compressorBypassButton{"COMP"};
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> compressorBypassAttachment;
-
-    // Channel9 / Saturation
-    juce::ComboBox consoleTypeCombo;
-    juce::Label consoleTypeLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> consoleTypeAttachment;
-
-    juce::Slider driveSlider;
-    juce::Label driveLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
-
-    // Filters
-    juce::Slider hipassSlider, lowpassSlider;
-    juce::Label hipassLabel, lowpassLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hipassAttachment, lowpassAttachment;
-
-    juce::Slider hpPolesSlider, lpPolesSlider;
-    juce::Label hpPolesLabel, lpPolesLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hpPolesAttachment, lpPolesAttachment;
-
-    juce::Slider hpLsTiteSlider, lpSftHrdSlider;
-    juce::Label hpLsTiteLabel, lpSftHrdLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hpLsTiteAttachment, lpSftHrdAttachment;
-
-    // Baxandall EQ
-    juce::Slider trebleSlider, bassSlider;
-    juce::Label trebleLabel, bassLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trebleAttachment, bassAttachment;
-
-    // Parametric EQ
-    // juce::Slider trFreqSlider, trGainSlider, trResoSlider;
-    juce::Slider hmFreqSlider, hmGainSlider, hmResoSlider;
-    // juce::Slider lmFreqSlider, lmGainSlider, lmResoSlider;
-
-    // juce::Label trFreqLabel, trGainLabel, trResoLabel;
-    juce::Label hmFreqLabel, hmGainLabel, hmResoLabel;
-    // juce::Label lmFreqLabel, lmGainLabel, lmResoLabel;
-
-    // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trFreqAttachment, trGainAttachment,
-    // trResoAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hmFreqAttachment, hmGainAttachment, hmResoAttachment;
-    // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lmFreqAttachment, lmGainAttachment,
-    // lmResoAttachment;
-
-    // Compressor
-    juce::Slider pressureSlider, speedSlider, mewinessSlider;
-    juce::Label pressureLabel, speedLabel, mewinessLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
-        mewinessAttachment;
-
-    // Preset Management
+    // Preset Management Panel
+    juce::Component presetPanel;
     juce::ComboBox presetComboBox;
     juce::TextButton savePresetButton;
     juce::TextButton deletePresetButton;
     juce::TextButton previousPresetButton;
     juce::TextButton nextPresetButton;
+
+    // Console & Saturation
+    juce::GroupComponent consoleSatGroup;
+    juce::ComboBox consoleTypeCombo;
+    juce::Slider driveSlider;
+    juce::Label driveLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> consoleTypeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
+    juce::ToggleButton saturationBypassButton{"Byp"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
+
+    // High Pass Filter
+    juce::GroupComponent highPassGroup;
+    juce::Slider hipassSlider, hpLsTiteSlider, hpPolesSlider;
+    juce::Label hipassLabel, hpLsTiteLabel, hpPolesLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hipassAttachment, hpLsTiteAttachment,
+        hpPolesAttachment;
+
+    // Low Pass Filter
+    juce::GroupComponent lowPassGroup;
+    juce::Slider lowpassSlider, lpSftHrdSlider, lpPolesSlider;
+    juce::Label lowpassLabel, lpSftHrdLabel, lpPolesLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowpassAttachment, lpSftHrdAttachment,
+        lpPolesAttachment;
+
+    // High Shelf
+    juce::GroupComponent highShelfGroup;
+    juce::Slider trebleSlider;
+    juce::Label trebleLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trebleAttachment;
+
+    // High-Mid EQ
+    juce::GroupComponent highMidGroup;
+    juce::Slider hmFreqSlider, hmGainSlider, hmResoSlider;
+    juce::Label hmFreqLabel, hmGainLabel, hmResoLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hmFreqAttachment, hmGainAttachment, hmResoAttachment;
+
+    // Low Shelf
+    juce::GroupComponent lowShelfGroup;
+    juce::Slider bassSlider;
+    juce::Label bassLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bassAttachment;
+
+    // EQ Bypass
+    juce::ToggleButton eqBypassButton{"Byp"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> eqBypassAttachment;
+
+    // Compressor
+    juce::GroupComponent compressorGroup;
+    juce::Slider pressureSlider, speedSlider, mewinessSlider;
+    juce::Label pressureLabel, speedLabel, mewinessLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
+        mewinessAttachment;
+    VUMeter grMeter;
+    juce::ToggleButton compressorBypassButton{"Byp"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> compressorBypassAttachment;
+
+    // Meters
+    juce::GroupComponent metersGroup;
+    VUMeter measuredMeterL, measuredMeterR;
+    juce::TextButton vuMeterModeButton{"Input"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;
+
+    // Gain
+    juce::GroupComponent gainGroup;
+    juce::Slider inputGainSlider, outputGainSlider;
+    juce::Label inputGainLabel, outputGainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment, outputGainAttachment;
+    juce::TextButton masterBypassButton{"Bypass"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> masterBypassAttachment;
 
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     void buttonClicked(juce::Button* button) override;

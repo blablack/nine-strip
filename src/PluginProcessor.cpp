@@ -262,6 +262,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
     layout.add(std::make_unique<juce::AudioParameterBool>("saturationBypass", "Saturation Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("compressorBypass", "Compressor Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("inputMeasured", "Input Measured", true));
 
     return layout;
 }
@@ -355,10 +356,8 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     {
         if (getActiveEditor() != nullptr)
         {
-            inputLevelL.store(-60.0f);
-            inputLevelR.store(-60.0f);
-            outputLevelL.store(-60.0f);
-            outputLevelR.store(-60.0f);
+            measuredLevelL.store(-60.0f);
+            measuredLevelR.store(-60.0f);
         }
 
         return;  // Early exit, pass audio through untouched
@@ -371,7 +370,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     // Apply input gain
     buffer.applyGain(inputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime())
+    if (getActiveEditor() != nullptr && !isNonRealtime() && apvts.getRawParameterValue("inputMeasured")->load() > 0.5f)
     {
         meterUpdateCounter++;
 
@@ -381,8 +380,10 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
             auto inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
             inL = std::max<SampleType>(inL, 0.000001);
             inR = std::max<SampleType>(inR, 0.000001);
-            inputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
-            inputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
+            measuredLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
+            measuredLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
+
+            meterUpdateCounter = 0;
         }
     }
 
@@ -442,16 +443,18 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     // Apply output gain
     buffer.applyGain(outputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime())
+    if (getActiveEditor() != nullptr && !isNonRealtime() && apvts.getRawParameterValue("inputMeasured")->load() <= 0.5f)
     {
+        meterUpdateCounter++;
+
         if (meterUpdateCounter >= 4)
         {
             auto outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
             auto outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
             outL = std::max<SampleType>(outL, 0.000001);
             outR = std::max<SampleType>(outR, 0.000001);
-            outputLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
-            outputLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
+            measuredLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
+            measuredLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
 
             meterUpdateCounter = 0;
         }
