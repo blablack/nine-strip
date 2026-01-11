@@ -107,6 +107,34 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::TextButton masterBypassButton{"Bypass"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> masterBypassAttachment;
 
+    void setupPresetPanel();
+    void setupConsoleSection();
+    void setupFiltersSection();
+    void setupEQSection();
+    void setupDynamicsSection();
+    void setupMeters();
+    void setupGain();
+
+    void setupMainGrid(juce::Rectangle<int> bounds);
+    void layoutPresetPanel();
+    void layoutConsoleSection(int bigKnobSize);
+    void layoutFiltersSection(int bigKnobSize, int smallKnobSize);
+    void layoutEQSection(int bigKnobSize, int smallKnobSize);
+    void layoutDynamicsSection(int bigKnobSize, int smallKnobSize);
+    void layoutMeters();
+    void layoutGain();
+
+    void addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label, const juce::String& paramID,
+                       const juce::String& labelText,
+                       std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment);
+
+    void layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft, juce::Label& topLeftLabel,
+                             juce::Slider& topRight, juce::Label& topRightLabel, juce::Slider& bottom, juce::Label& bottomLabel,
+                             int bigKnobSize, int smallKnobSize,
+                             bool centerVertically = true);  // Default to centered
+
+    void layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label, int knobSize);
+
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     void buttonClicked(juce::Button* button) override;
 

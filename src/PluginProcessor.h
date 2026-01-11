@@ -78,7 +78,7 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     std::unique_ptr<PresetManager> presetManager;
 
-    std::atomic<int> meterUpdateCounter{0};
+    int meterUpdateCounter{0};
 
     Channel9 channel9;
     Highpass2 highpass2;

@@ -16,7 +16,19 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     setConstrainer(&constrainer);
     setResizable(false, true);
 
-    // ========== PRESET PANEL ==========
+    setupPresetPanel();
+    setupConsoleSection();
+    setupFiltersSection();
+    setupEQSection();
+    setupDynamicsSection();
+    setupMeters();
+    setupGain();
+
+    updatePresetComboBox();
+}
+
+void NineStripProcessorEditor::setupPresetPanel()
+{
     addAndMakeVisible(presetPanel);
     presetPanel.addAndMakeVisible(presetComboBox);
     presetComboBox.setTextWhenNothingSelected("No Preset Selected");
@@ -37,9 +49,10 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     presetPanel.addAndMakeVisible(deletePresetButton);
     deletePresetButton.setButtonText("Delete");
     deletePresetButton.addListener(this);
+}
 
-    // ========== COLUMN 1: CONSOLE & FILTERS ==========
-    // Console & Saturation
+void NineStripProcessorEditor::setupConsoleSection()
+{
     addAndMakeVisible(consoleSatGroup);
     consoleSatGroup.setText("Console");
     consoleSatGroup.setTextLabelPosition(juce::Justification::centredTop);
@@ -49,182 +62,76 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.apvts, "consoleType", consoleTypeCombo);
 
-    consoleSatGroup.addAndMakeVisible(driveSlider);
-    driveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    driveSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    driveAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "drive", driveSlider);
-    consoleSatGroup.addAndMakeVisible(driveLabel);
-    driveLabel.setText("Drive", juce::dontSendNotification);
-    driveLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", driveAttachment);
 
     consoleSatGroup.addAndMakeVisible(saturationBypassButton);
     saturationBypassButton.setClickingTogglesState(true);
     saturationBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "saturationBypass", saturationBypassButton);
+}
 
+void NineStripProcessorEditor::setupFiltersSection()
+{
     // High Pass Filter
     addAndMakeVisible(highPassGroup);
     highPassGroup.setText("High Pass");
     highPassGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    highPassGroup.addAndMakeVisible(hipassSlider);
-    hipassSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hipassSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hipassAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hipass", hipassSlider);
-    highPassGroup.addAndMakeVisible(hipassLabel);
-    hipassLabel.setText("Freq", juce::dontSendNotification);
-    hipassLabel.setJustificationType(juce::Justification::centred);
-
-    highPassGroup.addAndMakeVisible(hpLsTiteSlider);
-    hpLsTiteSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hpLsTiteSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hpLsTiteAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "ls_tite", hpLsTiteSlider);
-    highPassGroup.addAndMakeVisible(hpLsTiteLabel);
-    hpLsTiteLabel.setText("Ls/Tite", juce::dontSendNotification);
-    hpLsTiteLabel.setJustificationType(juce::Justification::centred);
-
-    highPassGroup.addAndMakeVisible(hpPolesSlider);
-    hpPolesSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hpPolesSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hpPolesAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hp_poles", hpPolesSlider);
-    highPassGroup.addAndMakeVisible(hpPolesLabel);
-    hpPolesLabel.setText("Slope", juce::dontSendNotification);
-    hpPolesLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", hipassAttachment);
+    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", hpLsTiteAttachment);
+    addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", hpPolesAttachment);
 
     // Low Pass Filter
     addAndMakeVisible(lowPassGroup);
     lowPassGroup.setText("Low Pass");
     lowPassGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    lowPassGroup.addAndMakeVisible(lowpassSlider);
-    lowpassSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    lowpassSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    lowpassAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "lowpass", lowpassSlider);
-    lowPassGroup.addAndMakeVisible(lowpassLabel);
-    lowpassLabel.setText("Freq", juce::dontSendNotification);
-    lowpassLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", lowpassAttachment);
+    addRotaryKnob(lowPassGroup, lpSftHrdSlider, lpSftHrdLabel, "lp_sft_hrd", "Soft/Hard", lpSftHrdAttachment);
+    addRotaryKnob(lowPassGroup, lpPolesSlider, lpPolesLabel, "lp_poles", "Slope", lpPolesAttachment);
+}
 
-    lowPassGroup.addAndMakeVisible(lpSftHrdSlider);
-    lpSftHrdSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    lpSftHrdSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    lpSftHrdAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
-                                                                                                "lp_sft_hrd", lpSftHrdSlider);
-    lowPassGroup.addAndMakeVisible(lpSftHrdLabel);
-    lpSftHrdLabel.setText("Soft/Hard", juce::dontSendNotification);
-    lpSftHrdLabel.setJustificationType(juce::Justification::centred);
-
-    lowPassGroup.addAndMakeVisible(lpPolesSlider);
-    lpPolesSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    lpPolesSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    lpPolesAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "lp_poles", lpPolesSlider);
-    lowPassGroup.addAndMakeVisible(lpPolesLabel);
-    lpPolesLabel.setText("Slope", juce::dontSendNotification);
-    lpPolesLabel.setJustificationType(juce::Justification::centred);
-
-    // ========== COLUMN 2: EQ ==========
+void NineStripProcessorEditor::setupEQSection()
+{
     // High Shelf
     addAndMakeVisible(highShelfGroup);
     highShelfGroup.setText("High Shelf");
     highShelfGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    highShelfGroup.addAndMakeVisible(trebleSlider);
-    trebleSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    trebleSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    trebleAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "treble", trebleSlider);
-    highShelfGroup.addAndMakeVisible(trebleLabel);
-    trebleLabel.setText("Gain", juce::dontSendNotification);
-    trebleLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(highShelfGroup, trebleSlider, trebleLabel, "treble", "Gain", trebleAttachment);
 
     // High-Mid EQ
     addAndMakeVisible(highMidGroup);
     highMidGroup.setText("Hi-Mid EQ");
     highMidGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    highMidGroup.addAndMakeVisible(hmFreqSlider);
-    hmFreqSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hmFreqSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hmFreqAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hm_freq", hmFreqSlider);
-    highMidGroup.addAndMakeVisible(hmFreqLabel);
-    hmFreqLabel.setText("Freq", juce::dontSendNotification);
-    hmFreqLabel.setJustificationType(juce::Justification::centred);
-
-    highMidGroup.addAndMakeVisible(hmGainSlider);
-    hmGainSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hmGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hmGainAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "highmid", hmGainSlider);
-    highMidGroup.addAndMakeVisible(hmGainLabel);
-    hmGainLabel.setText("Gain", juce::dontSendNotification);
-    hmGainLabel.setJustificationType(juce::Justification::centred);
-
-    highMidGroup.addAndMakeVisible(hmResoSlider);
-    hmResoSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    hmResoSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    hmResoAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "hm_reso", hmResoSlider);
-    highMidGroup.addAndMakeVisible(hmResoLabel);
-    hmResoLabel.setText("Q", juce::dontSendNotification);
-    hmResoLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(highMidGroup, hmFreqSlider, hmFreqLabel, "hm_freq", "Freq", hmFreqAttachment);
+    addRotaryKnob(highMidGroup, hmGainSlider, hmGainLabel, "highmid", "Gain", hmGainAttachment);
+    addRotaryKnob(highMidGroup, hmResoSlider, hmResoLabel, "hm_reso", "Q", hmResoAttachment);
 
     // Low Shelf
     addAndMakeVisible(lowShelfGroup);
     lowShelfGroup.setText("Low Shelf");
     lowShelfGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    lowShelfGroup.addAndMakeVisible(bassSlider);
-    bassSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    bassSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    bassAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "bass", bassSlider);
-    lowShelfGroup.addAndMakeVisible(bassLabel);
-    bassLabel.setText("Gain", juce::dontSendNotification);
-    bassLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(lowShelfGroup, bassSlider, bassLabel, "bass", "Gain", bassAttachment);
 
     // EQ Bypass
     lowShelfGroup.addAndMakeVisible(eqBypassButton);
     eqBypassButton.setClickingTogglesState(true);
     eqBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts,
                                                                                                 "eqBypass", eqBypassButton);
+}
 
-    // ========== COLUMN 3: COMPRESSOR ==========
+void NineStripProcessorEditor::setupDynamicsSection()
+{
     addAndMakeVisible(compressorGroup);
     compressorGroup.setText("Dynamics");
     compressorGroup.setTextLabelPosition(juce::Justification::centredTop);
 
-    compressorGroup.addAndMakeVisible(pressureSlider);
-    pressureSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    pressureSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    pressureAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
-                                                                                                "pressure", pressureSlider);
-    compressorGroup.addAndMakeVisible(pressureLabel);
-    pressureLabel.setText("Pressure", juce::dontSendNotification);
-    pressureLabel.setJustificationType(juce::Justification::centred);
-
-    compressorGroup.addAndMakeVisible(speedSlider);
-    speedSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    speedSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    speedAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "speed", speedSlider);
-    compressorGroup.addAndMakeVisible(speedLabel);
-    speedLabel.setText("Speed", juce::dontSendNotification);
-    speedLabel.setJustificationType(juce::Justification::centred);
-
-    compressorGroup.addAndMakeVisible(mewinessSlider);
-    mewinessSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    mewinessSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    mewinessAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
-                                                                                                "mewiness", mewinessSlider);
-    compressorGroup.addAndMakeVisible(mewinessLabel);
-    mewinessLabel.setText("Mewiness", juce::dontSendNotification);
-    mewinessLabel.setJustificationType(juce::Justification::centred);
+    addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", pressureAttachment);
+    addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", speedAttachment);
+    addRotaryKnob(compressorGroup, mewinessSlider, mewinessLabel, "mewiness", "Mewiness", mewinessAttachment);
 
     compressorGroup.addAndMakeVisible(grMeter);
 
@@ -232,8 +139,10 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     compressorBypassButton.setClickingTogglesState(true);
     compressorBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "compressorBypass", compressorBypassButton);
+}
 
-    // ========== COLUMN 4: METERS & GAIN ==========
+void NineStripProcessorEditor::setupMeters()
+{
     addAndMakeVisible(metersGroup);
     metersGroup.setText("Meters");
     metersGroup.setTextLabelPosition(juce::Justification::centredTop);
@@ -243,14 +152,15 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 
     metersGroup.addAndMakeVisible(vuMeterModeButton);
     vuMeterModeButton.setClickingTogglesState(true);
-    vuMeterModeButton.addListener(this);
     vuMeterModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "inputMeasured", vuMeterModeButton);
     audioProcessor.apvts.addParameterListener("inputMeasured", this);
     vuMeterModeButton.setButtonText((audioProcessor.apvts.getRawParameterValue("inputMeasured")->load() > 0.5f) ? "Input"
                                                                                                                 : "Output");
+}
 
-    // GAIN
+void NineStripProcessorEditor::setupGain()
+{
     addAndMakeVisible(gainGroup);
 
     gainGroup.setText("Gain");
@@ -278,8 +188,21 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     masterBypassButton.setClickingTogglesState(true);
     masterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "masterBypass", masterBypassButton);
+}
 
-    updatePresetComboBox();
+void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label,
+                                             const juce::String& paramID, const juce::String& labelText,
+                                             std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment)
+{
+    parent.addAndMakeVisible(slider);
+    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+    attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, paramID, slider);
+
+    parent.addAndMakeVisible(label);
+    label.setText(labelText, juce::dontSendNotification);
+    label.setJustificationType(juce::Justification::centred);
 }
 
 NineStripProcessorEditor::~NineStripProcessorEditor() { audioProcessor.apvts.removeParameterListener("inputMeasured", this); }
@@ -295,32 +218,14 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
 {
     if (parameterID == "inputMeasured")
     {
-        vuMeterModeButton.setButtonText(newValue > 0.5f ? "Input" : "Output");
+        juce::MessageManager::callAsync([this, newValue]()
+                                        { vuMeterModeButton.setButtonText(newValue > 0.5f ? "Input" : "Output"); });
     }
 }
 
 void NineStripProcessorEditor::resized()
 {
-    using Track = juce::Grid::TrackInfo;
-    using Fr = juce::Grid::Fr;
-    using Px = juce::Grid::Px;
-
-    // Variables for position calculations
-    int centerX = 0;
-    int centerY = 0;
-
-    int triangleWidth = 0;
-    int triangleHeight = 0;
-
-    int triangleX = 0;
-    int triangleY = 0;
-
-    int topY = 0;
-    int bottomY = 0;
-    int bottomX = 0;
-
     // Window size
-
     auto bounds = getLocalBounds().reduced(8);
 
     // Knobs size
@@ -328,6 +233,22 @@ void NineStripProcessorEditor::resized()
     int columnWidth = bounds.getWidth() / 4;   // 4 columns
     int bigKnobSize = (columnWidth - 20) / 2;  // Account for padding
     int smallKnobSize = bigKnobSize * 0.8f;
+
+    setupMainGrid(bounds);
+    layoutPresetPanel();
+    layoutConsoleSection(bigKnobSize);
+    layoutFiltersSection(bigKnobSize, smallKnobSize);
+    layoutEQSection(bigKnobSize, smallKnobSize);
+    layoutDynamicsSection(bigKnobSize, smallKnobSize);
+    layoutMeters();
+    layoutGain();
+}
+
+void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
+{
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    using Px = juce::Grid::Px;
 
     // ========== MAIN GRID: 4 columns + preset row ==========
     mainGrid.templateRows = {
@@ -370,169 +291,103 @@ void NineStripProcessorEditor::resized()
 
     mainGrid.setGap(juce::Grid::Px(8));
     mainGrid.performLayout(bounds);
+}
 
-    // ========== PRESET PANEL ==========
+void NineStripProcessorEditor::layoutPresetPanel()
+{
     auto presetBounds = presetPanel.getLocalBounds().reduced(4);
     previousPresetButton.setBounds(presetBounds.removeFromLeft(40).reduced(2));
     deletePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
     savePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
     nextPresetButton.setBounds(presetBounds.removeFromRight(40).reduced(2));
     presetComboBox.setBounds(presetBounds.reduced(2));
+}
 
-    // Console layout
+void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
+{
     auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(6);
-    consoleTypeCombo.setBounds(consoleBounds.getX() + 2, consoleBounds.getY() + 20, consoleBounds.getWidth() - 4, 24);
-    centerX = consoleBounds.getX() + (consoleBounds.getWidth() - bigKnobSize) / 2;
-    centerY = consoleBounds.getY() + (consoleBounds.getHeight() - bigKnobSize) / 2;
-    driveSlider.setBounds(centerX, centerY, bigKnobSize, bigKnobSize);
-    driveLabel.setBounds(driveSlider.getX(), driveSlider.getBottom(), driveSlider.getWidth(), 12);
-    saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 26, 50, 20);
 
+    consoleTypeCombo.setBounds(consoleBounds.getX() + 2, consoleBounds.getY() + 20, consoleBounds.getWidth() - 4, 24);
+
+    layoutCenteredKnob(consoleBounds, driveSlider, driveLabel, bigKnobSize);
+
+    saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 26, 50, 20);
+}
+
+void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKnobSize)
+{
     // High Pass layout
     auto hpBounds = highPassGroup.getLocalBounds().reduced(6);
-
-    // Calculate total triangle dimensions
-    triangleWidth = bigKnobSize * 2;                   // Two big knobs side by side
-    triangleHeight = bigKnobSize + smallKnobSize + 8;  // Top row + gap + bottom row
-
-    // Center the triangle in the available space
-    triangleX = hpBounds.getX() + (hpBounds.getWidth() - triangleWidth) / 2;
-    triangleY = hpBounds.getY() + (hpBounds.getHeight() - triangleHeight) / 2;
-
-    // Top row - two big knobs side by side
-    topY = triangleY;
-    hipassSlider.setBounds(triangleX, topY, bigKnobSize, bigKnobSize);
-    hipassLabel.setBounds(hipassSlider.getX(), hipassSlider.getBottom(), bigKnobSize, 12);
-
-    hpPolesSlider.setBounds(triangleX + bigKnobSize, topY, bigKnobSize, bigKnobSize);
-    hpPolesLabel.setBounds(hpPolesSlider.getX(), hpPolesSlider.getBottom(), bigKnobSize, 12);
-
-    // Bottom - small knob centered below the gap between the two big knobs
-    bottomY = triangleY + bigKnobSize + 8;                      // 8px gap
-    bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;  // Center it
-
-    hpLsTiteSlider.setBounds(bottomX, bottomY, smallKnobSize, smallKnobSize);
-    hpLsTiteLabel.setBounds(hpLsTiteSlider.getX(), hpLsTiteSlider.getBottom(), smallKnobSize, 12);
+    layoutTriangleKnobs(hpBounds, hipassSlider, hipassLabel, hpPolesSlider, hpPolesLabel, hpLsTiteSlider, hpLsTiteLabel,
+                        bigKnobSize, smallKnobSize);
 
     // Low Pass layout
     auto lpBounds = lowPassGroup.getLocalBounds().reduced(6);
+    layoutTriangleKnobs(lpBounds, lowpassSlider, lowpassLabel, lpPolesSlider, lpPolesLabel, lpSftHrdSlider, lpSftHrdLabel,
+                        bigKnobSize, smallKnobSize);
+}
 
-    // Calculate total triangle dimensions
-    triangleWidth = bigKnobSize * 2;                   // Two big knobs side by side
-    triangleHeight = bigKnobSize + smallKnobSize + 8;  // Top row + gap + bottom row
-
-    // Center the triangle in the available space
-    triangleX = lpBounds.getX() + (lpBounds.getWidth() - triangleWidth) / 2;
-    triangleY = lpBounds.getY() + (lpBounds.getHeight() - triangleHeight) / 2;
-
-    // Top row - two big knobs side by side
-    topY = triangleY;
-    lowpassSlider.setBounds(triangleX, topY, bigKnobSize, bigKnobSize);
-    lowpassLabel.setBounds(lowpassSlider.getX(), lowpassSlider.getBottom(), bigKnobSize, 12);
-
-    lpPolesSlider.setBounds(triangleX + bigKnobSize, topY, bigKnobSize, bigKnobSize);
-    lpPolesLabel.setBounds(lpPolesSlider.getX(), lpPolesSlider.getBottom(), bigKnobSize, 12);
-
-    // Bottom - small knob centered below
-    bottomY = triangleY + bigKnobSize + 8;                      // 8px gap
-    bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;  // Center it
-
-    lpSftHrdSlider.setBounds(bottomX, bottomY, smallKnobSize, smallKnobSize);
-    lpSftHrdLabel.setBounds(lpSftHrdSlider.getX(), lpSftHrdSlider.getBottom(), smallKnobSize, 12);
-
+void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
+{
     // High Shelf layout
     auto hsBounds = highShelfGroup.getLocalBounds().reduced(6);
-    centerX = hsBounds.getX() + (hsBounds.getWidth() - bigKnobSize) / 2;
-    centerY = hsBounds.getY() + (hsBounds.getHeight() - bigKnobSize) / 2;
-    trebleSlider.setBounds(centerX, centerY, bigKnobSize, bigKnobSize);
-    trebleLabel.setBounds(trebleSlider.getX(), trebleSlider.getBottom(), trebleSlider.getWidth(), 12);
+    layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
 
     // High-Mid layout
     auto hmBounds = highMidGroup.getLocalBounds().reduced(6);
-
-    // Calculate total triangle dimensions
-    triangleWidth = bigKnobSize * 2;                   // Two big knobs side by side
-    triangleHeight = bigKnobSize + smallKnobSize + 8;  // Top row + gap + bottom row
-
-    // Center the triangle in the available space
-    triangleX = hmBounds.getX() + (hmBounds.getWidth() - triangleWidth) / 2;
-    triangleY = hmBounds.getY() + (hmBounds.getHeight() - triangleHeight) / 2;
-
-    // Top row - two big knobs side by side
-    topY = triangleY;
-    hmFreqSlider.setBounds(triangleX, topY, bigKnobSize, bigKnobSize);
-    hmFreqLabel.setBounds(hmFreqSlider.getX(), hmFreqSlider.getBottom(), bigKnobSize, 12);
-
-    hmGainSlider.setBounds(triangleX + bigKnobSize, topY, bigKnobSize, bigKnobSize);
-    hmGainLabel.setBounds(hmGainSlider.getX(), hmGainSlider.getBottom(), bigKnobSize, 12);
-
-    // Bottom - small knob centered below
-    bottomY = triangleY + bigKnobSize + 8;                      // 8px gap
-    bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;  // Center it
-
-    hmResoSlider.setBounds(bottomX, bottomY, smallKnobSize, smallKnobSize);
-    hmResoLabel.setBounds(hmResoSlider.getX(), hmResoSlider.getBottom(), smallKnobSize, 12);
+    layoutTriangleKnobs(hmBounds, hmFreqSlider, hmFreqLabel, hmGainSlider, hmGainLabel, hmResoSlider, hmResoLabel, bigKnobSize,
+                        smallKnobSize);
 
     // Low Shelf layout
     auto lsBounds = lowShelfGroup.getLocalBounds().reduced(6);
-    centerX = lsBounds.getX() + (lsBounds.getWidth() - bigKnobSize) / 2;
-    centerY = lsBounds.getY() + (lsBounds.getHeight() - bigKnobSize) / 2;
-    bassSlider.setBounds(centerX, centerY, bigKnobSize, bigKnobSize);
-    bassLabel.setBounds(bassSlider.getX(), bassSlider.getBottom(), bassSlider.getWidth(), 12);
-    eqBypassButton.setBounds(lsBounds.getRight() - 52, lsBounds.getBottom() - 26, 50, 20);
+    layoutCenteredKnob(lsBounds, bassSlider, bassLabel, bigKnobSize);
 
-    // Now layout controls inside compressorGroup (your existing code)
+    // Bypass button at bottom-right
+    eqBypassButton.setBounds(lsBounds.getRight() - 52, lsBounds.getBottom() - 26, 50, 20);
+}
+
+void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
+{
     auto compBounds = compressorGroup.getLocalBounds().reduced(6);
 
-    // Calculate total triangle dimensions for top section
-    triangleWidth = bigKnobSize * 2;
-    triangleHeight = bigKnobSize + smallKnobSize + 8;
+    // Triangle knobs at top (not centered vertically)
+    layoutTriangleKnobs(compBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
+                        bigKnobSize, smallKnobSize,
+                        false);  // Top-aligned, not centered
 
-    // Center the triangle
-    triangleX = compBounds.getX() + (compBounds.getWidth() - triangleWidth) / 2;
-    triangleY = compBounds.getY() + 10;  // Small offset from top
-
-    // Top row - two big knobs
-    topY = triangleY;
-    pressureSlider.setBounds(triangleX, topY, bigKnobSize, bigKnobSize);
-    pressureLabel.setBounds(pressureSlider.getX(), pressureSlider.getBottom(), bigKnobSize, 12);
-
-    speedSlider.setBounds(triangleX + bigKnobSize, topY, bigKnobSize, bigKnobSize);
-    speedLabel.setBounds(speedSlider.getX(), speedSlider.getBottom(), bigKnobSize, 12);
-
-    // Bottom - small knob centered
-    bottomY = triangleY + bigKnobSize + 8;
-    bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;
-
-    mewinessSlider.setBounds(bottomX, bottomY, smallKnobSize, smallKnobSize);
-    mewinessLabel.setBounds(mewinessSlider.getX(), mewinessSlider.getBottom(), smallKnobSize, 12);
-
-    // GR Meter and button below
-    centerX = compBounds.getX() + (compBounds.getWidth() - 20) / 2;
+    // GR Meter centered below knobs
+    int centerX = compBounds.getX() + (compBounds.getWidth() - 20) / 2;
     grMeter.setBounds(centerX, mewinessSlider.getBottom() + 25, 20, compBounds.getBottom() - 60 - mewinessSlider.getBottom());
 
+    // Bypass button at bottom-right
     compressorBypassButton.setBounds(compBounds.getRight() - 55, compBounds.getBottom() - 25, 50, 20);
+}
 
-    // Meters layout
+void NineStripProcessorEditor::layoutMeters()
+{
     auto metersBounds = metersGroup.getLocalBounds().reduced(6);
-    metersBounds.removeFromTop(18);
-    auto meterArea = metersBounds.removeFromTop(100);
+    metersBounds.removeFromTop(18);  // Space for "Meters" title
+
+    // Button at bottom - remove it first
+    vuMeterModeButton.setBounds(metersBounds.removeFromBottom(30).reduced(4, 2));
+
+    // Use ALL remaining space for meters (not just 100px!)
+    auto meterArea = metersBounds;
 
     // Split into two halves
     auto leftHalf = meterArea.removeFromLeft(meterArea.getWidth() / 2);
     auto rightHalf = meterArea;  // Remaining half
 
-    // Center 18px meter in left half
+    // Center 18px wide meters in each half, full height
     int leftCenterX = leftHalf.getX() + (leftHalf.getWidth() - 18) / 2;
     measuredMeterL.setBounds(leftCenterX, leftHalf.getY(), 18, leftHalf.getHeight());
 
-    // Center 18px meter in right half
     int rightCenterX = rightHalf.getX() + (rightHalf.getWidth() - 18) / 2;
     measuredMeterR.setBounds(rightCenterX, rightHalf.getY(), 18, rightHalf.getHeight());
+}
 
-    vuMeterModeButton.setBounds(metersBounds.removeFromBottom(30).reduced(4, 2));
-
-    // Gain layout
+void NineStripProcessorEditor::layoutGain()
+{
     auto gainBounds = gainGroup.getLocalBounds().reduced(6);
     gainBounds.removeFromTop(18);  // Space for group title
 
@@ -575,6 +430,47 @@ void NineStripProcessorEditor::updatePresetComboBox()
     }
 }
 
+void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft,
+                                                   juce::Label& topLeftLabel, juce::Slider& topRight,
+                                                   juce::Label& topRightLabel, juce::Slider& bottom, juce::Label& bottomLabel,
+                                                   int bigKnobSize, int smallKnobSize, bool centerVertically)
+{
+    // Calculate total triangle dimensions
+    int triangleWidth = bigKnobSize * 2;
+    int triangleHeight = bigKnobSize + smallKnobSize + 8;
+
+    // Horizontal centering (always)
+    int triangleX = bounds.getX() + (bounds.getWidth() - triangleWidth) / 2;
+
+    // Vertical positioning - centered or top-aligned
+    int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2
+                                     : bounds.getY() + 10;  // Small offset from top
+
+    // Top row - two big knobs side by side
+    topLeft.setBounds(triangleX, triangleY, bigKnobSize, bigKnobSize);
+    topLeftLabel.setBounds(topLeft.getX(), topLeft.getBottom(), bigKnobSize, 12);
+
+    topRight.setBounds(triangleX + bigKnobSize, triangleY, bigKnobSize, bigKnobSize);
+    topRightLabel.setBounds(topRight.getX(), topRight.getBottom(), bigKnobSize, 12);
+
+    // Bottom - small knob centered below the gap between the two big knobs
+    int bottomY = triangleY + bigKnobSize + 8;
+    int bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;
+
+    bottom.setBounds(bottomX, bottomY, smallKnobSize, smallKnobSize);
+    bottomLabel.setBounds(bottom.getX(), bottom.getBottom(), smallKnobSize, 12);
+}
+
+void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label,
+                                                  int knobSize)
+{
+    int centerX = bounds.getX() + (bounds.getWidth() - knobSize) / 2;
+    int centerY = bounds.getY() + (bounds.getHeight() - knobSize) / 2;
+
+    knob.setBounds(centerX, centerY, knobSize, knobSize);
+    label.setBounds(knob.getX(), knob.getBottom(), knobSize, 12);
+}
+
 void NineStripProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == &presetComboBox)
@@ -610,9 +506,9 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
         alert->addButton("OK", 1);
         alert->addButton("Cancel", 0);
 
-        alert->enterModalState(true,
+        alert->enterModalState(true,  // take keyboard focus
                                juce::ModalCallbackFunction::create(
-                                   [this, alert](int result)
+                                   [this, alert](int result)  // Capture alert ptr for getText
                                    {
                                        if (result == 1)
                                        {
@@ -623,7 +519,6 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
                                                updatePresetComboBox();
                                            }
                                        }
-                                       delete alert;
                                    }),
                                true);
     }

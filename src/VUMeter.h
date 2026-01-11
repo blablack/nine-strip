@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+
 #include <functional>
 
 class VUMeter : public juce::Component, private juce::Timer
@@ -13,6 +14,7 @@ class VUMeter : public juce::Component, private juce::Timer
     };
 
     VUMeter(std::function<float()> levelGetter, MeterType type = MeterType::Level);
+    ~VUMeter() override;
 
     void paint(juce::Graphics& g) override;
     void timerCallback() override;

@@ -2,9 +2,39 @@
 
 static const juce::String presetExtension = ".ninestrip";
 
-PresetManager::PresetManager(juce::AudioProcessorValueTreeState& apvts) : valueTreeState(apvts) {}
+PresetManager::PresetManager(juce::AudioProcessorValueTreeState& apvts) : valueTreeState(apvts)
+{
+    for (auto* param : apvts.processor.getParameters())
+    {
+        if (auto* paramWithID = dynamic_cast<juce::RangedAudioParameter*>(param))
+        {
+            apvts.addParameterListener(paramWithID->paramID, this);
+        }
+    }
+}
 
-juce::File PresetManager::getDefaultDirectory()
+PresetManager::~PresetManager()
+{
+    // ✅ Clean up parameter listeners
+    for (auto* param : valueTreeState.processor.getParameters())
+    {
+        if (auto* paramWithID = dynamic_cast<juce::RangedAudioParameter*>(param))
+        {
+            valueTreeState.removeParameterListener(paramWithID->paramID, this);
+        }
+    }
+}
+
+void PresetManager::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    // ✅ Any parameter change marks preset as modified (if a preset is loaded)
+    if (!currentPreset.isEmpty())
+    {
+        isModified = true;
+    }
+}
+
+juce::File PresetManager::getDefaultDirectory() const  // ✅ Now const
 {
     juce::File rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
 
@@ -15,7 +45,14 @@ juce::File PresetManager::getDefaultDirectory()
     rootFolder = rootFolder.getChildFile("NineStrip");
 
     // Create directory if it doesn't exist
-    if (!rootFolder.exists()) rootFolder.createDirectory();
+    if (!rootFolder.exists())
+    {
+        auto result = rootFolder.createDirectory();
+        if (!result.wasOk())
+        {
+            DBG("Failed to create preset directory: " + rootFolder.getFullPathName());
+        }
+    }
 
     return rootFolder;
 }
@@ -25,17 +62,20 @@ void PresetManager::savePreset(const juce::String& presetName)
     if (presetName.isEmpty()) return;
 
     currentPreset = presetName;
-    isModified = false;
 
-    // Get the current state from APVTS
     auto state = valueTreeState.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
 
-    // Create the preset file
     juce::File presetFile = getDefaultDirectory().getChildFile(presetName + presetExtension);
 
-    // Write XML to file
-    xml->writeTo(presetFile);
+    if (!xml->writeTo(presetFile))
+    {
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, "Save Failed",
+                                               "Could not save preset: " + presetName);
+        return;
+    }
+
+    isModified = false;  // Only mark unmodified if save succeeded
 }
 
 void PresetManager::deletePreset(const juce::String& presetName)
@@ -48,7 +88,11 @@ void PresetManager::deletePreset(const juce::String& presetName)
     {
         presetFile.deleteFile();
 
-        if (currentPreset == presetName) currentPreset = "";
+        if (currentPreset == presetName)
+        {
+            currentPreset = "";
+            isModified = false;
+        }
     }
 }
 
@@ -68,7 +112,7 @@ void PresetManager::loadPreset(const juce::String& presetName)
     // Convert XML to ValueTree
     auto valueTree = juce::ValueTree::fromXml(*xml);
 
-    // Replace the plugin state
+    // Replace the plugin state (thread-safe)
     valueTreeState.replaceState(valueTree);
 
     currentPreset = presetName;
@@ -107,7 +151,7 @@ juce::StringArray PresetManager::getAllPresets() const
 {
     juce::StringArray presets;
 
-    juce::File defaultDirectory = const_cast<PresetManager*>(this)->getDefaultDirectory();
+    juce::File defaultDirectory = getDefaultDirectory();
 
     // Find all preset files in the directory
     auto presetFiles = defaultDirectory.findChildFiles(juce::File::findFiles, false, "*" + presetExtension);
@@ -117,7 +161,7 @@ juce::StringArray PresetManager::getAllPresets() const
         presets.add(file.getFileNameWithoutExtension());
     }
 
-    presets.sort(true);  // Sort alphabetically
+    presets.sort(true);
 
     return presets;
 }

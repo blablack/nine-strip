@@ -367,10 +367,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
     float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
 
+    const bool inputMeasured = apvts.getRawParameterValue("inputMeasured")->load() > 0.5f;
+
     // Apply input gain
     buffer.applyGain(inputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime() && apvts.getRawParameterValue("inputMeasured")->load() > 0.5f)
+    if (getActiveEditor() != nullptr && !isNonRealtime() && inputMeasured)
     {
         meterUpdateCounter++;
 
@@ -443,7 +445,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     // Apply output gain
     buffer.applyGain(outputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime() && apvts.getRawParameterValue("inputMeasured")->load() <= 0.5f)
+    if (getActiveEditor() != nullptr && !isNonRealtime() && !inputMeasured)
     {
         meterUpdateCounter++;
 

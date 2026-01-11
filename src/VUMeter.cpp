@@ -1,12 +1,12 @@
 #include "VUMeter.h"
 
-VUMeter::VUMeter(std::function<float()> levelGetter, MeterType type) 
-    : getLevelFunc(levelGetter), meterType(type)
-{ 
-    startTimerHz(30); 
-    if (meterType == MeterType::GainReduction)
-        currentLevel = 0.0f;
+VUMeter::VUMeter(std::function<float()> levelGetter, MeterType type) : getLevelFunc(levelGetter), meterType(type)
+{
+    startTimerHz(30);
+    if (meterType == MeterType::GainReduction) currentLevel = 0.0f;
 }
+
+VUMeter::~VUMeter() { stopTimer(); }
 
 void VUMeter::paint(juce::Graphics& g)
 {
@@ -21,7 +21,7 @@ void VUMeter::paint(juce::Graphics& g)
         // Gain reduction meter (0 to -20 dB)
         auto levelHeight = juce::jmap(currentLevel, -20.0f, 0.0f, bounds.getHeight(), 0.0f);
         auto levelBounds = juce::Rectangle<float>(bounds.getX(), bounds.getY(), bounds.getWidth(), levelHeight);
-        
+
         // Color based on reduction amount
         if (currentLevel < -12.0f)
             g.setColour(juce::Colours::red);
@@ -29,14 +29,15 @@ void VUMeter::paint(juce::Graphics& g)
             g.setColour(juce::Colours::orange);
         else
             g.setColour(juce::Colours::green);
-        
+
         g.fillRect(levelBounds);
     }
     else
     {
         // Standard level meter
         auto levelHeight = juce::jmap(currentLevel, -60.0f, 0.0f, 0.0f, bounds.getHeight());
-        auto levelBounds = juce::Rectangle<float>(bounds.getX(), bounds.getBottom() - levelHeight, bounds.getWidth(), levelHeight);
+        auto levelBounds =
+            juce::Rectangle<float>(bounds.getX(), bounds.getBottom() - levelHeight, bounds.getWidth(), levelHeight);
 
         if (currentLevel > -3.0f)
             g.setColour(juce::Colours::red);
@@ -55,7 +56,7 @@ void VUMeter::paint(juce::Graphics& g)
     // Draw dB markers
     g.setColour(juce::Colours::white);
     g.setFont(10.0f);
-    
+
     if (meterType == MeterType::GainReduction)
     {
         auto drawMarker = [&](float db, const juce::String& label)
@@ -85,7 +86,7 @@ void VUMeter::paint(juce::Graphics& g)
 void VUMeter::timerCallback()
 {
     float newLevel = getLevelFunc();
-    
+
     if (meterType == MeterType::GainReduction)
     {
         newLevel = juce::jlimit(-20.0f, 0.0f, newLevel);
@@ -104,6 +105,6 @@ void VUMeter::timerCallback()
             currentLevel -= 0.5f;
         currentLevel = std::max(currentLevel, -60.0f);
     }
-    
+
     repaint();
 }

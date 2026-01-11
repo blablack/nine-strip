@@ -2,10 +2,11 @@
 
 #include <JuceHeader.h>
 
-class PresetManager
+class PresetManager : public juce::AudioProcessorValueTreeState::Listener
 {
    public:
     PresetManager(juce::AudioProcessorValueTreeState& apvts);
+    ~PresetManager() override;
 
     void savePreset(const juce::String& presetName);
     void deletePreset(const juce::String& presetName);
@@ -20,8 +21,11 @@ class PresetManager
     void markAsModified() { isModified = true; }
     void markAsUnmodified() { isModified = false; }
 
+    // AudioProcessorValueTreeState::Listener
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+
    private:
-    juce::File getDefaultDirectory();
+    juce::File getDefaultDirectory() const;
 
     juce::AudioProcessorValueTreeState& valueTreeState;
     juce::String currentPreset;
