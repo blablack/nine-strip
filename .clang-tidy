@@ -13,6 +13,7 @@ Checks: "clang-diagnostic-*,\
   -readability-uppercase-literal-suffix,\
   -cppcoreguidelines-owning-memory,\
   -google-readability-braces-around-statements,\
-  -readability-braces-around-statements"
+  -readability-braces-around-statements,\
+  -readability-math-missing-parentheses"
 
 HeaderFilterRegex: '**/Source/*\.(hpp|h)'

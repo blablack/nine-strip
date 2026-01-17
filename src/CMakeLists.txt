@@ -1,3 +1,5 @@
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 if(DEFINED ENV{AAX_SDK_PATH})
     set(AAX_SDK_PATH $ENV{AAX_SDK_PATH})
 endif()
@@ -59,40 +61,44 @@ target_compile_definitions(NineStrip
     # JUCE_DISPLAY_SPLASH_SCREEN=0 #if your plugin is distributed with GPL license or paid
 )
 
-juce_add_binary_data(JuceLogoBinary
-SOURCES 
-${CMAKE_SOURCE_DIR}/assets/juce-logo.svg
+juce_add_binary_data(NineStripAssets
+    SOURCES 
+    ${CMAKE_SOURCE_DIR}/assets/background.png
+    ${CMAKE_SOURCE_DIR}/assets/needlevu.png
+    ${CMAKE_SOURCE_DIR}/assets/peakon.png
+    ${CMAKE_SOURCE_DIR}/assets/peakoff.png
 )
 
 add_subdirectory(airwindows)
+add_subdirectory(ui)
 
 target_sources(NineStrip PRIVATE
     PluginEditor.cpp
     PluginProcessor.cpp
     PresetManager.cpp
-    VUMeter.cpp
     DCBlocker.cpp
 )
 
 target_link_libraries(NineStrip PUBLIC
 AirwindowsDSP
-JuceLogoBinary
+NineStripUI
+NineStripAssets
 juce::juce_audio_basics
 juce::juce_audio_devices
-juce::juce_audio_formats
+#juce::juce_audio_formats
 juce::juce_audio_plugin_client
 juce::juce_audio_processors
 juce::juce_audio_utils
 juce::juce_core
-juce::juce_cryptography
+#juce::juce_cryptography
 juce::juce_data_structures
 juce::juce_dsp
 juce::juce_events
 juce::juce_graphics
 juce::juce_gui_basics
 juce::juce_gui_extra
-juce::juce_opengl
-juce::juce_product_unlocking
+#juce::juce_opengl
+#juce::juce_product_unlocking
 )
 
 juce_generate_juce_header(NineStrip)

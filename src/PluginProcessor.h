@@ -46,6 +46,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     //==============================================================================
     juce::AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override;
+    void editorStateChanged(bool isOpen) { editorOpen.store(isOpen); }
 
     //==============================================================================
     const juce::String getName() const override;
@@ -67,7 +68,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
    private:
-    //==============================================================================
+    std::atomic<bool> editorOpen{false};
+
     void parameterChanged(const juce::String &parameterID, float newValue) override;
     void valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &) override;
 
@@ -78,9 +80,12 @@ class NineStripProcessor : public juce::AudioProcessor,
     template <typename SampleType>
     void processBlockInternal(juce::AudioBuffer<SampleType> &buffer);
 
-    std::unique_ptr<PresetManager> presetManager;
+    juce::AudioBuffer<float> meterBufferFloat;
+    juce::AudioBuffer<double> meterBufferDouble;
+    template <typename SampleType>
+    void updateMeters(const juce::AudioBuffer<SampleType> &buffer);
 
-    int meterUpdateCounter{0};
+    std::unique_ptr<PresetManager> presetManager;
 
     Channel9 channel9;
     Highpass2 highpass2;
@@ -91,6 +96,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     DCBlocker dcBlocker;
 
     // Level meters
+    juce::dsp::BallisticsFilter<float> ballisticsFilter;
     std::atomic<float> measuredLevelL{-60.0f};
     std::atomic<float> measuredLevelR{-60.0f};
     std::atomic<float> gainReduction{0.0f};

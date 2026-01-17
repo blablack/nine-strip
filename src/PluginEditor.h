@@ -3,7 +3,9 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
-#include "VUMeter.h"
+#include "ui/KnobLookAndFeel.h"
+#include "ui/NeedleVUMeter.h"
+#include "ui/VUMeter.h"
 
 class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::ComboBox::Listener,
@@ -23,6 +25,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
    private:
     NineStripProcessor& audioProcessor;
+
+    KnobLookAndFeel knobSkeuomorphicLook;
 
     juce::ComponentBoundsConstrainer constrainer;
 
@@ -95,7 +99,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     // Meters
     juce::GroupComponent metersGroup;
-    VUMeter measuredMeterL, measuredMeterR;
+    NeedleVUMeter needleVUMeterL, needleVUMeterR;
     juce::TextButton vuMeterModeButton{"Input"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;
 
@@ -124,16 +128,20 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     void layoutMeters();
     void layoutGain();
 
+    void setupGroupComponent(juce::GroupComponent& group, const juce::String& title);
+
     void addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label, const juce::String& paramID,
                        const juce::String& labelText,
                        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment);
 
-    void layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft, juce::Label& topLeftLabel,
-                             juce::Slider& topRight, juce::Label& topRightLabel, juce::Slider& bottom, juce::Label& bottomLabel,
-                             int bigKnobSize, int smallKnobSize,
-                             bool centerVertically = true);  // Default to centered
+    static void layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft, juce::Label& topLeftLabel,
+                                    juce::Slider& topRight, juce::Label& topRightLabel, juce::Slider& bottom,
+                                    juce::Label& bottomLabel, int bigKnobSize, int smallKnobSize,
+                                    bool centerVertically = true);  // Default to centered
 
-    void layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label, int knobSize);
+    static void layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label, int knobSize);
+
+    juce::Rectangle<int> constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio);
 
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     void buttonClicked(juce::Button* button) override;

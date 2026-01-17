@@ -12,6 +12,15 @@
       "args": [],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "build"
+    },
+    {
+      "name": "Debug",
+      "request": "launch",
+      "type": "lldb",
+      "program": "${workspaceFolder}/build/src/NineStrip_artefacts/Debug/Standalone/NineStrip",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build_debug"
     }
   ]
 }

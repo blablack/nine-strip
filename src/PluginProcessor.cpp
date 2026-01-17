@@ -14,12 +14,15 @@ NineStripProcessor::NineStripProcessor()
       parametric(44100.0),
       pressure4(44100.0)
 {
+    ballisticsFilter.setAttackTime(300.0f);
+    ballisticsFilter.setReleaseTime(300.0f);
+    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
+    ballisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 2});
+
     presetManager = std::make_unique<PresetManager>(apvts);
 
     apvts.state.addListener(this);
     setupParameterListeners();
-
-    meterUpdateCounter = 0;
 }
 
 NineStripProcessor::~NineStripProcessor()
@@ -282,7 +285,7 @@ const juce::String NineStripProcessor::getProgramName(int /*index*/) { return {}
 void NineStripProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
-void NineStripProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
+void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     channel9.setSampleRate(sampleRate);
     highpass2.setSampleRate(sampleRate);
@@ -335,6 +338,9 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*
     pressure4.setParameter(Pressure4::kParamA, apvts.getRawParameterValue("pressure")->load());
     pressure4.setParameter(Pressure4::kParamB, apvts.getRawParameterValue("speed")->load());
     pressure4.setParameter(Pressure4::kParamC, apvts.getRawParameterValue("mewiness")->load());
+
+    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
+    ballisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2});
 }
 
 void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
@@ -347,14 +353,48 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
 }
 
 template <typename SampleType>
+void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffer)
+{
+    // Make a COPY - don't modify the original audio!
+    // Use pre-allocated buffer
+    auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+            return meterBufferFloat;
+        else
+            return meterBufferDouble;
+    }();
+
+    meterBuffer.setSize(2, buffer.getNumSamples(), false, false, false);
+    meterBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
+    meterBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples());
+
+    // Process the copy through the filter
+    juce::dsp::AudioBlock<SampleType> block(meterBuffer);
+    juce::dsp::ProcessContextReplacing<SampleType> context(block);
+
+    ballisticsFilter.process(context);
+
+    // Get the resulting envelope level from the last sample
+    float levelL = meterBuffer.getSample(0, meterBuffer.getNumSamples() - 1);
+    float levelR = meterBuffer.getSample(1, meterBuffer.getNumSamples() - 1);
+
+    measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f));
+    measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f));
+}
+
+template <typename SampleType>
 void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buffer)
 {
     juce::ScopedNoDenormals noDenormals;
 
+    const bool masterBypass = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
+    const bool meteringNeeded = editorOpen.load() && !isNonRealtime();
+
     // Master bypass - skip all processing
-    if (apvts.getRawParameterValue("masterBypass")->load() > 0.5f)
+    if (masterBypass)
     {
-        if (getActiveEditor() != nullptr)
+        if (meteringNeeded)
         {
             measuredLevelL.store(-60.0f);
             measuredLevelR.store(-60.0f);
@@ -364,36 +404,30 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     }
 
     // Get gain values
-    float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
-    float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
+    const float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
+    const float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
+
+    const bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
+    const bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
+    const bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
 
     const bool inputMeasured = apvts.getRawParameterValue("inputMeasured")->load() > 0.5f;
+    const bool inputMeteringNeeded = meteringNeeded && inputMeasured;
+    const bool outputMeteringNeeded = meteringNeeded && !inputMeasured;
 
     // Apply input gain
     buffer.applyGain(inputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime() && inputMeasured)
+    if (inputMeteringNeeded)
     {
-        meterUpdateCounter++;
-
-        if (meterUpdateCounter >= 4)
-        {
-            auto inL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-            auto inR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-            inL = std::max<SampleType>(inL, 0.000001);
-            inR = std::max<SampleType>(inR, 0.000001);
-            measuredLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(inL), -60.0f));
-            measuredLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(inR), -60.0f));
-
-            meterUpdateCounter = 0;
-        }
+        updateMeters(buffer);
     }
 
     // Create raw pointer arrays for Airwindows processing
     SampleType *channelData[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
 
     // Process through the plugin chain
-    if (apvts.getRawParameterValue("saturationBypass")->load() < 0.5f)
+    if (!saturationBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
             channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
@@ -401,7 +435,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
             channel9.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
     }
 
-    if (apvts.getRawParameterValue("eqBypass")->load() < 0.5f)
+    if (!eqBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
         {
@@ -421,7 +455,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         dcBlocker.processStereo(channelData, buffer.getNumSamples());
     }
 
-    if (apvts.getRawParameterValue("compressorBypass")->load() < 0.5f)
+    if (!compressorBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
         {
@@ -431,13 +465,13 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         {
             pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
         }
-        if (getActiveEditor() != nullptr)
+        if (meteringNeeded)
         {
             float grDb = juce::Decibels::gainToDecibels(pressure4.getGainReduction());
             gainReduction.store(std::min(grDb, 0.0f));  // Negative values for reduction
         }
     }
-    else if (getActiveEditor() != nullptr)
+    else if (meteringNeeded)
     {
         gainReduction.store(0.0f);
     }
@@ -445,21 +479,9 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     // Apply output gain
     buffer.applyGain(outputGainLinear);
 
-    if (getActiveEditor() != nullptr && !isNonRealtime() && !inputMeasured)
+    if (outputMeteringNeeded)
     {
-        meterUpdateCounter++;
-
-        if (meterUpdateCounter >= 4)
-        {
-            auto outL = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-            auto outR = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-            outL = std::max<SampleType>(outL, 0.000001);
-            outR = std::max<SampleType>(outR, 0.000001);
-            measuredLevelL.store(juce::Decibels::gainToDecibels(static_cast<float>(outL), -60.0f));
-            measuredLevelR.store(juce::Decibels::gainToDecibels(static_cast<float>(outR), -60.0f));
-
-            meterUpdateCounter = 0;
-        }
+        updateMeters(buffer);
     }
 }
 
