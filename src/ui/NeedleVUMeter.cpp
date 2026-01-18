@@ -38,7 +38,10 @@ void NeedleVUMeter::paint(juce::Graphics& g)
     // 5. Scale and position the peak indicator
     juce::Rectangle<float> peakBounds(offsetX, offsetY, peakScaled, peakScaled);
 
-    g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+    if (isPeakLit)
+        g.drawImage(peakOnImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+    else
+        g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
 
     // 3. Set clipping region to exclude borders
     auto meterArea = bounds.reduced(scaledBorderWidth);
@@ -78,6 +81,24 @@ void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds)
 void NeedleVUMeter::timerCallback()
 {
     currentLevel = getLevelFunc();
+
+    // Check if we've hit peak threshold
+    if (currentLevel >= peakThreshold)
+    {
+        isPeakLit = true;
+        peakHoldCounter = peakHoldDuration;  // Reset the hold counter
+    }
+
+    // Decrement hold counter
+    if (peakHoldCounter > 0)
+    {
+        peakHoldCounter--;
+        isPeakLit = true;
+    }
+    else
+    {
+        isPeakLit = false;
+    }
 
     repaint();
 }

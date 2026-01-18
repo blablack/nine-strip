@@ -9,7 +9,7 @@ NineStrip is a complete channel strip solution that combines console modeling, f
 ## Signal Chain
 
 ```
-INPUT GAIN
+PURESTGAIN - Input Gain
     ↓
 CHANNEL9 - Console model + Saturation + Drive
     ↓
@@ -23,7 +23,7 @@ PARAMETRIC - Mid Band
     ↓
 PRESSURE4 - Compressor
     ↓
-OUTPUT GAIN
+PURESTGAIN - Output Gain
 ```
 
 ## Features
@@ -52,6 +52,8 @@ Load NineStrip on any channel where you want complete processing control. The si
 
 This plugin incorporates processing algorithms from [Airwindows](https://www.airwindows.com/) by Chris Johnson. Massive thanks to Chris for his open-source contributions to the audio community.
 
+The UI look and feel is based on the 3D knob from [SoundDevelopment/3D_knob_lnf](https://github.com/SoundDevelopment/3D_knob_lnf) (MIT License).
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) due to the use of the JUCE framework under its open-source license terms.
@@ -60,6 +62,7 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 
 - JUCE Framework: Used under GPL/AGPL license terms
 - Airwindows algorithms: MIT License (compatible with AGPL-3.0)
+- 3D Knob LnF: MIT License (compatible with AGPL-3.0)
 - NineStrip: AGPL-3.0
 
 See the [LICENSE](./LICENSE) file for full details.

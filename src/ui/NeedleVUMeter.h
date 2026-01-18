@@ -27,6 +27,11 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
     juce::Image peakOnImage;
     juce::Image peakOffImage;
 
+    bool isPeakLit = false;
+    int peakHoldCounter = 0;
+    const int peakHoldDuration = 5;  // 5 frames ≈ 83ms at 60Hz
+    const float peakThreshold = 6.0f;
+
     float backgroundWidth = 750.0f;
     float backgroundHeight = 450.0f;
     float borderWidth = 20.0f;

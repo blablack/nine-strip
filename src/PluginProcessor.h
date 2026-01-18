@@ -10,6 +10,7 @@
 #include "airwindows/Lowpass2.h"
 #include "airwindows/Parametric.h"
 #include "airwindows/Pressure4.h"
+#include "airwindows/PurestGain.h"
 
 //==============================================================================
 /**
@@ -68,6 +69,10 @@ class NineStripProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
    private:
+    const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive",    "hipass", "ls_tite",  "hp_poles",
+                                                    "lowpass",   "lp_sft_hrd",  "lp_poles", "treble", "bass",     "hm_freq",
+                                                    "highmid",   "hm_reso",     "pressure", "speed",  "mewiness", "outputGain"};
+
     std::atomic<bool> editorOpen{false};
 
     void parameterChanged(const juce::String &parameterID, float newValue) override;
@@ -93,6 +98,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     Baxandall2 baxandall2;
     Parametric parametric;
     Pressure4 pressure4;
+    PurestGain inputPurestGain;
+    PurestGain outputPurestGain;
     DCBlocker dcBlocker;
 
     // Level meters

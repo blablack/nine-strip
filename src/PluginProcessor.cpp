@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 
 #include "PluginEditor.h"
+#include "PurestGain.h"
 
 NineStripProcessor::NineStripProcessor()
     : AudioProcessor(BusesProperties()
@@ -12,9 +13,11 @@ NineStripProcessor::NineStripProcessor()
       lowpass2(44100.0),
       baxandall2(44100.0),
       parametric(44100.0),
-      pressure4(44100.0)
+      pressure4(44100.0),
+      inputPurestGain(44100.0),
+      outputPurestGain(44100.0)
 {
-    ballisticsFilter.setAttackTime(300.0f);
+    ballisticsFilter.setAttackTime(10.0f);
     ballisticsFilter.setReleaseTime(300.0f);
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 2});
@@ -33,28 +36,11 @@ NineStripProcessor::~NineStripProcessor()
 
 void NineStripProcessor::setupParameterListeners()
 {
-    /*
-        tr_freq
-        treble_param
-        tr_reso
-        lm_freq
-        lowmid
-        lm_reso
-    */
-
-    const std::vector<juce::String> parameterIDs = {"consoleType", "drive",    "hipass", "ls_tite", "hp_poles", "lowpass",
-                                                    "lp_sft_hrd",  "lp_poles", "treble", "bass",    "hm_freq",  "highmid",
-                                                    "hm_reso",     "pressure", "speed",  "mewiness"};
-
     for (const auto &id : parameterIDs) apvts.addParameterListener(id, this);
 }
 
 void NineStripProcessor::removeParameterListeners()
 {
-    const std::vector<juce::String> parameterIDs = {"consoleType", "drive",    "hipass", "ls_tite", "hp_poles", "lowpass",
-                                                    "lp_sft_hrd",  "lp_poles", "treble", "bass",    "hm_freq",  "highmid",
-                                                    "hm_reso",     "pressure", "speed",  "mewiness"};
-
     for (const auto &id : parameterIDs) apvts.removeParameterListener(id, this);
 }
 
@@ -115,6 +101,12 @@ void NineStripProcessor::parameterChanged(const juce::String &parameterID, float
         pressure4.setParameter(Pressure4::kParamB, newValue);
     else if (parameterID == "mewiness")
         pressure4.setParameter(Pressure4::kParamC, newValue);
+
+    // PurestGain
+    else if (parameterID == "inputGain")
+        inputPurestGain.setParameter(PurestGain::kParamA, newValue);
+    else if (parameterID == "outputGain")
+        outputPurestGain.setParameter(PurestGain::kParamA, newValue);
 }
 
 void NineStripProcessor::valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &)
@@ -133,12 +125,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    // Input gain - display as -10 to +10
+    // Input gain - store as 0-1, display as -40 to +40 dB
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "inputGain", "Input Gain", juce::NormalisableRange<float>(-24.0f, 24.0f), 0.0f,
+        "inputGain", "Input Gain", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { return juce::String((value / 24.0f) * 10.0f, 1); })
-            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() / 10.0f) * 24.0f; })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 80.0f) - 40.0f, 1) + " dB"; })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 40.0f) / 80.0f; })));
 
     // Channel9
     layout.add(std::make_unique<juce::AudioParameterChoice>("consoleType", "Console Type",
@@ -253,12 +245,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
             .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
             .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
-    // Output gain - display as -10 to +10
+    // Input gain - store as 0-1, display as -40 to +40 dB
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "outputGain", "Output Gain", juce::NormalisableRange<float>(-24.0f, 24.0f), 0.0f,
+        "outputGain", "Output Gain", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { return juce::String((value / 24.0f) * 10.0f, 1); })
-            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() / 10.0f) * 24.0f; })));
+            .withStringFromValueFunction([](float value, int) { return juce::String((value * 80.0f) - 40.0f, 1) + " dB"; })
+            .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 40.0f) / 80.0f; })));
 
     // Bypass switches
     layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Bypass", false));
@@ -293,6 +285,8 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     baxandall2.setSampleRate(sampleRate);
     parametric.setSampleRate(sampleRate);
     pressure4.setSampleRate(sampleRate);
+    inputPurestGain.setSampleRate(sampleRate);
+    outputPurestGain.setSampleRate(sampleRate);
 
     dcBlocker.prepare(sampleRate);
 
@@ -310,6 +304,11 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     parametric.setParameter(Parametric::kParamJ, 1.0f);  // wet/dry
 
     pressure4.setParameter(Pressure4::kParamD, 1.0f);  // output gain
+
+    inputPurestGain.setParameter(PurestGain::kParamB, 1.0f);   // chasespeed
+    outputPurestGain.setParameter(PurestGain::kParamB, 1.0f);  // chasespeed
+
+    inputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("inputGain")->load());
 
     channel9.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
     channel9.setParameter(Channel9::kParamB, apvts.getRawParameterValue("drive")->load());
@@ -338,6 +337,8 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     pressure4.setParameter(Pressure4::kParamA, apvts.getRawParameterValue("pressure")->load());
     pressure4.setParameter(Pressure4::kParamB, apvts.getRawParameterValue("speed")->load());
     pressure4.setParameter(Pressure4::kParamC, apvts.getRawParameterValue("mewiness")->load());
+
+    outputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("outputGain")->load());
 
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2});
@@ -379,8 +380,8 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
     float levelL = meterBuffer.getSample(0, meterBuffer.getNumSamples() - 1);
     float levelR = meterBuffer.getSample(1, meterBuffer.getNumSamples() - 1);
 
-    measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f));
-    measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f));
+    measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f) + 18.0f);
+    measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f) + 18.0f);
 }
 
 template <typename SampleType>
@@ -403,10 +404,6 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         return;  // Early exit, pass audio through untouched
     }
 
-    // Get gain values
-    const float inputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("inputGain")->load());
-    const float outputGainLinear = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("outputGain")->load());
-
     const bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
     const bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
     const bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
@@ -415,16 +412,18 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     const bool inputMeteringNeeded = meteringNeeded && inputMeasured;
     const bool outputMeteringNeeded = meteringNeeded && !inputMeasured;
 
-    // Apply input gain
-    buffer.applyGain(inputGainLinear);
+    // Create raw pointer arrays for Airwindows processing
+    SampleType *channelData[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
+
+    if constexpr (std::is_same_v<SampleType, float>)
+        inputPurestGain.processReplacing(channelData, channelData, buffer.getNumSamples());
+    else
+        inputPurestGain.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
 
     if (inputMeteringNeeded)
     {
         updateMeters(buffer);
     }
-
-    // Create raw pointer arrays for Airwindows processing
-    SampleType *channelData[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
 
     // Process through the plugin chain
     if (!saturationBypass)
@@ -476,8 +475,10 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         gainReduction.store(0.0f);
     }
 
-    // Apply output gain
-    buffer.applyGain(outputGainLinear);
+    if constexpr (std::is_same_v<SampleType, float>)
+        outputPurestGain.processReplacing(channelData, channelData, buffer.getNumSamples());
+    else
+        outputPurestGain.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
 
     if (outputMeteringNeeded)
     {
