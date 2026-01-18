@@ -17,10 +17,15 @@ NineStripProcessor::NineStripProcessor()
       inputPurestGain(44100.0),
       outputPurestGain(44100.0)
 {
-    ballisticsFilter.setAttackTime(10.0f);
-    ballisticsFilter.setReleaseTime(300.0f);
-    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 2});
+    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
+    ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
+    ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
+
+    grBallisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 1});
+    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
+    grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
+    grBallisticsFilter.setReleaseTime(grBallisticsFilterAttackTime);
 
     presetManager = std::make_unique<PresetManager>(apvts);
 
@@ -342,6 +347,17 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2});
+    ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
+    ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
+    meterBufferFloat.setSize(2, samplesPerBlock);
+    meterBufferDouble.setSize(2, samplesPerBlock);
+
+    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
+    grBallisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 1});
+    grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
+    grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
+    grMeterBufferFloat.setSize(1, samplesPerBlock);
+    grMeterBufferDouble.setSize(1, samplesPerBlock);
 }
 
 void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
@@ -382,6 +398,37 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
 
     measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f) + 18.0f);
     measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f) + 18.0f);
+}
+
+template <typename SampleType>
+void NineStripProcessor::updateGRMeter(float currentGR, int numSamples)
+{
+    // Get the appropriate buffer
+    auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+            return grMeterBufferFloat;
+        else
+            return grMeterBufferDouble;
+    }();
+
+    // Fill buffer with the GR gain value (not dB yet)
+    float grGain = juce::Decibels::decibelsToGain(currentGR);
+    meterBuffer.clear();
+
+    // Fill the buffer with the constant gain value
+    for (int i = 0; i < numSamples; ++i) meterBuffer.setSample(0, i, grGain);
+
+    // Process through ballistics filter
+    juce::dsp::AudioBlock<SampleType> block(meterBuffer);
+    juce::dsp::ProcessContextReplacing<SampleType> context(block);
+    grBallisticsFilter.process(context);
+
+    // Extract smoothed value and convert back to dB
+    float smoothedGain = meterBuffer.getSample(0, numSamples - 1);
+    float smoothedDb = juce::Decibels::gainToDecibels(smoothedGain, -60.0f);
+
+    gainReduction.store(std::min(smoothedDb, 0.0f));
 }
 
 template <typename SampleType>
@@ -467,12 +514,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         if (meteringNeeded)
         {
             float grDb = juce::Decibels::gainToDecibels(pressure4.getGainReduction());
-            gainReduction.store(std::min(grDb, 0.0f));  // Negative values for reduction
+            updateGRMeter<SampleType>(grDb, buffer.getNumSamples());
         }
     }
     else if (meteringNeeded)
     {
-        gainReduction.store(0.0f);
+        updateGRMeter<SampleType>(0.0f, buffer.getNumSamples());
     }
 
     if constexpr (std::is_same_v<SampleType, float>)

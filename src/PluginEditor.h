@@ -93,12 +93,12 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::Label pressureLabel, speedLabel, mewinessLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
         mewinessAttachment;
-    VUMeter grMeter;
+    NeedleVUMeter grMeter;
     juce::ToggleButton compressorBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> compressorBypassAttachment;
 
     // Meters
-    juce::GroupComponent metersGroup;
+    juce::Component metersGroup;
     NeedleVUMeter needleVUMeterL, needleVUMeterR;
     juce::TextButton vuMeterModeButton{"Input"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;

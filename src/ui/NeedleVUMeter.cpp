@@ -2,8 +2,8 @@
 
 #include "BinaryData.h"
 
-NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter)
-    : getLevelFunc(levelGetter), imageAspectRatio(backgroundWidth / backgroundHeight)
+NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
+    : getLevelFunc(levelGetter), meterType(type), imageAspectRatio(backgroundWidth / backgroundHeight)
 {
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::needlevu_png, BinaryData::needlevu_pngSize);
     peakOnImage = juce::ImageCache::getFromMemory(BinaryData::peakon_png, BinaryData::peakon_pngSize);
@@ -31,17 +31,20 @@ void NeedleVUMeter::paint(juce::Graphics& g)
     float scaledBorderWidth = borderWidth * scale;
     float scaledBottomBorder = bottomBorderHeight * scale;
 
-    float peakScaled = peakSize * scale;
-    float offsetX = (bounds.getWidth() - peakScaled) - (100 * scale);
-    float offsetY = (bounds.getHeight() - peakScaled) - (100 * scale);
+    if (meterType == MeterType::Level)
+    {
+        float peakScaled = peakSize * scale;
+        float offsetX = (bounds.getWidth() - peakScaled) - (100 * scale);
+        float offsetY = (bounds.getHeight() - peakScaled) - (100 * scale);
 
-    // 5. Scale and position the peak indicator
-    juce::Rectangle<float> peakBounds(offsetX, offsetY, peakScaled, peakScaled);
+        // 5. Scale and position the peak indicator
+        juce::Rectangle<float> peakBounds(offsetX, offsetY, peakScaled, peakScaled);
 
-    if (isPeakLit)
-        g.drawImage(peakOnImage, peakBounds, juce::RectanglePlacement::stretchToFit);
-    else
-        g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        if (isPeakLit)
+            g.drawImage(peakOnImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        else
+            g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+    }
 
     // 3. Set clipping region to exclude borders
     auto meterArea = bounds.reduced(scaledBorderWidth);
@@ -82,22 +85,25 @@ void NeedleVUMeter::timerCallback()
 {
     currentLevel = getLevelFunc();
 
-    // Check if we've hit peak threshold
-    if (currentLevel >= peakThreshold)
+    if (meterType == MeterType::Level)
     {
-        isPeakLit = true;
-        peakHoldCounter = peakHoldDuration;  // Reset the hold counter
-    }
+        // Check if we've hit peak threshold
+        if (currentLevel >= peakThreshold)
+        {
+            isPeakLit = true;
+            peakHoldCounter = peakHoldDuration;  // Reset the hold counter
+        }
 
-    // Decrement hold counter
-    if (peakHoldCounter > 0)
-    {
-        peakHoldCounter--;
-        isPeakLit = true;
-    }
-    else
-    {
-        isPeakLit = false;
+        // Decrement hold counter
+        if (peakHoldCounter > 0)
+        {
+            peakHoldCounter--;
+            isPeakLit = true;
+        }
+        else
+        {
+            isPeakLit = false;
+        }
     }
 
     repaint();

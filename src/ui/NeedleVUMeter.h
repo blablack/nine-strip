@@ -9,15 +9,23 @@
 class NeedleVUMeter : public juce::Component, private juce::Timer
 {
    public:
-    NeedleVUMeter(std::function<float()> levelGetter);
+    enum class MeterType
+    {
+        Level,         // Standard VU: -20dB to +3dB, left to right
+        GainReduction  // GR meter: 0dB to -20dB, right to left
+    };
+
+    NeedleVUMeter(std::function<float()> levelGetter, MeterType type);
     ~NeedleVUMeter() override;
 
     void paint(juce::Graphics& g) override;
     void timerCallback() override;
 
-    float getAspectRatio() const { return imageAspectRatio; }
+    [[nodiscard]] float getAspectRatio() const { return imageAspectRatio; }
 
    private:
+    MeterType meterType;
+
     void drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds);
 
     std::function<float()> getLevelFunc;

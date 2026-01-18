@@ -6,9 +6,9 @@
 NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
-      needleVUMeterL([&p]() { return p.getMeasuredLevelL(); }),
-      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }),
-      grMeter([&p]() { return p.getGainReduction(); }, VUMeter::MeterType::GainReduction)
+      needleVUMeterL([&p]() { return p.getMeasuredLevelL(); }, NeedleVUMeter::MeterType::Level),
+      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }, NeedleVUMeter::MeterType::Level),
+      grMeter([&p]() { return p.getGainReduction(); }, NeedleVUMeter::MeterType::GainReduction)
 {
     audioProcessor.editorStateChanged(true);
 
@@ -57,7 +57,7 @@ void NineStripProcessorEditor::setupPresetPanel()
 
 void NineStripProcessorEditor::setupConsoleSection()
 {
-    setupGroupComponent(consoleSatGroup, "Console");
+    setupGroupComponent(consoleSatGroup, "CONSOLE");
 
     consoleSatGroup.addAndMakeVisible(consoleTypeCombo);
     consoleTypeCombo.addItemList(juce::StringArray{"Neve", "API", "SSL", "Teac", "Mackie"}, 1);
@@ -75,14 +75,14 @@ void NineStripProcessorEditor::setupConsoleSection()
 void NineStripProcessorEditor::setupFiltersSection()
 {
     // High Pass Filter
-    setupGroupComponent(highPassGroup, "High Pass");
+    setupGroupComponent(highPassGroup, "HIGH PASS");
 
     addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", hipassAttachment);
     addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", hpLsTiteAttachment);
     addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", hpPolesAttachment);
 
     // Low Pass Filter
-    setupGroupComponent(lowPassGroup, "Low Pass");
+    setupGroupComponent(lowPassGroup, "LOW PASS");
 
     addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", lowpassAttachment);
     addRotaryKnob(lowPassGroup, lpSftHrdSlider, lpSftHrdLabel, "lp_sft_hrd", "Soft/Hard", lpSftHrdAttachment);
@@ -92,19 +92,19 @@ void NineStripProcessorEditor::setupFiltersSection()
 void NineStripProcessorEditor::setupEQSection()
 {
     // High Shelf
-    setupGroupComponent(highShelfGroup, "High Shelf");
+    setupGroupComponent(highShelfGroup, "HIGH SHELF");
 
     addRotaryKnob(highShelfGroup, trebleSlider, trebleLabel, "treble", "Gain", trebleAttachment);
 
     // High-Mid EQ
-    setupGroupComponent(highMidGroup, "Hi-Mid EQ");
+    setupGroupComponent(highMidGroup, "HI-MID EQ");
 
     addRotaryKnob(highMidGroup, hmFreqSlider, hmFreqLabel, "hm_freq", "Freq", hmFreqAttachment);
     addRotaryKnob(highMidGroup, hmGainSlider, hmGainLabel, "highmid", "Gain", hmGainAttachment);
     addRotaryKnob(highMidGroup, hmResoSlider, hmResoLabel, "hm_reso", "Q", hmResoAttachment);
 
     // Low Shelf
-    setupGroupComponent(lowShelfGroup, "Low Shelf");
+    setupGroupComponent(lowShelfGroup, "LOW SHELF");
 
     addRotaryKnob(lowShelfGroup, bassSlider, bassLabel, "bass", "Gain", bassAttachment);
 
@@ -117,7 +117,7 @@ void NineStripProcessorEditor::setupEQSection()
 
 void NineStripProcessorEditor::setupDynamicsSection()
 {
-    setupGroupComponent(compressorGroup, "Dynamics");
+    setupGroupComponent(compressorGroup, "DYNAMICS");
 
     addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", pressureAttachment);
     addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", speedAttachment);
@@ -133,7 +133,9 @@ void NineStripProcessorEditor::setupDynamicsSection()
 
 void NineStripProcessorEditor::setupMeters()
 {
-    setupGroupComponent(metersGroup, "Meters");
+    addAndMakeVisible(metersGroup);
+    metersGroup.setColour(juce::GroupComponent::outlineColourId, juce::Colours::transparentBlack);
+    metersGroup.setColour(juce::GroupComponent::textColourId, juce::Colours::white);
 
     metersGroup.addAndMakeVisible(needleVUMeterL);
     metersGroup.addAndMakeVisible(needleVUMeterR);
@@ -149,7 +151,7 @@ void NineStripProcessorEditor::setupMeters()
 
 void NineStripProcessorEditor::setupGain()
 {
-    setupGroupComponent(gainGroup, "Gain");
+    setupGroupComponent(gainGroup, "GAIN");
 
     gainGroup.addAndMakeVisible(inputGainSlider);
     inputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
@@ -249,10 +251,10 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
     };
 
     mainGrid.templateColumns = {
-        Track(Fr(1)),  // Column 1: Console/Filters
-        Track(Fr(1)),  // Column 2: EQ
-        Track(Fr(1)),  // Column 3: Meters (wider)
-        Track(Fr(1))   // Column 4: Dynamics/Gain
+        Track(Fr(5)),  // Column 1: Console/Filters
+        Track(Fr(5)),  // Column 2: EQ
+        Track(Fr(6)),  // Column 3: Meters (wider)
+        Track(Fr(4))   // Column 4: Dynamics/Gain
     };
 
     mainGrid.items.clear();
@@ -342,12 +344,20 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
 
     // Triangle knobs at top (not centered vertically)
     layoutTriangleKnobs(compBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
-                        bigKnobSize, smallKnobSize,
-                        false);  // Top-aligned, not centered
+                        bigKnobSize, smallKnobSize, false);
 
-    // GR Meter centered below knobs
-    int centerX = compBounds.getX() + (compBounds.getWidth() - 20) / 2;
-    grMeter.setBounds(centerX, mewinessSlider.getBottom() + 25, 20, compBounds.getBottom() - 60 - mewinessSlider.getBottom());
+    // Define available area for GR meter
+    int topY = mewinessSlider.getBottom() + 15;
+    int bottomY = compBounds.getBottom() - 30;  // Leave room for bypass button
+    int availableHeight = bottomY - topY;
+
+    // Create centered rectangle for the meter
+    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(), availableHeight);
+
+    // Constrain to aspect ratio and center horizontally
+    auto grMeterBounds = constrainToAspectRatio(meterArea, grMeter.getAspectRatio());
+    grMeterBounds.setCentre(compBounds.getCentreX(), grMeterBounds.getCentreY());
+    grMeter.setBounds(grMeterBounds);
 
     // Bypass button at bottom-right
     compressorBypassButton.setBounds(compBounds.getRight() - 55, compBounds.getBottom() - 25, 50, 20);
