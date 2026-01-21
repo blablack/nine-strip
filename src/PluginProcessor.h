@@ -99,16 +99,18 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     // Level meters
     juce::dsp::BallisticsFilter<float> ballisticsFilter;
-    const float ballisticsFilterAttackTime{10.0f};
-    const float ballisticsFilterReleaseTime{300.0f};
+    // const float ballisticsFilterAttackTime{10.0f};
+    // const float ballisticsFilterReleaseTime{300.0f};
+    const float ballisticsFilterAttackTime{1000.0f};
+    const float ballisticsFilterReleaseTime{1000.0f};
     juce::AudioBuffer<float> meterBufferFloat;
     juce::AudioBuffer<double> meterBufferDouble;
     template <typename SampleType>
     void updateMeters(const juce::AudioBuffer<SampleType> &buffer);
 
     juce::dsp::BallisticsFilter<float> grBallisticsFilter;
-    const float grBallisticsFilterAttackTime{10.0f};
-    const float grBallisticsFilterReleaseTime{300.0f};
+    const float grBallisticsFilterAttackTime{1000.0f};
+    const float grBallisticsFilterReleaseTime{1000.0f};
     juce::AudioBuffer<float> grMeterBufferFloat;
     juce::AudioBuffer<double> grMeterBufferDouble;
     template <typename SampleType>

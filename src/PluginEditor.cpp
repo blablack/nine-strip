@@ -64,7 +64,7 @@ void NineStripProcessorEditor::setupConsoleSection()
     consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.apvts, "consoleType", consoleTypeCombo);
 
-    addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", driveAttachment);
+    addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", juce::Colours::white.darker(), driveAttachment);
 
     consoleSatGroup.addAndMakeVisible(saturationBypassButton);
     saturationBypassButton.setClickingTogglesState(true);
@@ -77,16 +77,21 @@ void NineStripProcessorEditor::setupFiltersSection()
     // High Pass Filter
     setupGroupComponent(highPassGroup, "HIGH PASS");
 
-    addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", hipassAttachment);
-    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", hpLsTiteAttachment);
-    addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", hpPolesAttachment);
+    addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", juce::Colours::green.darker(), hipassAttachment);
+    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", juce::Colours::green.darker(),
+                  hpLsTiteAttachment);
+    addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", juce::Colours::green.darker(),
+                  hpPolesAttachment);
 
     // Low Pass Filter
     setupGroupComponent(lowPassGroup, "LOW PASS");
 
-    addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", lowpassAttachment);
-    addRotaryKnob(lowPassGroup, lpSftHrdSlider, lpSftHrdLabel, "lp_sft_hrd", "Soft/Hard", lpSftHrdAttachment);
-    addRotaryKnob(lowPassGroup, lpPolesSlider, lpPolesLabel, "lp_poles", "Slope", lpPolesAttachment);
+    addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", juce::Colours::blue.darker(),
+                  lowpassAttachment);
+    addRotaryKnob(lowPassGroup, lpSftHrdSlider, lpSftHrdLabel, "lp_sft_hrd", "Soft/Hard", juce::Colours::blue.darker(),
+                  lpSftHrdAttachment);
+    addRotaryKnob(lowPassGroup, lpPolesSlider, lpPolesLabel, "lp_poles", "Slope", juce::Colours::blue.darker(),
+                  lpPolesAttachment);
 }
 
 void NineStripProcessorEditor::setupEQSection()
@@ -94,19 +99,19 @@ void NineStripProcessorEditor::setupEQSection()
     // High Shelf
     setupGroupComponent(highShelfGroup, "HIGH SHELF");
 
-    addRotaryKnob(highShelfGroup, trebleSlider, trebleLabel, "treble", "Gain", trebleAttachment);
+    addRotaryKnob(highShelfGroup, trebleSlider, trebleLabel, "treble", "Gain", juce::Colours::black, trebleAttachment);
 
     // High-Mid EQ
     setupGroupComponent(highMidGroup, "HI-MID EQ");
 
-    addRotaryKnob(highMidGroup, hmFreqSlider, hmFreqLabel, "hm_freq", "Freq", hmFreqAttachment);
-    addRotaryKnob(highMidGroup, hmGainSlider, hmGainLabel, "highmid", "Gain", hmGainAttachment);
-    addRotaryKnob(highMidGroup, hmResoSlider, hmResoLabel, "hm_reso", "Q", hmResoAttachment);
+    addRotaryKnob(highMidGroup, hmFreqSlider, hmFreqLabel, "hm_freq", "Freq", juce::Colours::white.darker(), hmFreqAttachment);
+    addRotaryKnob(highMidGroup, hmGainSlider, hmGainLabel, "highmid", "Gain", juce::Colours::white.darker(), hmGainAttachment);
+    addRotaryKnob(highMidGroup, hmResoSlider, hmResoLabel, "hm_reso", "Q", juce::Colours::white.darker(), hmResoAttachment);
 
     // Low Shelf
     setupGroupComponent(lowShelfGroup, "LOW SHELF");
 
-    addRotaryKnob(lowShelfGroup, bassSlider, bassLabel, "bass", "Gain", bassAttachment);
+    addRotaryKnob(lowShelfGroup, bassSlider, bassLabel, "bass", "Gain", juce::Colours::black, bassAttachment);
 
     // EQ Bypass
     lowShelfGroup.addAndMakeVisible(eqBypassButton);
@@ -119,9 +124,11 @@ void NineStripProcessorEditor::setupDynamicsSection()
 {
     setupGroupComponent(compressorGroup, "DYNAMICS");
 
-    addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", pressureAttachment);
-    addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", speedAttachment);
-    addRotaryKnob(compressorGroup, mewinessSlider, mewinessLabel, "mewiness", "Mewiness", mewinessAttachment);
+    addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", juce::Colours::white.darker(),
+                  pressureAttachment);
+    addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", juce::Colours::white.darker(), speedAttachment);
+    addRotaryKnob(compressorGroup, mewinessSlider, mewinessLabel, "mewiness", "Mewiness", juce::Colours::white.darker(),
+                  mewinessAttachment);
 
     compressorGroup.addAndMakeVisible(grMeter);
 
@@ -156,6 +163,7 @@ void NineStripProcessorEditor::setupGain()
     gainGroup.addAndMakeVisible(inputGainSlider);
     inputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
     inputGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    inputGainSlider.setLookAndFeel(&faderSkeuomorphicLook);
     inputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
                                                                                                  "inputGain", inputGainSlider);
     gainGroup.addAndMakeVisible(inputGainLabel);
@@ -165,6 +173,7 @@ void NineStripProcessorEditor::setupGain()
     gainGroup.addAndMakeVisible(outputGainSlider);
     outputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
     outputGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    outputGainSlider.setLookAndFeel(&faderSkeuomorphicLook);
     outputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.apvts, "outputGain", outputGainSlider);
     gainGroup.addAndMakeVisible(outputGainLabel);
@@ -178,7 +187,7 @@ void NineStripProcessorEditor::setupGain()
 }
 
 void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label,
-                                             const juce::String& paramID, const juce::String& labelText,
+                                             const juce::String& paramID, const juce::String& labelText, juce::Colour knobColor,
                                              std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment)
 {
     parent.addAndMakeVisible(slider);
@@ -186,6 +195,8 @@ void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slid
     slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 
     slider.setLookAndFeel(&knobSkeuomorphicLook);
+
+    slider.setColour(juce::Slider::rotarySliderFillColourId, knobColor);
 
     attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, paramID, slider);
 
@@ -419,13 +430,24 @@ void NineStripProcessorEditor::layoutGain()
 
     // Use remaining space for sliders
     auto gainSliders = gainBounds.reduced(0, 4);  // Small vertical padding
+    gainSliders.removeFromBottom(20);
+
+    // Calculate fader width based on available space - scale between 20-50px
+    const int faderWidth = juce::jlimit(20, 50, gainSliders.getWidth() / 4);
+
     auto inputArea = gainSliders.removeFromLeft(gainSliders.getWidth() / 2).reduced(2);
-    inputGainLabel.setBounds(inputArea.removeFromBottom(12));
-    inputGainSlider.setBounds(inputArea);
+    inputGainLabel.setBounds(inputArea.removeFromBottom(20));
+
+    // Center the fader horizontally in its area
+    const int inputCenterX = inputArea.getX() + (inputArea.getWidth() - faderWidth) / 2;
+    inputGainSlider.setBounds(inputCenterX, inputArea.getY(), faderWidth, inputArea.getHeight());
 
     auto outputArea = gainSliders.reduced(2);
-    outputGainLabel.setBounds(outputArea.removeFromBottom(12));
-    outputGainSlider.setBounds(outputArea);
+    outputGainLabel.setBounds(outputArea.removeFromBottom(20));
+
+    // Center the fader horizontally in its area
+    const int outputCenterX = outputArea.getX() + (outputArea.getWidth() - faderWidth) / 2;
+    outputGainSlider.setBounds(outputCenterX, outputArea.getY(), faderWidth, outputArea.getHeight());
 }
 
 void NineStripProcessorEditor::updatePresetComboBox()

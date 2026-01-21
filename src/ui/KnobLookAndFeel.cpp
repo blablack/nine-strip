@@ -2,7 +2,7 @@
 
 KnobLookAndFeel::KnobLookAndFeel()
 {
-    setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::white.darker());
+    // setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::white.darker());
     setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colours::darkslategrey.darker());
     setColour(juce::Slider::trackColourId, juce::Colours::white.darker());
     setColour(juce::Slider::thumbColourId, juce::Colours::white.darker());
@@ -15,7 +15,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
 {
     const auto minDimension = static_cast<float>(std::min(width, height));
     const bool smallMode{(minDimension <= 60)};
-    constexpr auto flatStyle{true};
+    constexpr auto flatStyle{false};
     constexpr auto dialSizeRatio{0.35f};
     constexpr auto dialBulbiness{6};
     const auto baseSizeRatio{smallMode ? 0.8f : 0.7f};
@@ -31,7 +31,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     const float angle{rotaryStartAngle + (sliderPos * (rotaryEndAngle - rotaryStartAngle))};
 
     const auto baseColour{findColour(juce::Slider::rotarySliderOutlineColourId)};
-    const auto knobColour{findColour(juce::Slider::rotarySliderFillColourId)};
+    const auto knobColour{slider.findColour(juce::Slider::rotarySliderFillColourId)};
     const auto trackColour{findColour(juce::Slider::trackColourId).darker(slider.isEnabled() ? 0.0f : 0.4f)};
     const auto thumbColour{findColour(juce::Slider::thumbColourId)};
 

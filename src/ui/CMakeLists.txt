@@ -1,6 +1,6 @@
 add_library(NineStripUI STATIC
-    VUMeter.cpp
     KnobLookAndFeel.cpp
+    FaderLookAndFeel.cpp
     NeedleVUMeter.cpp
 )
 

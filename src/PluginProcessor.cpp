@@ -360,7 +360,12 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     grMeterBufferDouble.setSize(1, samplesPerBlock);
 }
 
-void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
+void NineStripProcessor::releaseResources()
+{
+    dcBlocker.reset();
+    ballisticsFilter.reset();
+    grBallisticsFilter.reset();
+}
 
 bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {

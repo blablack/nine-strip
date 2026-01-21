@@ -3,9 +3,10 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "ui/FaderLookAndFeel.h"
 #include "ui/KnobLookAndFeel.h"
 #include "ui/NeedleVUMeter.h"
-#include "ui/VUMeter.h"
+
 
 class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::ComboBox::Listener,
@@ -27,6 +28,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     NineStripProcessor& audioProcessor;
 
     KnobLookAndFeel knobSkeuomorphicLook;
+    FaderLookAndFeel faderSkeuomorphicLook;
 
     juce::ComponentBoundsConstrainer constrainer;
 
@@ -131,7 +133,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     void setupGroupComponent(juce::GroupComponent& group, const juce::String& title);
 
     void addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label, const juce::String& paramID,
-                       const juce::String& labelText,
+                       const juce::String& labelText, juce::Colour knobColor,
                        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment);
 
     static void layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft, juce::Label& topLeftLabel,
