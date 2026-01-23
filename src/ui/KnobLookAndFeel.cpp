@@ -15,7 +15,6 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
 {
     const auto minDimension = static_cast<float>(std::min(width, height));
     const bool smallMode{(minDimension <= 60)};
-    constexpr auto flatStyle{false};
     constexpr auto dialSizeRatio{0.35f};
     constexpr auto dialBulbiness{6};
     const auto baseSizeRatio{smallMode ? 0.8f : 0.7f};
@@ -35,6 +34,8 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     const auto trackColour{findColour(juce::Slider::trackColourId).darker(slider.isEnabled() ? 0.0f : 0.4f)};
     const auto thumbColour{findColour(juce::Slider::thumbColourId)};
 
+    bool hasTextBox = slider.getTextBoxPosition() != juce::Slider::NoTextBox;
+
     const auto baseDiameter{minDimension * baseSizeRatio};
     const auto baseRadius{baseDiameter / 2.0f};
     const float rxBase{centerX - baseRadius};
@@ -42,15 +43,12 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     juce::Path dialBase{};
     dialBase.addEllipse(rxBase, ryBase, baseDiameter, baseDiameter);
 
-    if constexpr (flatStyle)
-        g.setColour(baseColour);
-    else
-        g.setGradientFill(juce::ColourGradient(baseColour, rxBase, ryBase, baseColour.darker(0.8f), rxBase + baseRadius,
-                                               ryBase + baseRadius, false));
+    g.setGradientFill(juce::ColourGradient(baseColour, rxBase, ryBase, baseColour.darker(0.8f), rxBase + baseRadius,
+                                           ryBase + baseRadius, false));
 
     g.fillPath(dialBase);
 
-    if (!smallMode)
+    if (!smallMode && !hasTextBox)
     {
         const auto innerTickCircleDiameter{minDimension * innerTickCircleRatio};
         const auto outerRadius{outerTickCircleDiameter / 2.0f};
@@ -99,12 +97,9 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
         juce::AffineTransform::rotation((45.0f / 360.0f) * juce::MathConstants<float>::twoPi, centerX, centerY));
     innerDial.addPath(innerDialRotated);
 
-    if constexpr (!flatStyle)
-    {
-        const auto shadow =
-            juce::DropShadow(juce::Colours::black, 20, {static_cast<int>(baseRadius) / 4, static_cast<int>(baseRadius) / 4});
-        shadow.drawForPath(g, innerDial);
-    }
+    const auto shadow =
+        juce::DropShadow(juce::Colours::black, 30, {static_cast<int>(baseRadius) / 3, static_cast<int>(baseRadius) / 3});
+    shadow.drawForPath(g, innerDial);
 
     if (slider.isEnabled())
     {
@@ -120,7 +115,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     g.setColour(knobColour);
     g.fillPath(innerDial);
 
-    if (!smallMode)
+    if (!smallMode && !hasTextBox)
     {
         g.setFont(juce::FontOptions{}.withHeight(juce::jlimit(10.0f, 20.0f, outerTickCircleDiameter / 8.0f)));
         const auto textSize = juce::jlimit(20, 80, width - juce::roundToInt(centerX + baseRadius));

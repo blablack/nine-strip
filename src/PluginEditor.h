@@ -45,10 +45,10 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     // Console & Saturation
     juce::GroupComponent consoleSatGroup;
-    juce::ComboBox consoleTypeCombo;
+    juce::Slider consoleTypeSlider;
     juce::Slider driveSlider;
     juce::Label driveLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> consoleTypeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> consoleTypeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
     GlowButton saturationBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;

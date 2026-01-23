@@ -59,10 +59,30 @@ void NineStripProcessorEditor::setupConsoleSection()
 {
     setupGroupComponent(consoleSatGroup, "CONSOLE");
 
-    consoleSatGroup.addAndMakeVisible(consoleTypeCombo);
-    consoleTypeCombo.addItemList(juce::StringArray{"Neve", "API", "SSL", "Teac", "Mackie"}, 1);
-    consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-        audioProcessor.apvts, "consoleType", consoleTypeCombo);
+    // Setup console type rotary knob
+    consoleSatGroup.addAndMakeVisible(consoleTypeSlider);
+    consoleTypeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    consoleTypeSlider.setRange(0, 4, 1);  // 5 choices (0-4), step size of 1
+    consoleTypeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+
+    // Map numeric values to text labels
+    consoleTypeSlider.textFromValueFunction = [](double value)
+    {
+        static const juce::StringArray types{"Neve", "API", "SSL", "Teac", "Mackie"};
+        return types[static_cast<int>(value)];
+    };
+
+    consoleTypeSlider.valueFromTextFunction = [](const juce::String& text)
+    {
+        static const juce::StringArray types{"Neve", "API", "SSL", "Teac", "Mackie"};
+        return static_cast<double>(types.indexOf(text));
+    };
+
+    consoleTypeSlider.setLookAndFeel(&knobSkeuomorphicLook);
+    consoleTypeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::orange);
+
+    consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.apvts, "consoleType", consoleTypeSlider);
 
     addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", juce::Colours::white.darker(), driveAttachment);
 
@@ -306,10 +326,19 @@ void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
 {
     auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(6);
 
-    consoleTypeCombo.setBounds(consoleBounds.getX() + 2, consoleBounds.getY() + 20, consoleBounds.getWidth() - 4, 24);
+    const int horizontalSpacing = 16;
+    int totalWidth = bigKnobSize * 2 + horizontalSpacing;
+    int startX = consoleBounds.getCentreX() - (totalWidth / 2);
+    int knobY = consoleBounds.getY() + (consoleBounds.getHeight() - bigKnobSize - 40) / 2;  // Center vertically
 
-    layoutCenteredKnob(consoleBounds, driveSlider, driveLabel, bigKnobSize);
+    // Console type knob on left
+    consoleTypeSlider.setBounds(startX, knobY, bigKnobSize, bigKnobSize + 20);
 
+    // Drive knob on right
+    driveSlider.setBounds(startX + bigKnobSize + horizontalSpacing, knobY, bigKnobSize, bigKnobSize);
+    driveLabel.setBounds(driveSlider.getX(), driveSlider.getBottom(), bigKnobSize, 18);
+
+    // Bypass button at bottom-right
     saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 26, 50, 20);
 }
 
@@ -349,17 +378,18 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
 {
     auto compBounds = compressorGroup.getLocalBounds().reduced(6);
 
+    auto triangleBounds = compBounds.withTrimmedTop(30);
     // Triangle knobs at top (not centered vertically)
-    layoutTriangleKnobs(compBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
+    layoutTriangleKnobs(triangleBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
                         bigKnobSize, smallKnobSize, false);
 
     // Define available area for GR meter
-    int topY = mewinessSlider.getBottom() + 15;
+    int topY = mewinessSlider.getBottom() + 25;
     int bottomY = compBounds.getBottom() - 30;  // Leave room for bypass button
     int availableHeight = bottomY - topY;
 
     // Create centered rectangle for the meter
-    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(), availableHeight);
+    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(), static_cast<int>(availableHeight * 0.7));
 
     // Constrain to aspect ratio and center horizontally
     auto grMeterBounds = constrainToAspectRatio(meterArea, grMeter.getAspectRatio());
