@@ -164,13 +164,36 @@ void NineStripProcessorEditor::setupMeters()
     metersGroup.addAndMakeVisible(needleVUMeterL);
     metersGroup.addAndMakeVisible(needleVUMeterR);
 
-    metersGroup.addAndMakeVisible(vuMeterModeButton);
-    vuMeterModeButton.setClickingTogglesState(true);
-    vuMeterModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        audioProcessor.apvts, "inputMeasured", vuMeterModeButton);
+    metersGroup.addAndMakeVisible(vuMeterInputButton);
+    vuMeterInputButton.setClickingTogglesState(true);
+    vuMeterInputButton.onClick = [this]()
+    {
+        if (vuMeterInputButton.getToggleState())
+        {
+            vuMeterOutputButton.setToggleState(false, juce::dontSendNotification);
+            audioProcessor.apvts.getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
+        }
+    };
+
+    // Setup Output button
+    metersGroup.addAndMakeVisible(vuMeterOutputButton);
+    vuMeterOutputButton.setClickingTogglesState(true);
+    vuMeterOutputButton.onClick = [this]()
+    {
+        if (vuMeterOutputButton.getToggleState())
+        {
+            vuMeterInputButton.setToggleState(false, juce::dontSendNotification);
+            audioProcessor.apvts.getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
+        }
+    };
+
+    // Initialize button states based on current parameter value
+    bool isInputMode = audioProcessor.apvts.getRawParameterValue("inputMeasured")->load() > 0.5f;
+    vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
+    vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
+
+    // Listen for parameter changes
     audioProcessor.apvts.addParameterListener("inputMeasured", this);
-    vuMeterModeButton.setButtonText((audioProcessor.apvts.getRawParameterValue("inputMeasured")->load() > 0.5f) ? "Input"
-                                                                                                                : "Output");
 }
 
 void NineStripProcessorEditor::setupGain()
@@ -237,8 +260,11 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
 {
     if (parameterID == "inputMeasured")
     {
-        juce::MessageManager::callAsync([this, newValue]()
-                                        { vuMeterModeButton.setButtonText(newValue > 0.5f ? "Input" : "Output"); });
+        bool isInputMode = newValue > 0.5f;
+        vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
+        vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
+
+        // Your existing VU meter update code...
     }
 }
 
@@ -405,7 +431,20 @@ void NineStripProcessorEditor::layoutMeters()
     auto metersBounds = metersGroup.getLocalBounds().reduced(6);
     metersBounds.removeFromTop(2);
 
-    vuMeterModeButton.setBounds(metersBounds.removeFromBottom(30).reduced(4, 2));
+    auto buttonArea = metersBounds.removeFromBottom(30).reduced(4, 2);
+
+    // Calculate button dimensions - two buttons side-by-side with spacing
+    const int spacing = 8;
+    const int buttonWidth = (buttonArea.getWidth() - spacing) / 4;
+
+    // Center the button group horizontally
+    const int totalGroupWidth = buttonWidth * 2 + spacing;
+    const int startX = buttonArea.getCentreX() - (totalGroupWidth / 2);
+    const int buttonY = buttonArea.getY();
+    const int buttonHeight = buttonArea.getHeight();
+
+    vuMeterInputButton.setBounds(startX, buttonY, buttonWidth, buttonHeight);
+    vuMeterOutputButton.setBounds(startX + buttonWidth + spacing, buttonY, buttonWidth, buttonHeight);
 
     auto meterArea = metersBounds;
 

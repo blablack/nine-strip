@@ -102,7 +102,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Meters
     juce::Component metersGroup;
     NeedleVUMeter needleVUMeterL, needleVUMeterR;
-    juce::TextButton vuMeterModeButton{"Input"};
+    GlowButton vuMeterInputButton{"Input"};
+    GlowButton vuMeterOutputButton{"Output"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;
 
     // Gain
