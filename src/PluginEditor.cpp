@@ -497,18 +497,18 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
 
     // Top row - add labelPadding to width, offset x by half
     topLeft.setBounds(triangleX - labelPadding / 2, triangleY, bigKnobSize + labelPadding, bigKnobSize);
-    topLeftLabel.setBounds(topLeft.getX() + labelPadding / 2, topLeft.getBottom(), bigKnobSize, 12);
+    topLeftLabel.setBounds(topLeft.getX() + labelPadding / 2, topLeft.getBottom(), bigKnobSize, 20);
 
     topRight.setBounds(triangleX + bigKnobSize + horizontalSpacing - labelPadding / 2, triangleY, bigKnobSize + labelPadding,
                        bigKnobSize);
-    topRightLabel.setBounds(topRight.getX() + labelPadding / 2, topRight.getBottom(), bigKnobSize, 12);
+    topRightLabel.setBounds(topRight.getX() + labelPadding / 2, topRight.getBottom(), bigKnobSize, 20);
 
     // Bottom - small knob with padding
     int bottomY = triangleY + bigKnobSize + verticalSpacing;
     int bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;
 
     bottom.setBounds(bottomX - labelPadding / 2, bottomY, smallKnobSize + labelPadding, smallKnobSize);
-    bottomLabel.setBounds(bottom.getX() + labelPadding / 2, bottom.getBottom(), smallKnobSize, 12);
+    bottomLabel.setBounds(bottom.getX() + labelPadding / 2, bottom.getBottom(), smallKnobSize, 20);
 }
 
 void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label,
@@ -520,7 +520,7 @@ void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, j
     int centerY = bounds.getY() + (bounds.getHeight() - knobSize) / 2;
 
     knob.setBounds(centerX - labelPadding / 2, centerY, knobSize + labelPadding, knobSize);
-    label.setBounds(knob.getX() + labelPadding / 2, knob.getBottom(), knobSize, 12);
+    label.setBounds(knob.getX() + labelPadding / 2, knob.getBottom(), knobSize, 20);
 }
 
 void NineStripProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
