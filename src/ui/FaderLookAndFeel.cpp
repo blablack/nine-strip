@@ -16,7 +16,7 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
     // Scale track and thumb based on width
     const auto trackWidth = static_cast<float>(width) * 0.3f;
     const auto thumbWidth = static_cast<float>(width) * 0.6f;
-    const auto thumbHeight = thumbWidth * 1.5f;  // Maintains 2:3 ratio (20:30)
+    const auto thumbHeight = thumbWidth * 1.5f;
 
     const auto centerX{static_cast<float>(x) + (static_cast<float>(width) / 2.0f)};
     const auto trackX{centerX - (trackWidth / 2.0f)};
@@ -53,19 +53,23 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
 
     juce::Rectangle<float> thumbRect(thumbX, thumbY, thumbWidth, thumbHeight);
 
-    // Thumb shadow - styled like the dial shadow
+    // Thumb shadow
     const auto shadow =
         juce::DropShadow(juce::Colours::black, 20, {static_cast<int>(thumbWidth) / 4, static_cast<int>(thumbHeight) / 4});
     juce::Path thumbPath;
     thumbPath.addRectangle(thumbRect);
     shadow.drawForPath(g, thumbPath);
 
-    // Overall vertical gradient: darker at top, brighter at bottom
-    juce::ColourGradient overallGradient(thumbColour.darker(0.4f),  // Top - darker (facing away from light)
-                                         thumbX + thumbWidth / 2.0f, thumbY,
-                                         thumbColour.brighter(0.3f),  // Bottom - brighter (facing toward light)
-                                         thumbX + thumbWidth / 2.0f, thumbY + thumbHeight, false);
-    g.setGradientFill(overallGradient);
+    juce::ColourGradient radialGradient(
+        thumbColour.brighter(0.5f),   // Highlight center (simulates light hitting curved surface)
+        thumbX + thumbWidth / 2.0f,   // Center X
+        thumbY + thumbHeight * 0.3f,  // Light source from upper portion
+        thumbColour.darker(0.3f),     // Darker edges
+        thumbX + thumbWidth / 2.0f,   // Center X
+        thumbY + thumbHeight,         // Extends to bottom
+        true                          // ← RADIAL (was false for linear)
+    );
+    g.setGradientFill(radialGradient);
     g.fillRect(thumbRect);
 
     // Draw horizontal ridges/grooves
@@ -75,17 +79,13 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
     for (int i = 0; i < numRidges; ++i)
     {
         const auto ridgeY = thumbY + (ridgeHeight * static_cast<float>(i));
-
-        // Position in the thumb (0 = top, 1 = bottom)
         const auto verticalPos = static_cast<float>(i) / static_cast<float>(numRidges - 1);
 
-        // Base color gets brighter from top to bottom
         auto ridgeBaseColour = thumbColour.darker(0.4f).interpolatedWith(thumbColour.brighter(0.3f), verticalPos);
 
-        // Each groove: darker at top of groove, brighter at bottom
-        juce::ColourGradient grooveGradient(ridgeBaseColour.darker(0.4f),  // Top of groove - shadow
+        juce::ColourGradient grooveGradient(ridgeBaseColour.darker(0.6f),  // Was 0.4f - darker shadow
                                             thumbX, ridgeY,
-                                            ridgeBaseColour.brighter(0.4f),  // Bottom of groove - catching light
+                                            ridgeBaseColour.brighter(0.6f),  // Was 0.4f - brighter highlight
                                             thumbX, ridgeY + ridgeHeight, false);
 
         g.setGradientFill(grooveGradient);
@@ -101,7 +101,7 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
     }
 
     // Add subtle noise texture for realism
-    juce::Random random(static_cast<int64_t>(thumbY * 1000));  // Seed based on position for consistency
+    juce::Random random(static_cast<int64_t>(thumbY * 1000));
     const int noisePoints = 300;
     for (int i = 0; i < noisePoints; ++i)
     {
@@ -112,6 +112,13 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
         g.setColour(thumbColour.brighter(noiseBrightness).withAlpha(0.15f));
         g.fillRect(noiseX, noiseY, 1.0f, 1.0f);
     }
+
+    auto highlightArea = thumbRect.removeFromTop(thumbHeight * 0.35f);
+    g.setGradientFill(juce::ColourGradient(juce::Colours::white.withAlpha(0.25f),  // Bright white at top
+                                           highlightArea.getTopLeft(),
+                                           juce::Colours::transparentBlack,  // Fades to transparent
+                                           highlightArea.getBottomLeft(), false));
+    g.fillRect(highlightArea);
 
     // Top edge - bright (catching light)
     g.setColour(thumbColour.brighter(0.6f));
@@ -129,10 +136,13 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
     g.setColour(thumbColour.darker(0.6f));
     g.fillRect(thumbX + thumbWidth - 1.5f, thumbY, 1.5f, thumbHeight);
 
+    g.setColour(juce::Colours::white.withAlpha(0.15f));
+    g.drawRect(thumbRect, 0.5f);
+
     // Center indicator band - smaller and thinner
     g.setColour(juce::Colours::black.withAlpha(0.6f));
-    const auto centerBandY = thumbY + thumbHeight * 0.45f;                          // Centered better
-    g.fillRect(thumbX + 4.0f, centerBandY, thumbWidth - 8.0f, thumbHeight * 0.1f);  // Narrower band
+    const auto centerBandY = thumbY + thumbHeight * 0.45f;
+    g.fillRect(thumbX + 4.0f, centerBandY, thumbWidth - 8.0f, thumbHeight * 0.1f);
 
     // Outer outline
     g.setColour(thumbColour.darker(0.7f));
