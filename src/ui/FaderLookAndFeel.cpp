@@ -14,8 +14,8 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
     if (style != juce::Slider::LinearVertical) return;
 
     // Scale track and thumb based on width
-    const auto trackWidth = static_cast<float>(width) * 0.4f;
-    const auto thumbWidth = static_cast<float>(width) * 0.7f;
+    const auto trackWidth = static_cast<float>(width) * 0.3f;
+    const auto thumbWidth = static_cast<float>(width) * 0.6f;
     const auto thumbHeight = thumbWidth * 1.5f;  // Maintains 2:3 ratio (20:30)
 
     const auto centerX{static_cast<float>(x) + (static_cast<float>(width) / 2.0f)};

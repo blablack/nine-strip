@@ -67,7 +67,6 @@ void NineStripProcessorEditor::setupConsoleSection()
     addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", juce::Colours::white.darker(), driveAttachment);
 
     consoleSatGroup.addAndMakeVisible(saturationBypassButton);
-    saturationBypassButton.setClickingTogglesState(true);
     saturationBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "saturationBypass", saturationBypassButton);
 }
@@ -115,7 +114,6 @@ void NineStripProcessorEditor::setupEQSection()
 
     // EQ Bypass
     lowShelfGroup.addAndMakeVisible(eqBypassButton);
-    eqBypassButton.setClickingTogglesState(true);
     eqBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts,
                                                                                                 "eqBypass", eqBypassButton);
 }
@@ -133,7 +131,6 @@ void NineStripProcessorEditor::setupDynamicsSection()
     compressorGroup.addAndMakeVisible(grMeter);
 
     compressorGroup.addAndMakeVisible(compressorBypassButton);
-    compressorBypassButton.setClickingTogglesState(true);
     compressorBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "compressorBypass", compressorBypassButton);
 }
@@ -181,7 +178,6 @@ void NineStripProcessorEditor::setupGain()
     outputGainLabel.setJustificationType(juce::Justification::centred);
 
     gainGroup.addAndMakeVisible(masterBypassButton);
-    masterBypassButton.setClickingTogglesState(true);
     masterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.apvts, "masterBypass", masterBypassButton);
 }

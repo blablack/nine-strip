@@ -1,6 +1,5 @@
 #pragma once
 
-#include <juce_dsp/juce_dsp.h>
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 

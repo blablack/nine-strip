@@ -2,6 +2,7 @@ add_library(NineStripUI STATIC
     KnobLookAndFeel.cpp
     FaderLookAndFeel.cpp
     NeedleVUMeter.cpp
+    GlowButton.cpp
 )
 
 target_include_directories(NineStripUI PUBLIC

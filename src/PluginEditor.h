@@ -4,9 +4,9 @@
 
 #include "PluginProcessor.h"
 #include "ui/FaderLookAndFeel.h"
+#include "ui/GlowButton.h"
 #include "ui/KnobLookAndFeel.h"
 #include "ui/NeedleVUMeter.h"
-
 
 class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::ComboBox::Listener,
@@ -50,7 +50,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::Label driveLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> consoleTypeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
-    juce::ToggleButton saturationBypassButton{"Byp"};
+    GlowButton saturationBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
 
     // High Pass Filter
@@ -86,7 +86,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bassAttachment;
 
     // EQ Bypass
-    juce::ToggleButton eqBypassButton{"Byp"};
+    GlowButton eqBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> eqBypassAttachment;
 
     // Compressor
@@ -96,7 +96,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
         mewinessAttachment;
     NeedleVUMeter grMeter;
-    juce::ToggleButton compressorBypassButton{"Byp"};
+    GlowButton compressorBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> compressorBypassAttachment;
 
     // Meters
@@ -110,7 +110,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::Slider inputGainSlider, outputGainSlider;
     juce::Label inputGainLabel, outputGainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment, outputGainAttachment;
-    juce::TextButton masterBypassButton{"Bypass"};
+    GlowButton masterBypassButton{"MASTER BYPASS"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> masterBypassAttachment;
 
     void setupPresetPanel();
