@@ -39,7 +39,7 @@ PURESTGAIN - Output Gain
 ```bash
 git clone --recurse-submodules https://github.com/blablack/nine-strip.git
 cd nine-strip
-cmake -B build -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 ninja -C build
 ```
 

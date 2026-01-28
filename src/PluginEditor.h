@@ -44,7 +44,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::TextButton nextPresetButton;
 
     // Console & Saturation
-    juce::GroupComponent consoleSatGroup;
+    juce::Component consoleSatGroup;
+    juce::Label consoleSatLabel;
     juce::Slider consoleTypeSlider;
     juce::Slider driveSlider;
     juce::Label driveLabel;
@@ -54,33 +55,42 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
 
     // High Pass Filter
-    juce::GroupComponent highPassGroup;
+    juce::Component highPassGroup;
+    juce::Label highPassLabel;
     juce::Slider hipassSlider, hpLsTiteSlider, hpPolesSlider;
     juce::Label hipassLabel, hpLsTiteLabel, hpPolesLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hipassAttachment, hpLsTiteAttachment,
         hpPolesAttachment;
 
     // Low Pass Filter
-    juce::GroupComponent lowPassGroup;
+    juce::Component lowPassGroup;
+    juce::Label lowPassLabel;
     juce::Slider lowpassSlider, lpSftHrdSlider, lpPolesSlider;
     juce::Label lowpassLabel, lpSftHrdLabel, lpPolesLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowpassAttachment, lpSftHrdAttachment,
         lpPolesAttachment;
 
+    // Filter Bypass
+    GlowButton filterBypassButton{"Byp"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> filterBypassAttachment;
+
     // High Shelf
-    juce::GroupComponent highShelfGroup;
+    juce::Component highShelfGroup;
+    juce::Label highShelfLabel;
     juce::Slider trebleSlider;
     juce::Label trebleLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trebleAttachment;
 
     // High-Mid EQ
-    juce::GroupComponent highMidGroup;
+    juce::Component highMidGroup;
+    juce::Label highMidLabel;
     juce::Slider hmFreqSlider, hmGainSlider, hmResoSlider;
     juce::Label hmFreqLabel, hmGainLabel, hmResoLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hmFreqAttachment, hmGainAttachment, hmResoAttachment;
 
     // Low Shelf
-    juce::GroupComponent lowShelfGroup;
+    juce::Component lowShelfGroup;
+    juce::Label lowShelfLabel;
     juce::Slider bassSlider;
     juce::Label bassLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bassAttachment;
@@ -90,7 +100,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> eqBypassAttachment;
 
     // Compressor
-    juce::GroupComponent compressorGroup;
+    juce::Component compressorGroup;
+    juce::Label compressorLabel;
     juce::Slider pressureSlider, speedSlider, mewinessSlider;
     juce::Label pressureLabel, speedLabel, mewinessLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
@@ -107,7 +118,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;
 
     // Gain
-    juce::GroupComponent gainGroup;
+    juce::Component gainGroup;
+    juce::Label gainLabel;
     juce::Slider inputGainSlider, outputGainSlider;
     juce::Label inputGainLabel, outputGainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment, outputGainAttachment;
@@ -131,7 +143,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     void layoutMeters();
     void layoutGain();
 
-    void setupGroupComponent(juce::GroupComponent& group, const juce::String& title);
+    void setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title);
 
     void addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label, const juce::String& paramID,
                        const juce::String& labelText, juce::Colour knobColor,

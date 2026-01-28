@@ -260,6 +260,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
     // Bypass switches
     layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("saturationBypass", "Saturation Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("compressorBypass", "Compressor Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("inputMeasured", "Input Measured", true));
@@ -457,6 +458,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     }
 
     const bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
+    const bool filterBypass = apvts.getRawParameterValue("filterBypass")->load() > 0.5f;
     const bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
     const bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
 
@@ -486,23 +488,36 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
             channel9.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
     }
 
-    if (!eqBypass)
+    if (!filterBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
         {
             highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
             lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-            baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
-            parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
         }
         else
         {
             highpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
             lowpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+    }
+
+    if (!eqBypass)
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+        {
+            baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
+            parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
+        }
+        else
+        {
             baxandall2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
             parametric.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
         }
+    }
 
+    if (!filterBypass)
+    {
         dcBlocker.processStereo(channelData, buffer.getNumSamples());
     }
 

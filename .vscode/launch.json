@@ -8,10 +8,10 @@
       "name": "Run",
       "request": "launch",
       "type": "lldb",
-      "program": "${workspaceFolder}/build/src/NineStrip_artefacts/Standalone/NineStrip",
+      "program": "${workspaceFolder}/build/src/NineStrip_artefacts/Release/Standalone/NineStrip",
       "args": [],
       "cwd": "${workspaceFolder}",
-      "preLaunchTask": "build"
+      "preLaunchTask": "build_release"
     },
     {
       "name": "Debug",

@@ -57,7 +57,7 @@ void NineStripProcessorEditor::setupPresetPanel()
 
 void NineStripProcessorEditor::setupConsoleSection()
 {
-    setupGroupComponent(consoleSatGroup, "CONSOLE");
+    setupGroupComponent(consoleSatGroup, consoleSatLabel, "CONSOLE");
 
     // Setup console type rotary knob
     consoleSatGroup.addAndMakeVisible(consoleTypeSlider);
@@ -94,7 +94,7 @@ void NineStripProcessorEditor::setupConsoleSection()
 void NineStripProcessorEditor::setupFiltersSection()
 {
     // High Pass Filter
-    setupGroupComponent(highPassGroup, "HIGH PASS");
+    setupGroupComponent(highPassGroup, highPassLabel, "HIGH PASS");
 
     addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", juce::Colours::green.darker(), hipassAttachment);
     addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", juce::Colours::green.darker(),
@@ -103,7 +103,7 @@ void NineStripProcessorEditor::setupFiltersSection()
                   hpPolesAttachment);
 
     // Low Pass Filter
-    setupGroupComponent(lowPassGroup, "LOW PASS");
+    setupGroupComponent(lowPassGroup, lowPassLabel, "LOW PASS");
 
     addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", juce::Colours::blue.darker(),
                   lowpassAttachment);
@@ -111,24 +111,28 @@ void NineStripProcessorEditor::setupFiltersSection()
                   lpSftHrdAttachment);
     addRotaryKnob(lowPassGroup, lpPolesSlider, lpPolesLabel, "lp_poles", "Slope", juce::Colours::blue.darker(),
                   lpPolesAttachment);
+
+    lowPassGroup.addAndMakeVisible(filterBypassButton);
+    filterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.apvts, "filterBypass", filterBypassButton);
 }
 
 void NineStripProcessorEditor::setupEQSection()
 {
     // High Shelf
-    setupGroupComponent(highShelfGroup, "HIGH SHELF");
+    setupGroupComponent(highShelfGroup, highShelfLabel, "HIGH SHELF");
 
     addRotaryKnob(highShelfGroup, trebleSlider, trebleLabel, "treble", "Gain", juce::Colours::black, trebleAttachment);
 
     // High-Mid EQ
-    setupGroupComponent(highMidGroup, "HI-MID EQ");
+    setupGroupComponent(highMidGroup, highMidLabel, "HI-MID EQ");
 
     addRotaryKnob(highMidGroup, hmFreqSlider, hmFreqLabel, "hm_freq", "Freq", juce::Colours::white.darker(), hmFreqAttachment);
     addRotaryKnob(highMidGroup, hmGainSlider, hmGainLabel, "highmid", "Gain", juce::Colours::white.darker(), hmGainAttachment);
     addRotaryKnob(highMidGroup, hmResoSlider, hmResoLabel, "hm_reso", "Q", juce::Colours::white.darker(), hmResoAttachment);
 
     // Low Shelf
-    setupGroupComponent(lowShelfGroup, "LOW SHELF");
+    setupGroupComponent(lowShelfGroup, lowShelfLabel, "LOW SHELF");
 
     addRotaryKnob(lowShelfGroup, bassSlider, bassLabel, "bass", "Gain", juce::Colours::black, bassAttachment);
 
@@ -140,7 +144,7 @@ void NineStripProcessorEditor::setupEQSection()
 
 void NineStripProcessorEditor::setupDynamicsSection()
 {
-    setupGroupComponent(compressorGroup, "DYNAMICS");
+    setupGroupComponent(compressorGroup, compressorLabel, "DYNAMICS");
 
     addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", juce::Colours::white.darker(),
                   pressureAttachment);
@@ -198,7 +202,7 @@ void NineStripProcessorEditor::setupMeters()
 
 void NineStripProcessorEditor::setupGain()
 {
-    setupGroupComponent(gainGroup, "GAIN");
+    setupGroupComponent(gainGroup, gainLabel, "GAIN");
 
     gainGroup.addAndMakeVisible(inputGainSlider);
     inputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
@@ -297,10 +301,10 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
 
     // ========== MAIN GRID: 4 columns + preset row ==========
     mainGrid.templateRows = {
-        Track(Px(getHeight() * 40 / 600)),  // Row 1: Preset
-        Track(Fr(1)),                       // Row 2: Top sections
-        Track(Fr(1)),                       // Row 3: Bottom sections
-        Track(Fr(1))                        // Row 4: Bottom sections
+        Track(Px(getHeight() * 30 / 600)),  // Row 1: Preset
+        Track(Fr(9)),                       // Row 2: Top sections
+        Track(Fr(10)),                      // Row 3: Bottom sections
+        Track(Fr(10))                       // Row 4: Bottom sections
     };
 
     mainGrid.templateColumns = {
@@ -340,7 +344,7 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
 
 void NineStripProcessorEditor::layoutPresetPanel()
 {
-    auto presetBounds = presetPanel.getLocalBounds().reduced(4);
+    auto presetBounds = presetPanel.getLocalBounds().reduced(40, 0);
     previousPresetButton.setBounds(presetBounds.removeFromLeft(40).reduced(2));
     deletePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
     savePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
@@ -351,6 +355,8 @@ void NineStripProcessorEditor::layoutPresetPanel()
 void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
 {
     auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(6);
+
+    consoleSatLabel.setBounds(consoleBounds.removeFromTop(20));
 
     const int horizontalSpacing = 16;
     int totalWidth = bigKnobSize * 2 + horizontalSpacing;
@@ -365,44 +371,80 @@ void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
     driveLabel.setBounds(driveSlider.getX(), driveSlider.getBottom(), bigKnobSize, 18);
 
     // Bypass button at bottom-right
-    saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 26, 50, 20);
+    saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 30, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKnobSize)
 {
+    // Calculate proportional values based on group bounds
+    auto groupBounds = highPassGroup.getLocalBounds();
+    int margin = groupBounds.getWidth() * 0.02f;
+    int headerHeight = groupBounds.getHeight() * 0.15f;
+
     // High Pass layout
-    auto hpBounds = highPassGroup.getLocalBounds().reduced(6);
+    auto hpBounds = highPassGroup.getLocalBounds().reduced(margin);
+    highPassLabel.setBounds(hpBounds.removeFromTop(headerHeight));
     layoutTriangleKnobs(hpBounds, hipassSlider, hipassLabel, hpPolesSlider, hpPolesLabel, hpLsTiteSlider, hpLsTiteLabel,
                         bigKnobSize, smallKnobSize);
 
     // Low Pass layout
-    auto lpBounds = lowPassGroup.getLocalBounds().reduced(6);
+    auto lpBounds = lowPassGroup.getLocalBounds().reduced(margin);
+    lowPassLabel.setBounds(lpBounds.removeFromTop(headerHeight));
     layoutTriangleKnobs(lpBounds, lowpassSlider, lowpassLabel, lpPolesSlider, lpPolesLabel, lpSftHrdSlider, lpSftHrdLabel,
                         bigKnobSize, smallKnobSize);
+
+    // Bypass button - proportional sizing
+    int buttonWidth = lpBounds.getWidth() * 0.2f;
+    int buttonHeight = lpBounds.getHeight() * 0.08f;
+    int buttonMargin = margin;
+
+    filterBypassButton.setBounds(lpBounds.getRight() - 52, lpBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
 {
+    // Calculate proportional values
+    auto groupBounds = highShelfGroup.getLocalBounds();
+    int margin = groupBounds.getWidth() * 0.02f;
+    int headerHeightLarge = groupBounds.getHeight() * 0.15f;
+    int headerHeightSmall = groupBounds.getHeight() * 0.08f;
+    int labelHeight = groupBounds.getHeight() * 0.08f;
+
     // High Shelf layout
-    auto hsBounds = highShelfGroup.getLocalBounds().reduced(6);
-    layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
+    auto hsBounds = highShelfGroup.getLocalBounds().reduced(margin);
+    highShelfLabel.setBounds(hsBounds.removeFromTop(headerHeightSmall));
+
+    // Proportional label padding based on available width
+    const int labelPadding = hsBounds.getWidth() * 0.15f;
+    int centerX = hsBounds.getX() + (hsBounds.getWidth() - bigKnobSize) / 2;
+    int knobY = hsBounds.getY() + (hsBounds.getHeight() - bigKnobSize - labelHeight) / 2;
+
+    trebleSlider.setBounds(centerX - labelPadding / 2, knobY, bigKnobSize + labelPadding, bigKnobSize);
+    trebleLabel.setBounds(trebleSlider.getX() + labelPadding / 2, trebleSlider.getBottom(), bigKnobSize, labelHeight);
 
     // High-Mid layout
-    auto hmBounds = highMidGroup.getLocalBounds().reduced(6);
+    auto hmBounds = highMidGroup.getLocalBounds().reduced(margin);
+    highMidLabel.setBounds(hmBounds.removeFromTop(headerHeightLarge));
     layoutTriangleKnobs(hmBounds, hmFreqSlider, hmFreqLabel, hmGainSlider, hmGainLabel, hmResoSlider, hmResoLabel, bigKnobSize,
                         smallKnobSize);
 
     // Low Shelf layout
-    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(6);
+    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(margin);
+    lowShelfLabel.setBounds(lsBounds.removeFromTop(headerHeightLarge));
     layoutCenteredKnob(lsBounds, bassSlider, bassLabel, bigKnobSize);
 
-    // Bypass button at bottom-right
-    eqBypassButton.setBounds(lsBounds.getRight() - 52, lsBounds.getBottom() - 26, 50, 20);
+    // Bypass button - proportional sizing
+    int buttonWidth = lsBounds.getWidth() * 0.2f;
+    int buttonHeight = lsBounds.getHeight() * 0.08f;
+    int buttonMargin = margin;
+
+    eqBypassButton.setBounds(lsBounds.getRight() - 52, lsBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
 {
     auto compBounds = compressorGroup.getLocalBounds().reduced(6);
+    compressorLabel.setBounds(compBounds.removeFromTop(40));
 
     auto triangleBounds = compBounds.withTrimmedTop(30);
     // Triangle knobs at top (not centered vertically)
@@ -423,12 +465,12 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     grMeter.setBounds(grMeterBounds);
 
     // Bypass button at bottom-right
-    compressorBypassButton.setBounds(compBounds.getRight() - 55, compBounds.getBottom() - 25, 50, 20);
+    compressorBypassButton.setBounds(compBounds.getRight() - 55, compBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutMeters()
 {
-    auto metersBounds = metersGroup.getLocalBounds().reduced(6);
+    auto metersBounds = metersGroup.getLocalBounds().reduced(2);
     metersBounds.removeFromTop(2);
 
     auto buttonArea = metersBounds.removeFromBottom(30).reduced(4, 2);
@@ -540,13 +582,14 @@ void NineStripProcessorEditor::updatePresetComboBox()
     }
 }
 
-void NineStripProcessorEditor::setupGroupComponent(juce::GroupComponent& group, const juce::String& title)
+void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title)
 {
     addAndMakeVisible(group);
-    group.setText(title);
-    group.setTextLabelPosition(juce::Justification::centredTop);
-    group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::transparentBlack);
-    group.setColour(juce::GroupComponent::textColourId, juce::Colours::white);
+
+    group.addAndMakeVisible(label);
+    label.setText(title, juce::dontSendNotification);
+    label.setJustificationType(juce::Justification::centred);
+    label.setColour(juce::Label::textColourId, juce::Colours::white);
 }
 
 void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft,
@@ -555,14 +598,14 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
                                                    int bigKnobSize, int smallKnobSize, bool centerVertically)
 {
     const int horizontalSpacing = 16;
-    const int verticalSpacing = 32;
+    const int verticalSpacing = 20;
     const int labelPadding = 50;  // Extra width on each slider for min/max labels
 
     int triangleWidth = bigKnobSize * 2 + horizontalSpacing;
     int triangleHeight = bigKnobSize + smallKnobSize + verticalSpacing;
 
     int triangleX = bounds.getX() + (bounds.getWidth() - triangleWidth) / 2;
-    int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 : bounds.getY() + 10;
+    int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 - 20 : bounds.getY();
 
     // Top row - add labelPadding to width, offset x by half
     topLeft.setBounds(triangleX - labelPadding / 2, triangleY, bigKnobSize + labelPadding, bigKnobSize);
