@@ -443,25 +443,47 @@ void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSiz
 
 void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
 {
-    auto compBounds = compressorGroup.getLocalBounds().reduced(6);
-    compressorLabel.setBounds(compBounds.removeFromTop(40));
+    // Calculate proportional values
+    auto groupBounds = compressorGroup.getLocalBounds();
+    int margin = jmax(4, (int)(groupBounds.getWidth() * 0.02f));
+    int headerHeight = jmax(20, (int)(groupBounds.getHeight() * 0.15f));
+
+    auto compBounds = compressorGroup.getLocalBounds().reduced(margin);
+    compressorLabel.setBounds(compBounds.removeFromTop(headerHeight));
 
     auto triangleBounds = compBounds.withTrimmedTop(0);
     // Triangle knobs at top (not centered vertically)
     layoutTriangleKnobs(triangleBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
                         bigKnobSize, smallKnobSize, false);
 
-    // Define available area for GR meter
-    int topY = mewinessSlider.getBottom() + 45;
-    int bottomY = compBounds.getBottom() - 30;  // Leave room for bypass button
+    // Calculate proportional spacing for meter area
+    int knobBottomSpacing = jmax(20, (int)(compBounds.getHeight() * 0.08f));  // 8% spacing after knobs
+    int buttonAreaHeight = jmax(25, (int)(compBounds.getHeight() * 0.1f));    // 10% for button area
+
+    int topY = mewinessSlider.getBottom() + knobBottomSpacing;
+    int bottomY = compBounds.getBottom() - buttonAreaHeight;
     int availableHeight = bottomY - topY;
 
-    // Create centered rectangle for the meter
-    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(), static_cast<int>(availableHeight * 0.7));
+    // Use proportional width for meter (e.g., 80% of available width)
+    int meterMaxWidth = jmax(100, (int)(compBounds.getWidth() * 0.8f));
 
-    // Constrain to aspect ratio and center horizontally
+    // Create area for the meter with proportional height
+    juce::Rectangle<int> meterArea(
+        compBounds.getX(), topY, compBounds.getWidth(), jmax(50, (int)(availableHeight * 0.75f))  // Use 75% of available height
+    );
+
+    // Constrain to aspect ratio and center
     auto grMeterBounds = constrainToAspectRatio(meterArea, grMeter.getAspectRatio());
-    grMeterBounds.setCentre(compBounds.getCentreX(), grMeterBounds.getCentreY());
+
+    // Constrain width if needed
+    if (grMeterBounds.getWidth() > meterMaxWidth)
+    {
+        int newHeight = (int)(meterMaxWidth / grMeter.getAspectRatio());
+        grMeterBounds.setSize(meterMaxWidth, newHeight);
+    }
+
+    // Center both horizontally and vertically in available space
+    grMeterBounds.setCentre(compBounds.getCentreX(), topY + availableHeight / 2);
     grMeter.setBounds(grMeterBounds);
 
     // Bypass button at bottom-right
@@ -471,7 +493,6 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
 void NineStripProcessorEditor::layoutMeters()
 {
     auto metersBounds = metersGroup.getLocalBounds().reduced(2);
-    metersBounds.removeFromTop(2);
 
     auto buttonArea = metersBounds.removeFromBottom(30).reduced(4, 2);
 
