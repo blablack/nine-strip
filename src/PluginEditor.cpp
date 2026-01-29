@@ -446,13 +446,13 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     auto compBounds = compressorGroup.getLocalBounds().reduced(6);
     compressorLabel.setBounds(compBounds.removeFromTop(40));
 
-    auto triangleBounds = compBounds.withTrimmedTop(30);
+    auto triangleBounds = compBounds.withTrimmedTop(0);
     // Triangle knobs at top (not centered vertically)
     layoutTriangleKnobs(triangleBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
                         bigKnobSize, smallKnobSize, false);
 
     // Define available area for GR meter
-    int topY = mewinessSlider.getBottom() + 25;
+    int topY = mewinessSlider.getBottom() + 45;
     int bottomY = compBounds.getBottom() - 30;  // Leave room for bypass button
     int availableHeight = bottomY - topY;
 
