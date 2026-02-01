@@ -1,5 +1,7 @@
 #include "PluginProcessor.h"
 
+#include <array>
+
 #include "PluginEditor.h"
 #include "PurestGain.h"
 
@@ -23,9 +25,9 @@ NineStripProcessor::NineStripProcessor()
     ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
 
     grBallisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 1});
-    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
+    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
     grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
-    grBallisticsFilter.setReleaseTime(grBallisticsFilterAttackTime);
+    grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
 
     presetManager = std::make_unique<PresetManager>(apvts);
 
@@ -35,6 +37,8 @@ NineStripProcessor::NineStripProcessor()
 
 NineStripProcessor::~NineStripProcessor()
 {
+    juce::Logger::setCurrentLogger(nullptr);
+
     apvts.state.removeListener(this);
     removeParameterListeners();
 }
@@ -346,15 +350,15 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     outputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("outputGain")->load());
 
-    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2});
+    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
     ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
     meterBufferFloat.setSize(2, samplesPerBlock);
     meterBufferDouble.setSize(2, samplesPerBlock);
 
-    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
     grBallisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 1});
+    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
     grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
     grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
     grMeterBufferFloat.setSize(1, samplesPerBlock);
@@ -402,12 +406,15 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
     float levelL = meterBuffer.getSample(0, meterBuffer.getNumSamples() - 1);
     float levelR = meterBuffer.getSample(1, meterBuffer.getNumSamples() - 1);
 
-    measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f) + 18.0f);
-    measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f) + 18.0f);
+    float dbfsL = juce::Decibels::gainToDecibels(levelL, -60.0f);
+    float dbfsR = juce::Decibels::gainToDecibels(levelR, -60.0f);
+
+    measuredLevelL.store(dbfsL);
+    measuredLevelR.store(dbfsR);
 }
 
 template <typename SampleType>
-void NineStripProcessor::updateGRMeter(float currentGR, int numSamples)
+void NineStripProcessor::updateGRMeter(float coefficientGain, int numSamples)
 {
     // Get the appropriate buffer
     auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
@@ -418,23 +425,33 @@ void NineStripProcessor::updateGRMeter(float currentGR, int numSamples)
             return grMeterBufferDouble;
     }();
 
-    // Fill buffer with the GR gain value (not dB yet)
-    float grGain = juce::Decibels::decibelsToGain(currentGR);
-    meterBuffer.clear();
+    meterBuffer.setSize(1, numSamples, false, false, false);
 
-    // Fill the buffer with the constant gain value
-    for (int i = 0; i < numSamples; ++i) meterBuffer.setSample(0, i, grGain);
+    // Clamp coefficient to valid range
+    coefficientGain = std::clamp(coefficientGain, 0.0001f, 1.0f);
 
-    // Process through ballistics filter
-    juce::dsp::AudioBlock<SampleType> block(meterBuffer);
-    juce::dsp::ProcessContextReplacing<SampleType> context(block);
+    // Fill buffer with coefficient (linear domain, not dB)
+    for (int i = 0; i < numSamples; ++i) meterBuffer.setSample(0, i, coefficientGain);
+
+    // Apply ballistics filter (same as VU meter approach)
+    juce::dsp::AudioBlock<SampleType> block(meterBuffer);           // ← Changed to SampleType
+    juce::dsp::ProcessContextReplacing<SampleType> context(block);  // ← Changed to SampleType
     grBallisticsFilter.process(context);
 
-    // Extract smoothed value and convert back to dB
-    float smoothedGain = meterBuffer.getSample(0, numSamples - 1);
-    float smoothedDb = juce::Decibels::gainToDecibels(smoothedGain, -60.0f);
+    // Get smoothed coefficient and convert to dB
+    float smoothedCoeff = meterBuffer.getSample(0, numSamples - 1);
+    float grDB = NAN;
+    if (smoothedCoeff >= 0.999f)  // No compression
+    {
+        grDB = 0.0f;
+    }
+    else
+    {
+        grDB = juce::Decibels::gainToDecibels(smoothedCoeff);
+    }
 
-    gainReduction.store(std::min(smoothedDb, 0.0f));
+    // Clamp to 0 dB max
+    gainReduction.store(std::min(grDB, 0.0f));
 }
 
 template <typename SampleType>
@@ -450,8 +467,19 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     {
         if (meteringNeeded)
         {
-            measuredLevelL.store(-60.0f);
-            measuredLevelR.store(-60.0f);
+            // Create a silent buffer to feed the ballistics filter
+            auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+            {
+                if constexpr (std::is_same_v<SampleType, float>)
+                    return meterBufferFloat;
+                else
+                    return meterBufferDouble;
+            }();
+
+            meterBuffer.setSize(2, buffer.getNumSamples(), false, false, false);
+            meterBuffer.clear();  // Fill with zeros
+
+            updateMeters(meterBuffer);  // Process silence through ballistics
         }
 
         return;  // Early exit, pass audio through untouched
@@ -467,12 +495,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     const bool outputMeteringNeeded = meteringNeeded && !inputMeasured;
 
     // Create raw pointer arrays for Airwindows processing
-    SampleType *channelData[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
+    std::array<SampleType *, 2> channelData = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
 
     if constexpr (std::is_same_v<SampleType, float>)
-        inputPurestGain.processReplacing(channelData, channelData, buffer.getNumSamples());
+        inputPurestGain.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
     else
-        inputPurestGain.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        inputPurestGain.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
 
     if (inputMeteringNeeded)
     {
@@ -483,22 +511,22 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     if (!saturationBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
-            channel9.processReplacing(channelData, channelData, buffer.getNumSamples());
+            channel9.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         else
-            channel9.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            channel9.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
     }
 
     if (!filterBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
         {
-            highpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
-            lowpass2.processReplacing(channelData, channelData, buffer.getNumSamples());
+            highpass2.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
+            lowpass2.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
         else
         {
-            highpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-            lowpass2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            highpass2.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
+            lowpass2.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
     }
 
@@ -506,46 +534,52 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     {
         if constexpr (std::is_same_v<SampleType, float>)
         {
-            baxandall2.processReplacing(channelData, channelData, buffer.getNumSamples());
-            parametric.processReplacing(channelData, channelData, buffer.getNumSamples());
+            baxandall2.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
+            parametric.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
         else
         {
-            baxandall2.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
-            parametric.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            baxandall2.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
+            parametric.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
     }
 
     if (!filterBypass)
     {
-        dcBlocker.processStereo(channelData, buffer.getNumSamples());
+        dcBlocker.processStereo(channelData.data(), buffer.getNumSamples());
     }
 
     if (!compressorBypass)
     {
+        // Reset GR tracking for this block
+        pressure4.resetGRTracking();
+
         if constexpr (std::is_same_v<SampleType, float>)
         {
-            pressure4.processReplacing(channelData, channelData, buffer.getNumSamples());
+            pressure4.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
         else
         {
-            pressure4.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+            pressure4.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
         }
+
+        pressure4.finalizeGR();
+
         if (meteringNeeded)
         {
-            float grDb = juce::Decibels::gainToDecibels(pressure4.getGainReduction());
-            updateGRMeter<SampleType>(grDb, buffer.getNumSamples());
+            float coefficient = pressure4.getGainReduction();
+            updateGRMeter<SampleType>(coefficient, buffer.getNumSamples());
         }
     }
     else if (meteringNeeded)
     {
-        updateGRMeter<SampleType>(0.0f, buffer.getNumSamples());
+        updateGRMeter<SampleType>(1.0f, buffer.getNumSamples());
     }
 
     if constexpr (std::is_same_v<SampleType, float>)
-        outputPurestGain.processReplacing(channelData, channelData, buffer.getNumSamples());
+        outputPurestGain.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
     else
-        outputPurestGain.processDoubleReplacing(channelData, channelData, buffer.getNumSamples());
+        outputPurestGain.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
 
     if (outputMeteringNeeded)
     {

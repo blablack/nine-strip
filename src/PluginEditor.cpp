@@ -82,13 +82,13 @@ void NineStripProcessorEditor::setupConsoleSection()
     consoleTypeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::orange);
 
     consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.apvts, "consoleType", consoleTypeSlider);
+        audioProcessor.getAPVTS(), "consoleType", consoleTypeSlider);
 
     addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", juce::Colours::white.darker(), driveAttachment);
 
     consoleSatGroup.addAndMakeVisible(saturationBypassButton);
     saturationBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        audioProcessor.apvts, "saturationBypass", saturationBypassButton);
+        audioProcessor.getAPVTS(), "saturationBypass", saturationBypassButton);
 }
 
 void NineStripProcessorEditor::setupFiltersSection()
@@ -114,7 +114,7 @@ void NineStripProcessorEditor::setupFiltersSection()
 
     lowPassGroup.addAndMakeVisible(filterBypassButton);
     filterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        audioProcessor.apvts, "filterBypass", filterBypassButton);
+        audioProcessor.getAPVTS(), "filterBypass", filterBypassButton);
 }
 
 void NineStripProcessorEditor::setupEQSection()
@@ -138,7 +138,7 @@ void NineStripProcessorEditor::setupEQSection()
 
     // EQ Bypass
     lowShelfGroup.addAndMakeVisible(eqBypassButton);
-    eqBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.apvts,
+    eqBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.getAPVTS(),
                                                                                                 "eqBypass", eqBypassButton);
 }
 
@@ -156,7 +156,7 @@ void NineStripProcessorEditor::setupDynamicsSection()
 
     compressorGroup.addAndMakeVisible(compressorBypassButton);
     compressorBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        audioProcessor.apvts, "compressorBypass", compressorBypassButton);
+        audioProcessor.getAPVTS(), "compressorBypass", compressorBypassButton);
 }
 
 void NineStripProcessorEditor::setupMeters()
@@ -175,7 +175,7 @@ void NineStripProcessorEditor::setupMeters()
         if (vuMeterInputButton.getToggleState())
         {
             vuMeterOutputButton.setToggleState(false, juce::dontSendNotification);
-            audioProcessor.apvts.getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
+            audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
         }
     };
 
@@ -187,17 +187,17 @@ void NineStripProcessorEditor::setupMeters()
         if (vuMeterOutputButton.getToggleState())
         {
             vuMeterInputButton.setToggleState(false, juce::dontSendNotification);
-            audioProcessor.apvts.getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
+            audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
         }
     };
 
     // Initialize button states based on current parameter value
-    bool isInputMode = audioProcessor.apvts.getRawParameterValue("inputMeasured")->load() > 0.5f;
+    bool isInputMode = audioProcessor.getAPVTS().getRawParameterValue("inputMeasured")->load() > 0.5f;
     vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
     vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
 
     // Listen for parameter changes
-    audioProcessor.apvts.addParameterListener("inputMeasured", this);
+    audioProcessor.getAPVTS().addParameterListener("inputMeasured", this);
 }
 
 void NineStripProcessorEditor::setupGain()
@@ -208,7 +208,7 @@ void NineStripProcessorEditor::setupGain()
     inputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
     inputGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     inputGainSlider.setLookAndFeel(&faderSkeuomorphicLook);
-    inputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts,
+    inputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getAPVTS(),
                                                                                                  "inputGain", inputGainSlider);
     gainGroup.addAndMakeVisible(inputGainLabel);
     inputGainLabel.setText("Input", juce::dontSendNotification);
@@ -219,14 +219,14 @@ void NineStripProcessorEditor::setupGain()
     outputGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     outputGainSlider.setLookAndFeel(&faderSkeuomorphicLook);
     outputGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.apvts, "outputGain", outputGainSlider);
+        audioProcessor.getAPVTS(), "outputGain", outputGainSlider);
     gainGroup.addAndMakeVisible(outputGainLabel);
     outputGainLabel.setText("Output", juce::dontSendNotification);
     outputGainLabel.setJustificationType(juce::Justification::centred);
 
     gainGroup.addAndMakeVisible(masterBypassButton);
     masterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        audioProcessor.apvts, "masterBypass", masterBypassButton);
+        audioProcessor.getAPVTS(), "masterBypass", masterBypassButton);
 }
 
 void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label,
@@ -241,7 +241,8 @@ void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slid
 
     slider.setColour(juce::Slider::rotarySliderFillColourId, knobColor);
 
-    attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, paramID, slider);
+    attachment =
+        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.getAPVTS(), paramID, slider);
 
     parent.addAndMakeVisible(label);
     label.setText(labelText, juce::dontSendNotification);
@@ -251,7 +252,7 @@ void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slid
 NineStripProcessorEditor::~NineStripProcessorEditor()
 {
     audioProcessor.editorStateChanged(false);
-    audioProcessor.apvts.removeParameterListener("inputMeasured", this);
+    audioProcessor.getAPVTS().removeParameterListener("inputMeasured", this);
 }
 
 void NineStripProcessorEditor::paint(juce::Graphics& g)
@@ -445,8 +446,8 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
 {
     // Calculate proportional values
     auto groupBounds = compressorGroup.getLocalBounds();
-    int margin = jmax(4, (int)(groupBounds.getWidth() * 0.02f));
-    int headerHeight = jmax(20, (int)(groupBounds.getHeight() * 0.15f));
+    int margin = jmax(4, static_cast<int>(groupBounds.getWidth() * 0.02f));
+    int headerHeight = jmax(20, static_cast<int>(groupBounds.getHeight() * 0.15f));
 
     auto compBounds = compressorGroup.getLocalBounds().reduced(margin);
     compressorLabel.setBounds(compBounds.removeFromTop(headerHeight));
@@ -457,19 +458,19 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
                         bigKnobSize, smallKnobSize, false);
 
     // Calculate proportional spacing for meter area
-    int knobBottomSpacing = jmax(20, (int)(compBounds.getHeight() * 0.08f));  // 8% spacing after knobs
-    int buttonAreaHeight = jmax(25, (int)(compBounds.getHeight() * 0.1f));    // 10% for button area
+    int knobBottomSpacing = jmax(20, static_cast<int>(compBounds.getHeight() * 0.08f));  // 8% spacing after knobs
+    int buttonAreaHeight = jmax(25, static_cast<int>(compBounds.getHeight() * 0.1f));    // 10% for button area
 
     int topY = mewinessSlider.getBottom() + knobBottomSpacing;
     int bottomY = compBounds.getBottom() - buttonAreaHeight;
     int availableHeight = bottomY - topY;
 
     // Use proportional width for meter (e.g., 80% of available width)
-    int meterMaxWidth = jmax(100, (int)(compBounds.getWidth() * 0.8f));
+    int meterMaxWidth = jmax(100, static_cast<int>(compBounds.getWidth() * 0.8f));
 
     // Create area for the meter with proportional height
-    juce::Rectangle<int> meterArea(
-        compBounds.getX(), topY, compBounds.getWidth(), jmax(50, (int)(availableHeight * 0.75f))  // Use 75% of available height
+    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(),
+                                   jmax(50, static_cast<int>(availableHeight * 0.75f))  // Use 75% of available height
     );
 
     // Constrain to aspect ratio and center
@@ -478,7 +479,7 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     // Constrain width if needed
     if (grMeterBounds.getWidth() > meterMaxWidth)
     {
-        int newHeight = (int)(meterMaxWidth / grMeter.getAspectRatio());
+        int newHeight = static_cast<int>(meterMaxWidth / grMeter.getAspectRatio());
         grMeterBounds.setSize(meterMaxWidth, newHeight);
     }
 

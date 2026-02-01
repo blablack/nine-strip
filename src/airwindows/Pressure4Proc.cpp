@@ -3,6 +3,7 @@
  *  Copyright (c) 2016 airwindows, Airwindows uses the MIT license
  * ======================================== */
 
+#include <algorithm>
 #include <cmath>
 
 #include "Pressure4.h"
@@ -127,9 +128,6 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             coefficient = (coefficient * mewiness) + (muCoefficientA * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
-            
-            // Store the gain reduction coefficient
-            currentGainReduction.store((float)coefficient);
         }
         else
         {
@@ -140,10 +138,8 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             coefficient = (coefficient * mewiness) + (muCoefficientB * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
-            
-            // Store the gain reduction coefficient
-            currentGainReduction.store((float)coefficient);
         }
+        blockMinCoefficient = std::min<double>(coefficient, blockMinCoefficient);
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
         // rather than inflate it
@@ -329,9 +325,6 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             coefficient = (coefficient * mewiness) + (muCoefficientA * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
-            
-            // Store the gain reduction coefficient
-            currentGainReduction.store((float)coefficient);
         }
         else
         {
@@ -342,10 +335,8 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             coefficient = (coefficient * mewiness) + (muCoefficientB * unmewiness);
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
-            
-            // Store the gain reduction coefficient
-            currentGainReduction.store((float)coefficient);
         }
+        blockMinCoefficient = std::min<double>(coefficient, blockMinCoefficient);
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
         // rather than inflate it

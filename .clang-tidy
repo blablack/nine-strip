@@ -7,6 +7,9 @@ Checks: "clang-diagnostic-*,\
   readability-*,\
   performance-*,\
   portability-*,\
+  -cppcoreguidelines-special-member-functions,\
+  -cppcoreguidelines-narrowing-conversions,\
+  -readability-identifier-length,\
   -modernize-use-trailing-return-type,\
   -readability-magic-numbers,\
   -cppcoreguidelines-avoid-magic-numbers,\
@@ -14,6 +17,8 @@ Checks: "clang-diagnostic-*,\
   -cppcoreguidelines-owning-memory,\
   -google-readability-braces-around-statements,\
   -readability-braces-around-statements,\
+  -readability-function-cognitive-complexity,\
+  -readability-named-parameter,\
   -readability-math-missing-parentheses"
 
 HeaderFilterRegex: '**/Source/*\.(hpp|h)'

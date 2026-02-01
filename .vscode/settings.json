@@ -2,14 +2,6 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "C_Cpp.default.cppStandard": "c++17",
     "cmake.buildDirectory": "${workspaceFolder}/build",
-    "git.ignoreLimitWarning": true,
-    "clangd.arguments": [
-        "-clang-tidy",
-        "-background-index",
-        "-compile-commands-dir=${workspaceFolder}/build",
-        "-header-insertion=never",
-        "--query-driver=\"/usr/bin/clang++\""
-    ],
     "cmake.ctestArgs": [
         "--verbose"
     ],

@@ -14,10 +14,10 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::AudioProcessorValueTreeState::Listener
 {
    public:
-    NineStripProcessorEditor(NineStripProcessor&);
+    explicit NineStripProcessorEditor(NineStripProcessor& p);
     ~NineStripProcessorEditor() override;
 
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics& g) override;
     void resized() override;
     void updatePresetDisplay();
     void updatePresetComboBox();
@@ -156,7 +156,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     static void layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label, int knobSize);
 
-    juce::Rectangle<int> constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio);
+    static juce::Rectangle<int> constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio);
 
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     void buttonClicked(juce::Button* button) override;

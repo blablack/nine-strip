@@ -27,11 +27,10 @@ class NineStripProcessor : public juce::AudioProcessor,
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
     //==============================================================================
-    juce::AudioProcessorValueTreeState apvts;
-
-    //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
+
+    juce::AudioProcessorValueTreeState &getAPVTS() { return apvts; }
 
     float getMeasuredLevelL() const { return measuredLevelL.load(); }
     float getMeasuredLevelR() const { return measuredLevelR.load(); }
@@ -69,6 +68,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
    private:
+    juce::AudioProcessorValueTreeState apvts;
+
     const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive",    "hipass", "ls_tite",  "hp_poles",
                                                     "lowpass",   "lp_sft_hrd",  "lp_poles", "treble", "bass",     "hm_freq",
                                                     "highmid",   "hm_reso",     "pressure", "speed",  "mewiness", "outputGain"};
@@ -78,7 +79,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     void parameterChanged(const juce::String &parameterID, float newValue) override;
     void valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &) override;
 
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void setupParameterListeners();
     void removeParameterListeners();
 
@@ -101,8 +102,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     juce::dsp::BallisticsFilter<float> ballisticsFilter;
     // const float ballisticsFilterAttackTime{10.0f};
     // const float ballisticsFilterReleaseTime{300.0f};
-    const float ballisticsFilterAttackTime{1000.0f};
-    const float ballisticsFilterReleaseTime{1000.0f};
+    const float ballisticsFilterAttackTime{2000.0f};
+    const float ballisticsFilterReleaseTime{2000.0f};
     juce::AudioBuffer<float> meterBufferFloat;
     juce::AudioBuffer<double> meterBufferDouble;
     template <typename SampleType>
@@ -114,7 +115,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     juce::AudioBuffer<float> grMeterBufferFloat;
     juce::AudioBuffer<double> grMeterBufferDouble;
     template <typename SampleType>
-    void updateGRMeter(float currentGR, int numSamples);
+    void updateGRMeter(float coefficientGain, int numSamples);
 
     std::atomic<float> measuredLevelL{-60.0f};
     std::atomic<float> measuredLevelR{-60.0f};
