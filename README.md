@@ -2,6 +2,8 @@
 
 A VST3 channel strip plugin built with JUCE framework, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool.
 
+![screenshot](pics/screenshot.png)
+
 ## Overview
 
 NineStrip is a complete channel strip solution that combines console modeling, filtering, EQ, and dynamics processing in a single plugin. Built on proven Airwindows algorithms, it provides a streamlined workflow for mixing and mastering tasks.
