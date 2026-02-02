@@ -17,6 +17,7 @@ Checks: "clang-diagnostic-*,\
   -cppcoreguidelines-owning-memory,\
   -google-readability-braces-around-statements,\
   -readability-braces-around-statements,\
+  -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
   -readability-named-parameter,\
   -readability-math-missing-parentheses"

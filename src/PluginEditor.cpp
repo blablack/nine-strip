@@ -169,26 +169,30 @@ void NineStripProcessorEditor::setupMeters()
     metersGroup.addAndMakeVisible(needleVUMeterR);
 
     metersGroup.addAndMakeVisible(vuMeterInputButton);
-    vuMeterInputButton.setClickingTogglesState(true);
+    vuMeterInputButton.setClickingTogglesState(false);  // Add this!
     vuMeterInputButton.onClick = [this]()
     {
-        if (vuMeterInputButton.getToggleState())
-        {
-            vuMeterOutputButton.setToggleState(false, juce::dontSendNotification);
-            audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
-        }
+        // If already on, do nothing
+        if (vuMeterInputButton.getToggleState()) return;
+
+        // Turn this button on and the other off
+        vuMeterInputButton.setToggleState(true, juce::dontSendNotification);
+        vuMeterOutputButton.setToggleState(false, juce::dontSendNotification);
+        audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
     };
 
     // Setup Output button
     metersGroup.addAndMakeVisible(vuMeterOutputButton);
-    vuMeterOutputButton.setClickingTogglesState(true);
+    vuMeterOutputButton.setClickingTogglesState(false);  // Add this!
     vuMeterOutputButton.onClick = [this]()
     {
-        if (vuMeterOutputButton.getToggleState())
-        {
-            vuMeterInputButton.setToggleState(false, juce::dontSendNotification);
-            audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
-        }
+        // If already on, do nothing
+        if (vuMeterOutputButton.getToggleState()) return;
+
+        // Turn this button on and the other off
+        vuMeterOutputButton.setToggleState(true, juce::dontSendNotification);
+        vuMeterInputButton.setToggleState(false, juce::dontSendNotification);
+        audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
     };
 
     // Initialize button states based on current parameter value
