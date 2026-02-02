@@ -354,15 +354,17 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
     ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
-    meterBufferFloat.setSize(2, samplesPerBlock);
-    meterBufferDouble.setSize(2, samplesPerBlock);
+    meterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
+    meterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
+    emptyMeterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
+    emptyMeterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
 
     grBallisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 1});
     grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
     grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
     grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
-    grMeterBufferFloat.setSize(1, samplesPerBlock);
-    grMeterBufferDouble.setSize(1, samplesPerBlock);
+    grMeterBufferFloat.setSize(1, samplesPerBlock, false, false, true);
+    grMeterBufferDouble.setSize(1, samplesPerBlock, false, false, true);
 }
 
 void NineStripProcessor::releaseResources()
@@ -392,7 +394,6 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
             return meterBufferDouble;
     }();
 
-    meterBuffer.setSize(2, buffer.getNumSamples(), false, false, false);
     meterBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
     meterBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples());
 
@@ -424,8 +425,6 @@ void NineStripProcessor::updateGRMeter(float coefficientGain, int numSamples)
         else
             return grMeterBufferDouble;
     }();
-
-    meterBuffer.setSize(1, numSamples, false, false, false);
 
     // Clamp coefficient to valid range
     coefficientGain = std::clamp(coefficientGain, 0.0001f, 1.0f);
@@ -467,19 +466,17 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     {
         if (meteringNeeded)
         {
-            // Create a silent buffer to feed the ballistics filter
-            auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+            // Get reference to appropriate buffer (already sized)
+            auto &emptyMeterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
             {
                 if constexpr (std::is_same_v<SampleType, float>)
-                    return meterBufferFloat;
+                    return emptyMeterBufferFloat;
                 else
-                    return meterBufferDouble;
+                    return emptyMeterBufferDouble;
             }();
 
-            meterBuffer.setSize(2, buffer.getNumSamples(), false, false, false);
-            meterBuffer.clear();  // Fill with zeros
-
-            updateMeters(meterBuffer);  // Process silence through ballistics
+            emptyMeterBuffer.clear();
+            updateMeters(emptyMeterBuffer);
         }
 
         return;  // Early exit, pass audio through untouched

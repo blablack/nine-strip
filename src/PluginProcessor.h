@@ -109,6 +109,9 @@ class NineStripProcessor : public juce::AudioProcessor,
     template <typename SampleType>
     void updateMeters(const juce::AudioBuffer<SampleType> &buffer);
 
+    juce::AudioBuffer<float> emptyMeterBufferFloat;
+    juce::AudioBuffer<double> emptyMeterBufferDouble;
+
     juce::dsp::BallisticsFilter<float> grBallisticsFilter;
     const float grBallisticsFilterAttackTime{1000.0f};
     const float grBallisticsFilterReleaseTime{1000.0f};
