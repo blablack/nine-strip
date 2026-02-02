@@ -25,8 +25,8 @@ juce_add_plugin(NineStrip
     # IS_MIDI_EFFECT TRUE/FALSE                 # Is this plugin a MIDI effect?
     # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE    # Does the editor need keyboard focus?
     # COPY_PLUGIN_AFTER_BUILD TRUE/FALSE        # Should the plugin be installed to a default location after building?
-    PLUGIN_MANUFACTURER_CODE CCCC               # A four-character manufacturer id with at least one upper-case character
-    PLUGIN_CODE XXXX                            # A unique four-character plugin id with at least one upper-case character
+    PLUGIN_MANUFACTURER_CODE No28               # A four-character manufacturer id with at least one upper-case character
+    PLUGIN_CODE NnSt                            # A unique four-character plugin id with at least one upper-case character
     FORMATS 
     # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
             Standalone 
