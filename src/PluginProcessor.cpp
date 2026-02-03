@@ -19,6 +19,21 @@ NineStripProcessor::NineStripProcessor()
       inputPurestGain(44100.0),
       outputPurestGain(44100.0)
 {
+    static const juce::String APP_FOLDER_NAME =
+#if JUCE_LINUX
+        ".config/NineStrip";
+#else
+        "NineStrip";
+#endif
+
+    // Then use it in both places:
+    PropertiesFile::Options options;
+    options.applicationName = "NineStrip";
+    options.filenameSuffix = ".settings";
+    options.folderName = APP_FOLDER_NAME;
+    options.osxLibrarySubFolder = "Application Support";
+    appProperties.setStorageParameters(options);
+
     ballisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 2});
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);

@@ -48,6 +48,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     bool hasEditor() const override;
     void editorStateChanged(bool isOpen) { editorOpen.store(isOpen); }
 
+    juce::ApplicationProperties &getAppProperties() { return appProperties; }
+
     //==============================================================================
     const juce::String getName() const override;
 
@@ -68,6 +70,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
    private:
+    juce::ApplicationProperties appProperties;
+
     juce::AudioProcessorValueTreeState apvts;
 
     const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive",    "hipass", "ls_tite",  "hp_poles",

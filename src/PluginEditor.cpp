@@ -14,9 +14,19 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 
     const int baseWidth = 800;
     const int baseHeight = 600;
-    setSize(baseWidth, baseHeight);
-    constrainer.setFixedAspectRatio(static_cast<float>(baseWidth) / static_cast<float>(baseHeight));
-    constrainer.setSizeLimits(baseWidth, baseHeight, baseWidth * 3, baseHeight * 3);
+
+    int width = baseWidth;
+    int height = baseHeight;
+
+    if (auto* props = audioProcessor.getAppProperties().getUserSettings())
+    {
+        width = props->getIntValue("editorWidth", baseWidth);
+        height = props->getIntValue("editorHeight", baseHeight);
+    }
+
+    setSize(width, height);
+    constrainer.setFixedAspectRatio(static_cast<float>(width) / static_cast<float>(height));
+    constrainer.setSizeLimits(width, baseHeight, width * 3, height * 3);
     setConstrainer(&constrainer);
     setResizable(false, true);
 
@@ -279,6 +289,12 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
 
 void NineStripProcessorEditor::resized()
 {
+    if (auto* props = audioProcessor.getAppProperties().getUserSettings())
+    {
+        props->setValue("editorWidth", getWidth());
+        props->setValue("editorHeight", getHeight());
+    }
+
     // Window size
     auto bounds = getLocalBounds().reduced(8);
 
