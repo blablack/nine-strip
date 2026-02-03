@@ -492,6 +492,8 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
 
             emptyMeterBuffer.clear();
             updateMeters(emptyMeterBuffer);
+
+            updateGRMeter<SampleType>(1.0f, buffer.getNumSamples());
         }
 
         return;  // Early exit, pass audio through untouched
