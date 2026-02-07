@@ -1,0 +1,180 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            artifact: NineStrip-Linux.tar.gz
+            cc: gcc
+            cxx: g++
+
+          - name: macOS
+            os: macos-latest
+            artifact: NineStrip-macOS.zip
+            cc: clang
+            cxx: clang++
+
+          - name: Windows
+            os: windows-latest
+            artifact: NineStrip-Windows.zip
+            cc: cl
+            cxx: cl
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # Important: matches your --recurse-submodules
+
+      # Install Ninja (all platforms)
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      # Linux dependencies
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.0-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev \
+            gcc \
+            g++
+
+      # macOS dependencies
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install ninja
+
+      # Windows dependencies
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # CMake configuration - matches your command
+      - name: Configure CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=${{ matrix.cc }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      # Build - matches your ninja command
+      - name: Build
+        run: ninja -C build
+
+      # Build manual (only on Linux, once)
+      - name: Build manual
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation
+          cd doc
+          pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
+
+      # Package Linux
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p NineStrip
+          cp -r build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp doc/NineStrip_Manual.pdf NineStrip/
+          tar -czf ${{ matrix.artifact }} NineStrip
+
+      # Package macOS
+      - name: Package macOS
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p NineStrip
+          cp -r build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp doc/NineStrip_Manual.pdf NineStrip/
+          ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
+
+      # Package Windows
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path NineStrip
+          Copy-Item -Recurse build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          Copy-Item doc/NineStrip_Manual.pdf NineStrip/
+          Compress-Archive -Path NineStrip -DestinationPath ${{ matrix.artifact }}
+
+      # Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Linux/NineStrip-Linux.tar.gz
+            macOS/NineStrip-macOS.zip
+            Windows/NineStrip-Windows.zip
+          body: |
+            # NineStrip ${{ github.ref_name }}
+
+            ## Downloads
+            - **Linux**: NineStrip-Linux.tar.gz
+            - **macOS**: NineStrip-macOS.zip
+            - **Windows**: NineStrip-Windows.zip
+
+            Each package includes:
+            - NineStrip.vst3 plugin
+            - User Manual (PDF)
+
+            ## Installation
+            See the included manual for installation instructions.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
