@@ -113,7 +113,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir -p NineStrip
-          cp -r build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           tar -czf ${{ matrix.artifact }} NineStrip
 
@@ -122,7 +122,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p NineStrip
-          cp -r build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
 
@@ -132,7 +132,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path NineStrip
-          Copy-Item -Recurse build/*_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          Copy-Item -Recurse build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
           Copy-Item doc/NineStrip_Manual.pdf NineStrip/
           Compress-Archive -Path NineStrip -DestinationPath ${{ matrix.artifact }}
 
