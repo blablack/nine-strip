@@ -2,10 +2,6 @@
 
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 DCBlocker::DCBlocker() : alpha(0.0), x_prevL(0.0), y_prevL(0.0), x_prevR(0.0), y_prevR(0.0) {}
 
 DCBlocker::~DCBlocker() {}
