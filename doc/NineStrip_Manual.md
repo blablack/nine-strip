@@ -412,6 +412,29 @@ The Hi-Mid EQ uses AirWindows' cascaded biquad filtering design:
 
 \pagebreak
 
+## DC Blocker
+
+The DC Blocker removes DC offset (unwanted zero-frequency content) from the audio signal. DC offset can occur from analog-to-digital conversion, certain processing algorithms, or accumulation through a signal chain, and can cause issues with headroom, compression behavior, and speaker damage in extreme cases.
+
+### Operation
+
+The DC blocker operates transparently in the background with no user controls. It processes both channels identically using a high-pass filter with a 5 Hz cutoff frequency.
+
+### Processing Architecture
+
+**High-Pass Filter Design:** Implements a first-order IIR high-pass filter specifically tuned to remove only DC and near-DC content while leaving the audible frequency range completely untouched.
+
+**5 Hz Cutoff:** The extremely low cutoff frequency (5 Hz) ensures that even the deepest bass frequencies remain unaffected. Musical content starts well above this threshold, making the filtering completely transparent.
+
+**Sample Rate Adaptive:** The filter coefficients automatically adjust based on the project sample rate, maintaining consistent behavior at 44.1kHz, 48kHz, 96kHz, and higher sample rates.
+
+**Independent Stereo Processing:** Each channel maintains its own filter state, preventing any inter-channel artifacts while efficiently removing DC offset from both left and right signals.
+
+This processing stage runs continuously and requires no configuration, silently protecting your signal chain from DC offset issues.
+
+
+\pagebreak
+
 ## Airwindows Pressure4
 
 The Dynamics section provides compression based on AirWindows Pressure4. This unique compressor design uses a "µ" (mu) style algorithm that operates fundamentally differently from traditional VCA, FET, or optical compressors, offering organic, musical compression with distinctive tonal characteristics.

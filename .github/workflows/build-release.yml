@@ -104,7 +104,7 @@ jobs:
       - name: Build manual
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation
+          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation librsvg2-bin
           cd doc
           pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
 

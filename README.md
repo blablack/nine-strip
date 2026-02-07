@@ -23,6 +23,8 @@ BAXANDALL2 - Bass and Treble Shelves
     ↓
 PARAMETRIC - Mid Band
     ↓
+DC BLOCKER - DC Offset Removal
+    ↓
 PRESSURE4 - Compressor
     ↓
 PURESTGAIN - Output Gain
