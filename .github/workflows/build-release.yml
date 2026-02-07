@@ -7,8 +7,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-manual:
+    name: Build Manual
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation librsvg2-bin
+
+      - name: Build manual
+        run: |
+          cd doc
+          pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-pdf
+          path: doc/NineStrip_Manual.pdf
+
   build:
     name: Build ${{ matrix.name }}
+    needs: build-manual
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -36,7 +60,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: recursive # Important: matches your --recurse-submodules
+          submodules: recursive
+
+      - name: Download manual PDF
+        uses: actions/download-artifact@v4
+        with:
+          name: manual-pdf
+          path: doc/
 
       # Install Ninja (all platforms)
       - name: Install Ninja
@@ -99,14 +129,6 @@ jobs:
       # Build - matches your ninja command
       - name: Build
         run: ninja -C build
-
-      # Build manual (only on Linux, once)
-      - name: Build manual
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation librsvg2-bin
-          cd doc
-          pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
 
       # Package Linux
       - name: Package Linux
