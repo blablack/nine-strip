@@ -2,7 +2,7 @@
 
 A VST3 channel strip plugin built with JUCE framework, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool.
 
-![screenshot](pics/screenshot.png)
+![Screenshot](pics/screenshot.png)
 
 ## Overview
 
@@ -43,6 +43,13 @@ git clone --recurse-submodules https://github.com/blablack/nine-strip.git
 cd nine-strip
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 ninja -C build
+```
+
+### Compiling documentation
+
+```bash
+cd doc
+pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
 ```
 
 ## Usage

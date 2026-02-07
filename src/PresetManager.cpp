@@ -34,7 +34,7 @@ void PresetManager::parameterChanged(const juce::String& parameterID, float newV
     }
 }
 
-juce::File PresetManager::getDefaultDirectory() const  // ✅ Now const
+juce::File PresetManager::getDefaultDirectory() const  //
 {
     juce::File rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
 
@@ -42,7 +42,7 @@ juce::File PresetManager::getDefaultDirectory() const  // ✅ Now const
     rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets");
 #endif
 
-    rootFolder = rootFolder.getChildFile("NineStrip");
+    rootFolder = rootFolder.getChildFile("NineStrip").getChildFile("Presets");
 
     // Create directory if it doesn't exist
     if (!rootFolder.exists())

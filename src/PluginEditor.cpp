@@ -107,7 +107,7 @@ void NineStripProcessorEditor::setupFiltersSection()
     setupGroupComponent(highPassGroup, highPassLabel, "HIGH PASS");
 
     addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", juce::Colours::green.darker(), hipassAttachment);
-    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Ls/Tite", juce::Colours::green.darker(),
+    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Loose/Tight", juce::Colours::green.darker(),
                   hpLsTiteAttachment);
     addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", juce::Colours::green.darker(),
                   hpPolesAttachment);
@@ -156,10 +156,10 @@ void NineStripProcessorEditor::setupDynamicsSection()
 {
     setupGroupComponent(compressorGroup, compressorLabel, "DYNAMICS");
 
-    addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", juce::Colours::white.darker(),
+    addRotaryKnob(compressorGroup, pressureSlider, pressureLabel, "pressure", "Pressure", juce::Colours::red.darker(),
                   pressureAttachment);
-    addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", juce::Colours::white.darker(), speedAttachment);
-    addRotaryKnob(compressorGroup, mewinessSlider, mewinessLabel, "mewiness", "Mewiness", juce::Colours::white.darker(),
+    addRotaryKnob(compressorGroup, speedSlider, speedLabel, "speed", "Speed", juce::Colours::red.darker(), speedAttachment);
+    addRotaryKnob(compressorGroup, mewinessSlider, mewinessLabel, "mewiness", "Mewiness", juce::Colours::red.darker(),
                   mewinessAttachment);
 
     compressorGroup.addAndMakeVisible(grMeter);

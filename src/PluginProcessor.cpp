@@ -181,12 +181,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
             .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
             .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
-    // LP Poles - display as 0-10
+    // LP Poles - display as 0-4
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "lp_poles", "LP Slope", juce::NormalisableRange<float>(0.0f, 1.0f), 0.25f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
-            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 4.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 4.0f; })));
 
     // Highpass2 - display as 0-10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
@@ -195,19 +195,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
             .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
             .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
 
-    // HP Ls/Tite - display as -10 to +10
+    // HP Loose/Tight - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "ls_tite", "HP Ls/Tite", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
+        "ls_tite", "HP Loose/Tight", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
         juce::AudioParameterFloatAttributes()
             .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
             .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));
 
-    // HP Poles - display as 0-10
+    // HP Poles - display as 0-4
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "hp_poles", "HP Slope", juce::NormalisableRange<float>(0.0f, 1.0f), 0.25f,
         juce::AudioParameterFloatAttributes()
-            .withStringFromValueFunction([](float value, int) { return juce::String(value * 10.0f, 1); })
-            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 10.0f; })));
+            .withStringFromValueFunction([](float value, int) { return juce::String(value * 4.0f, 1); })
+            .withValueFromStringFunction([](const juce::String &text) { return text.getFloatValue() / 4.0f; })));
 
     // Baxandall2 - display as -10 to +10 (Pultec-style)
     layout.add(std::make_unique<juce::AudioParameterFloat>(
