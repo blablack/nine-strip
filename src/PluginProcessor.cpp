@@ -275,7 +275,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
             .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 40.0f) / 80.0f; })));
 
     // Bypass switches
-    layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Master Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("saturationBypass", "Saturation Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
@@ -296,7 +296,7 @@ double NineStripProcessor::getTailLengthSeconds() const { return 0.0; }
 int NineStripProcessor::getNumPrograms() { return 1; }
 int NineStripProcessor::getCurrentProgram() { return 0; }
 void NineStripProcessor::setCurrentProgram(int index) {}
-const juce::String NineStripProcessor::getProgramName(int /*index*/) { return {}; }
+const juce::String NineStripProcessor::getProgramName(int /*index*/) { return "Default"; }
 void NineStripProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
