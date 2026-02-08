@@ -115,7 +115,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # CMake configuration - matches your command
+      # CMake configuration
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
@@ -130,9 +130,39 @@ jobs:
         run: |
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-      # Build - matches your ninja command
+      # Build
       - name: Build
         run: ninja -C build
+
+      # Run VST3 Validator
+      - name: Validate VST3 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ./vst3sdk/build/bin/validator build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-linux.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
+
+      - name: Validate VST3 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ./vst3sdk/build/bin/validator build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-macos.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
+
+      - name: Validate VST3 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $validator = "vst3sdk/build/bin/Release/validator.exe"
+          $plugin = "build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3"
+          & $validator $plugin 2>&1 | Tee-Object -FilePath "validator-windows.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Upload validator logs
+      - name: Upload validator logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validator-log-${{ matrix.name }}
+          path: validator-*.log
 
       # Package Linux
       - name: Package Linux
