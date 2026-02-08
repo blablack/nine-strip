@@ -124,14 +124,14 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd vst3sdk
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF
           cmake --build build --target validator
 
       - name: Build VST3 Validator (Windows)
         if: runner.os == 'Windows'
         run: |
           cd vst3sdk
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF
           cmake --build build --config Release --target validator
 
       # CMake configuration
