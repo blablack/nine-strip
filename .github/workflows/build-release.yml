@@ -72,6 +72,10 @@ jobs:
           name: manual-pdf
           path: doc/
 
+      # Clone VST3 SDK for validator
+      - name: Clone VST3 SDK
+        run: git clone --recursive --depth 1 https://github.com/steinbergmedia/vst3sdk.git
+
       # Install Ninja (all platforms)
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
@@ -115,6 +119,21 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      # Build VST3 validator
+      - name: Build VST3 Validator (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd vst3sdk
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target validator
+
+      - name: Build VST3 Validator (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd vst3sdk
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --target validator
+
       # CMake configuration
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
@@ -130,7 +149,262 @@ jobs:
         run: |
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-      # Build
+      # Buildname: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-manual:
+    name: Build Manual
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-xetex texlive-fonts-recommended pandoc fonts-liberation librsvg2-bin
+
+      - name: Build manual
+        run: |
+          cd doc
+          pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelatex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-pdf
+          path: doc/NineStrip_Manual.pdf
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: build-manual
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            artifact: NineStrip-Linux.tar.gz
+            cc: gcc
+            cxx: g++
+
+          - name: macOS
+            os: macos-latest
+            artifact: NineStrip-macOS.zip
+            cc: clang
+            cxx: clang++
+
+          - name: Windows
+            os: windows-latest
+            artifact: NineStrip-Windows.zip
+            cc: cl
+            cxx: cl
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download manual PDF
+        uses: actions/download-artifact@v4
+        with:
+          name: manual-pdf
+          path: doc/
+
+      # Clone VST3 SDK for validator
+      - name: Clone VST3 SDK
+        run: git clone --recursive --depth 1 https://github.com/steinbergmedia/vst3sdk.git
+
+      # Install Ninja (all platforms)
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      # Linux dependencies
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev \
+            gcc \
+            g++
+
+      # macOS dependencies
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install ninja
+
+      # Windows dependencies
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # Build VST3 validator
+      - name: Build VST3 Validator (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd vst3sdk
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target validator
+
+      - name: Build VST3 Validator (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd vst3sdk
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --target validator
+
+      # CMake configuration - matches your command
+      - name: Configure CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=${{ matrix.cc }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      # Build - matches your ninja command
+      - name: Build
+        run: ninja -C build
+
+      # Run VST3 Validator
+      - name: Validate VST3 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ./vst3sdk/build/bin/validator build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-linux.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
+
+      - name: Validate VST3 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ./vst3sdk/build/bin/validator build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-macos.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
+
+      - name: Validate VST3 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $validator = "vst3sdk/build/bin/Release/validator.exe"
+          $plugin = "build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3"
+          & $validator $plugin 2>&1 | Tee-Object -FilePath "validator-windows.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Upload validator logs
+      - name: Upload validator logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validator-log-${{ matrix.name }}
+          path: validator-*.log
+
+      # Package Linux
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p NineStrip
+          cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp doc/NineStrip_Manual.pdf NineStrip/
+          tar -czf ${{ matrix.artifact }} NineStrip
+
+      # Package macOS
+      - name: Package macOS
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p NineStrip
+          cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp doc/NineStrip_Manual.pdf NineStrip/
+          ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
+
+      # Package Windows
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path NineStrip
+          Copy-Item -Recurse build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          Copy-Item doc/NineStrip_Manual.pdf NineStrip/
+          Compress-Archive -Path NineStrip -DestinationPath ${{ matrix.artifact }}
+
+      # Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Linux/NineStrip-Linux.tar.gz
+            macOS/NineStrip-macOS.zip
+            Windows/NineStrip-Windows.zip
+          body: |
+            # NineStrip ${{ github.ref_name }}
+
+            ## Downloads
+            - **Linux**: NineStrip-Linux.tar.gz
+            - **macOS**: NineStrip-macOS.zip
+            - **Windows**: NineStrip-Windows.zip
+
+            Each package includes:
+            - NineStrip.vst3 plugin
+            - User Manual (PDF)
+
+            ## Installation
+            See the included manual for installation instructions.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build
         run: ninja -C build
 
