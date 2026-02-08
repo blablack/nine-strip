@@ -52,8 +52,6 @@ NineStripProcessor::NineStripProcessor()
 
 NineStripProcessor::~NineStripProcessor()
 {
-    juce::Logger::setCurrentLogger(nullptr);
-
     apvts.state.removeListener(this);
     removeParameterListeners();
 }
@@ -419,8 +417,8 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
     ballisticsFilter.process(context);
 
     // Get the resulting envelope level from the last sample
-    float levelL = meterBuffer.getSample(0, meterBuffer.getNumSamples() - 1);
-    float levelR = meterBuffer.getSample(1, meterBuffer.getNumSamples() - 1);
+    float levelL = meterBuffer.getRMSLevel(0, 0, meterBuffer.getNumSamples());
+    float levelR = meterBuffer.getRMSLevel(1, 0, meterBuffer.getNumSamples());
 
     float dbfsL = juce::Decibels::gainToDecibels(levelL, -60.0f);
     float dbfsR = juce::Decibels::gainToDecibels(levelR, -60.0f);
