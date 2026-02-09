@@ -40,7 +40,7 @@ juce_add_plugin(NineStrip
             # Unity 
             ${AAX_BUILD_FLAG}               
     VST3_CATEGORIES "Fx" 
-    LV2URI "http://github.com/blablack/nine=strip"
+    LV2URI "http://github.com/blablack/nine-strip"
     AU_MAIN_TYPE "kAudioUnitType_Effect"
     # AU_SANDBOX_SAFE TRUE
     # AAX_CATEGORY ""
