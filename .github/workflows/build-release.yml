@@ -224,7 +224,9 @@ jobs:
       - name: Validate Plugin (Linux)
         if: runner.os == 'Linux'
         run: |
-          ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+          sudo apt-get install -y xvfb
+
+          xvfb-run -a ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
 
       - name: Validate Plugin (macOS)
         if: runner.os == 'macOS'
