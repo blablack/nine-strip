@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "macOS architectures" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version" FORCE)
+endif()
+
 PROJECT(nine-strip
 LANGUAGES C CXX
 VERSION 0.0.2
