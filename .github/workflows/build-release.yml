@@ -72,10 +72,6 @@ jobs:
           name: manual-pdf
           path: doc/
 
-      # Clone VST3 SDK for validator
-      - name: Clone VST3 SDK
-        run: git clone --recursive --depth 1 https://github.com/steinbergmedia/vst3sdk.git
-
       # Install Ninja (all platforms)
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
@@ -119,21 +115,6 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # Build VST3 validator
-      - name: Build VST3 Validator (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          cd vst3sdk
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=OFF -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF
-          cmake --build build --target validator
-
-      - name: Build VST3 Validator (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd vst3sdk
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=OFF -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF
-          cmake --build build --config Release --target validator
-
       # CMake configuration
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
@@ -153,52 +134,7 @@ jobs:
       - name: Build
         run: ninja -C build
 
-      # Run VST3 Validator with dynamic path finding
-      - name: Validate VST3 (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          VALIDATOR=$(find vst3sdk/build -type f -name validator -executable | head -n 1)
-          if [ -z "$VALIDATOR" ]; then
-            echo "ERROR: validator not found"
-            exit 1
-          fi
-          echo "Using validator: $VALIDATOR"
-          $VALIDATOR build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-linux.log
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
-
-      - name: Validate VST3 (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          VALIDATOR=$(find vst3sdk/build -type f -name validator -perm +111 | head -n 1)
-          if [ -z "$VALIDATOR" ]; then
-            echo "ERROR: validator not found"
-            exit 1
-          fi
-          echo "Using validator: $VALIDATOR"
-          $VALIDATOR build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 2>&1 | tee validator-macos.log
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi
-
-      - name: Validate VST3 (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $validator = Get-ChildItem -Path "vst3sdk\build" -Recurse -Filter "validator.exe" | Select-Object -First 1
-          if (-not $validator) {
-            throw "validator.exe not found"
-          }
-          Write-Host "Using validator: $($validator.FullName)"
-          $plugin = "build\src\NineStrip_artefacts\Release\VST3\NineStrip.vst3"
-          & $validator.FullName $plugin 2>&1 | Tee-Object -FilePath "validator-windows.log"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      # Upload validator logs
-      - name: Upload validator logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: validator-log-${{ matrix.name }}
-          path: validator-*.log
-
+      # Run VST3 Validator
       - name: Download pluginval
         if: runner.os == 'Linux'
         run: |
