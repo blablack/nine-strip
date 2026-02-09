@@ -199,6 +199,52 @@ jobs:
           name: validator-log-${{ matrix.name }}
           path: validator-*.log
 
+      - name: Download pluginval
+        if: runner.os == 'Linux'
+        run: |
+          wget https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          unzip pluginval_Linux.zip
+          chmod +x pluginval
+
+      - name: Download pluginval
+        if: runner.os == 'macOS'
+        run: |
+          wget https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip pluginval_macOS.zip
+          chmod +x pluginval.app/Contents/MacOS/pluginval
+
+      - name: Download pluginval
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip" -OutFile "pluginval.zip"
+          Expand-Archive -Path pluginval.zip -DestinationPath .
+
+      # Validate with pluginval
+      - name: Validate Plugin (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+
+      - name: Validate Plugin (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+
+      - name: Validate Plugin (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\pluginval.exe --strictness-level 5 --validate-in-process --output-dir . --vst3 build\src\NineStrip_artefacts\Release\VST3\NineStrip.vst3
+
+      # Upload logs
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pluginval-log-${{ matrix.name }}
+          path: "*.txt"
+
       # Package Linux
       - name: Package Linux
         if: runner.os == 'Linux'

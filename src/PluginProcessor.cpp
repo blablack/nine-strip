@@ -34,6 +34,7 @@ NineStripProcessor::NineStripProcessor()
     options.osxLibrarySubFolder = "Application Support";
     appProperties.setStorageParameters(options);
 
+    /*
     ballisticsFilter.prepare({44100, static_cast<juce::uint32>(512), 2});
     ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
@@ -43,6 +44,7 @@ NineStripProcessor::NineStripProcessor()
     grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
     grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
     grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
+    */
 
     presetManager = std::make_unique<PresetManager>(apvts);
 
