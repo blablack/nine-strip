@@ -205,6 +205,8 @@ jobs:
         run: |
           mkdir -p NineStrip
           cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp -r build/src/NineStrip_artefacts/Release/LV2/NineStrip.lv2 NineStrip/
+          cp build/src/NineStrip_artefacts/Release/Standalone/NineStrip NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           tar -czf ${{ matrix.artifact }} NineStrip
 
@@ -214,6 +216,7 @@ jobs:
         run: |
           mkdir -p NineStrip
           cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp -r build/src/NineStrip_artefacts/Release/Standalone/NineStrip.app NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
 
@@ -224,6 +227,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path NineStrip
           Copy-Item -Recurse build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          Copy-Item build/src/NineStrip_artefacts/Release/Standalone/NineStrip.exe NineStrip/
           Copy-Item doc/NineStrip_Manual.pdf NineStrip/
           Compress-Archive -Path NineStrip -DestinationPath ${{ matrix.artifact }}
 
@@ -261,10 +265,19 @@ jobs:
 
             Each package includes:
             - NineStrip.vst3 plugin
+            - NineStrip.lv2 plugin (Linux only))
+            - NineStrip standalone application
             - User Manual (PDF)
 
             ## Installation
             See the included manual for installation instructions.
+
+            ### macOS Security Note
+            For unsigned builds, you may need to remove the quarantine flag:
+            ```bash
+            xattr -d -r com.apple.quarantine /path/to/NineStrip.vst3
+            xattr -d -r com.apple.quarantine /path/to/NineStrip.app
+            ```
           draft: false
           prerelease: false
         env:

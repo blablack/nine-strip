@@ -54,7 +54,7 @@ header-includes: |
 
 \vspace{0.5cm}
 
-{\large Version 0.0.1}
+{\large Version 0.0.2}
 
 \vspace{1cm}
 
@@ -79,7 +79,13 @@ The signal chain implements a conventional channel strip topology: input gain st
 
 # Installation
 
+NineStrip is available in two formats:
+- **VST3 Plugin** - For use within digital audio workstations (DAWs)
+- **Standalone Application** - For independent audio processing
+
 ## Linux
+
+### VST3 Plugin
 
 1. Download the `NineStrip.vst3` bundle
 2. Copy to your VST3 directory:
@@ -94,17 +100,49 @@ The signal chain implements a conventional channel strip topology: input gain st
 sudo cp -r NineStrip.vst3 /usr/lib/vst3/
 ```
 
+### Standalone Application
+
+1. Download the `NineStrip` executable
+2. Make it executable:
+   ```bash
+   chmod +x NineStrip
+   ```
+3. Run directly or move to a convenient location:
+   ```bash
+   ./NineStrip
+   ```
+
 ## macOS
 
+### VST3 Plugin
+
 1. Download the `NineStrip.vst3` bundle
-2. Copy to one of these locations:
+2. **Remove macOS quarantine flag**  
+   macOS Gatekeeper blocks unsigned plugins with a "plugin is damaged" error. Until this plugin is code-signed, you'll need to remove the quarantine flag using Terminal:
+   
+   ```bash
+   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.vst3
+   ```
+
+3. Copy to one of these locations:
    ```
    ~/Library/Audio/Plug-Ins/VST3/        (user)
    /Library/Audio/Plug-Ins/VST3/         (system)
    ```
-3. Rescan plugins in your DAW
+4. Rescan plugins in your DAW
+
+### Standalone Application
+
+1. Download the `NineStrip.app` bundle
+2. Remove quarantine flag:
+   ```bash
+   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.app
+   ```
+3. Drag to Applications folder or run directly
 
 ## Windows
+
+### VST3 Plugin
 
 1. Download the `NineStrip.vst3` bundle
 2. Copy to your VST3 directory:
@@ -112,6 +150,52 @@ sudo cp -r NineStrip.vst3 /usr/lib/vst3/
    C:\Program Files\Common Files\VST3\
    ```
 3. Rescan plugins in your DAW
+
+### Standalone Application
+
+1. Download `NineStrip.exe`
+2. Run directly or place in a convenient location (e.g., Program Files)
+
+# Using the Standalone Application
+
+The standalone version of NineStrip operates identically to the plugin version but runs as an independent application, allowing you to process audio without a DAW.
+
+## Audio Configuration
+
+On first launch, configure your audio interface:
+
+1. Click the settings/options button (typically in the menu or toolbar)
+2. Select **Audio/MIDI Settings** or **Preferences**
+3. Configure:
+   - **Audio Device:** Select your audio interface
+   - **Sample Rate:** Choose appropriate sample rate (44.1kHz, 48kHz, etc.)
+   - **Buffer Size:** Adjust for balance between latency and performance
+   - **Input Channels:** Select your input source
+   - **Output Channels:** Select your output destination
+
+## Typical Use Cases
+
+**Hardware Processing:**
+- Connect external instruments or microphones to your audio interface
+- Process signals through NineStrip in real-time
+- Monitor or record the processed output
+
+**File Processing:**
+- Use your DAW's audio routing to send tracks through the standalone application
+- Process stems or individual tracks outside your DAW session
+
+**Live Performance:**
+- Use as a vocal or instrument processor during live performances
+- Benefit from low-latency processing with appropriate buffer size settings
+
+## Standalone vs Plugin
+
+The standalone application offers identical processing quality and controls as the VST3 plugin. The main differences are:
+
+- **Plugin:** Runs inside a DAW, integrates with your session, supports automation
+- **Standalone:** Runs independently, processes audio in real-time, useful for hardware processing or live use
+
+All presets are shared between plugin and standalone versions.
 
 # Operation
 
@@ -603,6 +687,7 @@ Presets are stored as XML files in your system's standard plugin preset location
 
 - **AirWindows**: Chris Johnson  
   [https://www.airwindows.com](https://www.airwindows.com)
+  Support his work on [Patreon](https://www.patreon.com/airwindows)
   
 - **3D Knob LnF**:  
   [https://github.com/SoundDevelopment/3D_knob_lnf](https://github.com/SoundDevelopment/3D_knob_lnf)
