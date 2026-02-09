@@ -311,7 +311,7 @@ jobs:
 
             Each package includes:
             - NineStrip.vst3 plugin
-            - NineStrip.lv2 plugin (Linux only))
+            - NineStrip.lv2 plugin (Linux only)
             - NineStrip standalone application
             - User Manual (PDF)
 
