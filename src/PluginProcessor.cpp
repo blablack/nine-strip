@@ -16,6 +16,7 @@ NineStripProcessor::NineStripProcessor()
       baxandall2(44100.0),
       parametric(44100.0),
       pressure4(44100.0),
+      interstage(44100.0),
       inputPurestGain(44100.0),
       outputPurestGain(44100.0)
 {
@@ -310,6 +311,7 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     baxandall2.setSampleRate(sampleRate);
     parametric.setSampleRate(sampleRate);
     pressure4.setSampleRate(sampleRate);
+    interstage.setSampleRate(sampleRate);
     inputPurestGain.setSampleRate(sampleRate);
     outputPurestGain.setSampleRate(sampleRate);
 
@@ -516,10 +518,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     else
         inputPurestGain.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
 
-    if (inputMeteringNeeded)
-    {
-        updateMeters(buffer);
-    }
+    if (inputMeteringNeeded) updateMeters(buffer);
+
+    if constexpr (std::is_same_v<SampleType, float>)
+        interstage.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
+    else
+        interstage.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
 
     // Process through the plugin chain
     if (!saturationBypass)
@@ -558,10 +562,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         }
     }
 
-    if (!filterBypass)
-    {
-        dcBlocker.processStereo(channelData.data(), buffer.getNumSamples());
-    }
+    if (!filterBypass) dcBlocker.processStereo(channelData.data(), buffer.getNumSamples());
 
     if (!compressorBypass)
     {
@@ -569,13 +570,9 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         pressure4.resetGRTracking();
 
         if constexpr (std::is_same_v<SampleType, float>)
-        {
             pressure4.processReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
-        }
         else
-        {
             pressure4.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
-        }
 
         pressure4.finalizeGR();
 
@@ -595,10 +592,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     else
         outputPurestGain.processDoubleReplacing(channelData.data(), channelData.data(), buffer.getNumSamples());
 
-    if (outputMeteringNeeded)
-    {
-        updateMeters(buffer);
-    }
+    if (outputMeteringNeeded) updateMeters(buffer);
 }
 
 void NineStripProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) { processBlockInternal(buffer); }

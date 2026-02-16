@@ -7,6 +7,7 @@
 #include "airwindows/Baxandall2.h"
 #include "airwindows/Channel9.h"
 #include "airwindows/Highpass2.h"
+#include "airwindows/Interstage.h"
 #include "airwindows/Lowpass2.h"
 #include "airwindows/Parametric.h"
 #include "airwindows/Pressure4.h"
@@ -101,6 +102,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     PurestGain inputPurestGain;
     PurestGain outputPurestGain;
     DCBlocker dcBlocker;
+    Interstage interstage;
 
     // Level meters
     juce::dsp::BallisticsFilter<float> ballisticsFilter;

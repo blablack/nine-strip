@@ -14,6 +14,8 @@ add_library(AirwindowsDSP STATIC
     Pressure4Proc.cpp
     PurestGain.cpp
     PurestGainProc.cpp
+    Interstage.cpp
+    InterstageProc.cpp
 )
 
 target_include_directories(AirwindowsDSP PUBLIC
