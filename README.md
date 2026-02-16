@@ -17,6 +17,8 @@ NineStrip is a complete channel strip solution that combines console modeling, f
 ```
 PURESTGAIN - Input Gain
     ↓
+INTERSTAGE - Analog Conditioning
+    ↓
 CHANNEL9 - Console model + Saturation + Drive
     ↓
 HIGHPASS2 - High Pass

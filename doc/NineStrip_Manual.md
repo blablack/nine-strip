@@ -243,6 +243,40 @@ The interface uses color-coded knobs for quick visual identification: orange for
 
 # NineStrip Functional Blocks
 
+## Airwindows Interstage
+
+Based on Airwindows Interstage, this zero-parameter processor emulates the natural frequency shaping and slew-rate limitations of analog circuitry. Interstage applies subtle conditioning to prevent excessively digital bass and treble characteristics without introducing distortion, saturation, or gain changes.
+
+### Operation
+
+Interstage operates transparently in the background with no user controls. It processes both channels identically, applying conditioning only when the signal exhibits characteristics that would not naturally occur in analog hardware.
+
+**Transparency by Design:** On naturally balanced audio, Interstage may produce no audible change. The processing only engages when confronted with extreme digital characteristics—unnaturally aggressive transients or excessive slew rates.
+
+**Non-Destructive Processing:** Interstage does not alter gain staging, add harmonic distortion, or compress dynamics. Peaks may increase slightly on heavily limited material as subsonic energy gets reorganized—this is normal analog-like behavior.
+
+### Bass Conditioning
+
+Reshapes low frequencies in a manner characteristic of capacitor-coupled analog circuits. Rather than removing bass content, Interstage subtly reorganizes subsonic and deep bass frequencies while maintaining extended low-frequency response. The result feels more controlled and analog-like without losing depth or impact.
+
+### Treble Management
+
+Restricts extreme treble slew rates based on overall signal energy. Normal audio passes through with full clarity and brightness. When confronted with unnaturally fast transients, Interstage automatically contains the most extreme high-frequency swings, creating the characteristic sound of real electronic components with finite speed limitations.
+
+**Signal-Dependent Response:** Louder, more energetic signals trigger progressively more high-frequency containment. Quiet passages retain full brightness. This mimics how analog components naturally respond to varying signal levels.
+
+### Processing Architecture
+
+**Three-Pole IIR Highpass:** Cascaded filtering provides gentle low-frequency shaping characteristic of capacitor-coupled analog stages.
+
+**Lowpass Reference Generation:** Creates a smoothed reference signal representing overall circuit energy.
+
+**Adaptive Slew Limiting:** Restricts high-frequency slew rates by comparing against the lowpass reference rather than the direct signal, creating analog-like treble behavior responsive to overall signal energy.
+
+\pagebreak
+
+\pagebreak
+
 ## Airwindows Channel9
 
 Based on Airwindows Channel9, this processing chain adds analog warmth, subtle harmonic enhancement, and the sonic characteristics of classic recording consoles to your signal.

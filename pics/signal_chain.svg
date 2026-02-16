@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   viewBox="0 0 400 810"
+   viewBox="0 0 400 900"
    version="1.1"
    id="svg16"
    sodipodi:docname="signal_chain.svg"
    width="400"
-   height="810"
+   height="900"
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -20,9 +20,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.74428571"
-     inkscape:cx="199.52015"
-     inkscape:cy="468.23417"
+     inkscape:zoom="1.38"
+     inkscape:cx="188.76812"
+     inkscape:cy="91.666667"
      inkscape:window-width="1366"
      inkscape:window-height="705"
      inkscape:window-x="0"
@@ -67,7 +67,7 @@
        refY="3"
        orient="auto">
       <polygon
-         points="10,3 0,6 0,0 "
+         points="0,0 10,3 0,6 "
          fill="#3498db"
          id="polygon1" />
     </marker>
@@ -79,224 +79,264 @@
        refY="3"
        orient="auto">
       <polygon
-         points="0,6 0,0 10,3 "
+         points="10,3 0,6 0,0 "
          fill="#3498db"
          id="polygon1-2" />
+    </marker>
+    <marker
+       id="arrowhead-67"
+       markerWidth="10"
+       markerHeight="10"
+       refX="9"
+       refY="3"
+       orient="auto">
+      <polygon
+         points="10,3 0,6 0,0 "
+         fill="#3498db"
+         id="polygon1-5" />
     </marker>
   </defs>
   <!-- Input Gain -->
   <rect
      class="box"
-     x="50"
-     y="20"
+     x="49"
+     y="96"
      width="300"
      height="60"
      id="rect1" />
   <text
      class="text-main"
-     x="200"
-     y="45"
-     id="text1">Input Gain</text>
+     x="198.96094"
+     y="121"
+     id="text1">Analog Conditioning</text>
   <text
      class="text-sub"
-     x="200"
-     y="65"
-     id="text2">PurestGain</text>
+     x="198.71289"
+     y="141"
+     id="text2">Interstage</text>
   <line
      class="arrow"
-     x1="200"
-     y1="80"
-     x2="200"
-     y2="110"
+     x1="199"
+     y1="156"
+     x2="199"
+     y2="186"
      id="line2" />
+  <rect
+     class="box"
+     x="49"
+     y="4"
+     width="300"
+     height="60"
+     id="rect1-5"
+     style="fill:#2c3e50;stroke:#3498db;stroke-width:2" />
+  <text
+     class="text-main"
+     x="198.96094"
+     y="29"
+     id="text1-6"
+     style="font-weight:bold;font-size:16px;font-family:'Liberation Sans', Arial, sans-serif;text-anchor:middle;fill:#ecf0f1">Input Gain</text>
+  <text
+     class="text-sub"
+     x="198.89746"
+     y="49"
+     id="text2-2"
+     style="font-size:12px;font-family:'Liberation Sans', Arial, sans-serif;text-anchor:middle;fill:#95a5a6">PurestGain</text>
+  <line
+     class="arrow"
+     x1="199"
+     y1="64"
+     x2="199"
+     y2="94"
+     id="line2-9"
+     style="fill:none;stroke:#3498db;stroke-width:3;marker-end:url(#arrowhead-67)" />
   <!-- Console -->
   <rect
      class="box"
-     x="50"
-     y="110"
+     x="49"
+     y="186"
      width="300"
      height="60"
      id="rect2" />
   <text
      class="text-main"
-     x="200"
-     y="135"
+     x="199.16797"
+     y="211"
      id="text3">Console Emulation</text>
   <text
      class="text-sub"
-     x="200"
-     y="155"
+     x="198.97949"
+     y="231"
      id="text4">Channel9</text>
   <line
      class="arrow"
-     x1="200"
-     y1="170"
-     x2="200"
-     y2="200"
+     x1="199"
+     y1="246"
+     x2="199"
+     y2="276"
      id="line4" />
   <!-- High Pass -->
   <rect
      class="box"
-     x="50"
-     y="200"
+     x="49"
+     y="276"
      width="300"
      height="60"
      id="rect4" />
   <text
      class="text-main"
-     x="200"
-     y="225"
+     x="198.58594"
+     y="301"
      id="text5">High Pass Filter</text>
   <text
      class="text-sub"
-     x="200"
-     y="245"
+     x="198.80957"
+     y="321"
      id="text6">Highpass2</text>
   <line
      class="arrow"
-     x1="200"
-     y1="260"
-     x2="200"
-     y2="290"
+     x1="199"
+     y1="336"
+     x2="199"
+     y2="366"
      id="line6" />
   <!-- Low Pass -->
   <rect
      class="box"
-     x="50"
-     y="290"
+     x="49"
+     y="366"
      width="300"
      height="60"
      id="rect6" />
   <text
      class="text-main"
-     x="200"
-     y="315"
+     x="198.58594"
+     y="391"
      id="text7">Low Pass Filter</text>
   <text
      class="text-sub"
-     x="200"
-     y="335"
+     x="198.80957"
+     y="411"
      id="text8">Lowpass2</text>
   <line
      class="arrow"
-     x1="200"
-     y1="350"
-     x2="200"
-     y2="380"
+     x1="199"
+     y1="426"
+     x2="199"
+     y2="456"
      id="line8" />
   <!-- Shelves -->
   <rect
      class="box"
-     x="50"
-     y="380"
+     x="49"
+     y="456"
      width="300"
      height="60"
      id="rect8" />
   <text
      class="text-main"
-     x="200"
-     y="405"
+     x="198.79297"
+     y="481"
      id="text9">Bass &amp; Treble Shelves</text>
   <text
      class="text-sub"
-     x="200"
-     y="425"
+     x="198.80957"
+     y="501"
      id="text10">Baxandall2</text>
   <line
      class="arrow"
-     x1="200"
-     y1="440"
-     x2="200"
-     y2="470"
+     x1="199"
+     y1="516"
+     x2="199"
+     y2="546"
      id="line10" />
   <!-- Parametric -->
   <rect
      class="box"
-     x="50"
-     y="470"
+     x="49"
+     y="546"
      width="300"
      height="60"
      id="rect10" />
   <text
      class="text-main"
-     x="200"
-     y="495"
+     x="198.80078"
+     y="571"
      id="text11">Parametric Mid EQ</text>
   <text
      class="text-sub"
-     x="200"
-     y="515"
+     x="198.66602"
+     y="591"
      id="text12">Parametric</text>
   <line
      class="arrow"
-     x1="200"
-     y1="530"
-     x2="200"
-     y2="560"
+     x1="199"
+     y1="606"
+     x2="199"
+     y2="636"
      id="line12" />
   <rect
      class="box"
      x="49"
-     y="559"
+     y="635"
      width="300"
      height="60"
      id="rect10-1"
      style="fill:#2c3e50;stroke:#3498db;stroke-width:2" />
   <text
      class="text-main"
-     x="199"
-     y="584"
+     x="198.58594"
+     y="660"
      id="text11-2"
      style="font-weight:bold;font-size:16px;font-family:'Liberation Sans', Arial, sans-serif;text-anchor:middle;fill:#ecf0f1">DC Blocker</text>
   <line
      class="arrow"
      x1="199"
-     y1="619"
+     y1="695"
      x2="199"
-     y2="649"
+     y2="725"
      id="line12-0"
      style="fill:none;stroke:#3498db;stroke-width:3;marker-end:url(#arrowhead-6)" />
   <!-- Compressor -->
   <rect
      class="box"
-     x="50"
-     y="650"
+     x="49"
+     y="726"
      width="300"
      height="60"
      id="rect12" />
   <text
      class="text-main"
-     x="200"
-     y="675"
+     x="198.79297"
+     y="751"
      id="text13">Compressor</text>
   <text
      class="text-sub"
-     x="200"
-     y="695"
+     x="198.68359"
+     y="771"
      id="text14">Pressure4</text>
   <line
      class="arrow"
-     x1="200"
-     y1="710"
-     x2="200"
-     y2="740"
+     x1="199"
+     y1="786"
+     x2="199"
+     y2="816"
      id="line14" />
   <!-- Output Gain -->
   <rect
      class="box"
-     x="50"
-     y="740"
+     x="49"
+     y="816"
      width="300"
      height="60"
      id="rect14" />
   <text
      class="text-main"
-     x="200"
-     y="765"
+     x="199.16797"
+     y="841"
      id="text15">Output Gain</text>
   <text
      class="text-sub"
-     x="200"
-     y="785"
+     x="198.89746"
+     y="861"
      id="text16">PurestGain</text>
 </svg>
