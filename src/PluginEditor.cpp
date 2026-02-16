@@ -24,11 +24,12 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
         height = props->getIntValue("editorHeight", baseHeight);
     }
 
-    setSize(width, height);
-    constrainer.setFixedAspectRatio(static_cast<float>(width) / static_cast<float>(height));
-    constrainer.setSizeLimits(width, baseHeight, width * 3, height * 3);
+    constrainer.setFixedAspectRatio(static_cast<float>(baseWidth) / static_cast<float>(baseHeight));
+    constrainer.setSizeLimits(baseWidth, baseHeight, baseWidth * 3, baseHeight * 3);
     setConstrainer(&constrainer);
     setResizable(false, true);
+
+    setSize(width, height);
 
     setupPresetPanel();
     setupConsoleSection();
