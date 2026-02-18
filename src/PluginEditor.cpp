@@ -12,9 +12,6 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 {
     audioProcessor.editorStateChanged(true);
 
-    const int baseWidth = 800;
-    const int baseHeight = 600;
-
     int width = baseWidth;
     int height = baseHeight;
 
@@ -74,9 +71,8 @@ void NineStripProcessorEditor::setupConsoleSection()
     consoleSatGroup.addAndMakeVisible(consoleTypeSlider);
     consoleTypeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     consoleTypeSlider.setRange(0, 4, 1);  // 5 choices (0-4), step size of 1
-    consoleTypeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    consoleTypeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 
-    // Map numeric values to text labels
     consoleTypeSlider.textFromValueFunction = [](double value)
     {
         static const juce::StringArray types{"Neve", "API", "SSL", "Teac", "Mackie"};
@@ -91,9 +87,22 @@ void NineStripProcessorEditor::setupConsoleSection()
 
     consoleTypeSlider.setLookAndFeel(&knobSkeuomorphicLook);
     consoleTypeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::orange);
+    consoleTypeSlider.getProperties().set("noTextAround", true);
 
     consoleTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getAPVTS(), "consoleType", consoleTypeSlider);
+
+    // Add value label below slider
+    consoleSatGroup.addAndMakeVisible(consoleTypeValueLabel);
+    consoleTypeValueLabel.setJustificationType(juce::Justification::centred);
+    consoleTypeValueLabel.setText("Neve", juce::dontSendNotification);  // Initial value
+
+    // Update label when slider changes
+    consoleTypeSlider.onValueChange = [this]()
+    {
+        consoleTypeValueLabel.setText(consoleTypeSlider.getTextFromValue(consoleTypeSlider.getValue()),
+                                      juce::dontSendNotification);
+    };
 
     addRotaryKnob(consoleSatGroup, driveSlider, driveLabel, "drive", "Drive", juce::Colours::white.darker(), driveAttachment);
 
@@ -283,8 +292,6 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
         bool isInputMode = newValue > 0.5f;
         vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
         vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
-
-        // Your existing VU meter update code...
     }
 }
 
@@ -301,8 +308,8 @@ void NineStripProcessorEditor::resized()
 
     // Knobs size
 
-    int columnWidth = bounds.getWidth() / 6;   // 4 columns
-    int bigKnobSize = (columnWidth - 20) / 2;  // Account for padding
+    int columnWidth = bounds.getWidth() / 5;
+    int bigKnobSize = (columnWidth - 10) / 2;  // Account for padding
     int smallKnobSize = bigKnobSize * 0.8f;
 
     setupMainGrid(bounds);
@@ -323,17 +330,17 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
 
     // ========== MAIN GRID: 4 columns + preset row ==========
     mainGrid.templateRows = {
-        Track(Px(getHeight() * 30 / 600)),  // Row 1: Preset
-        Track(Fr(9)),                       // Row 2: Top sections
-        Track(Fr(10)),                      // Row 3: Bottom sections
-        Track(Fr(10))                       // Row 4: Bottom sections
+        Track(Px(getHeight() * 30 / baseHeight)),  // Row 1: Preset
+        Track(Fr(9)),                              // Row 2: Top sections
+        Track(Fr(10)),                             // Row 3: Bottom sections
+        Track(Fr(10))                              // Row 4: Bottom sections
     };
 
     mainGrid.templateColumns = {
-        Track(Fr(5)),  // Column 1: Console/Filters
-        Track(Fr(5)),  // Column 2: EQ
-        Track(Fr(6)),  // Column 3: Meters (wider)
-        Track(Fr(4))   // Column 4: Dynamics/Gain
+        Track(Fr(4)),  // Column 1: Console/Filters
+        Track(Fr(4)),  // Column 2: EQ
+        Track(Fr(5)),  // Column 3: Meters (wider)
+        Track(Fr(5))   // Column 4: Dynamics/Gain
     };
 
     mainGrid.items.clear();
@@ -381,16 +388,22 @@ void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
     consoleSatLabel.setBounds(consoleBounds.removeFromTop(20));
 
     const int horizontalSpacing = 16;
+    const int shadowPadding = 40;
+
     int totalWidth = bigKnobSize * 2 + horizontalSpacing;
     int startX = consoleBounds.getCentreX() - (totalWidth / 2);
-    int knobY = consoleBounds.getY() + (consoleBounds.getHeight() - bigKnobSize - 40) / 2;  // Center vertically
+    int knobY = consoleBounds.getY() + (consoleBounds.getHeight() - bigKnobSize - 40) / 2;
 
-    // Console type knob on left
-    consoleTypeSlider.setBounds(startX, knobY, bigKnobSize, bigKnobSize + 20);
+    // Console type knob - expand bounds for shadow
+    consoleTypeSlider.setBounds(startX - shadowPadding / 2, knobY - shadowPadding / 2, bigKnobSize + shadowPadding,
+                                bigKnobSize + shadowPadding);
+    consoleTypeValueLabel.setBounds(startX, consoleTypeSlider.getBottom() - shadowPadding / 2, bigKnobSize, 18);
 
-    // Drive knob on right
-    driveSlider.setBounds(startX + bigKnobSize + horizontalSpacing, knobY, bigKnobSize, bigKnobSize);
-    driveLabel.setBounds(driveSlider.getX(), driveSlider.getBottom(), bigKnobSize, 18);
+    // Drive knob - expand bounds for shadow
+    driveSlider.setBounds(startX + bigKnobSize + horizontalSpacing - shadowPadding / 2, knobY - shadowPadding / 2,
+                          bigKnobSize + shadowPadding, bigKnobSize + shadowPadding);
+    driveLabel.setBounds(startX + bigKnobSize + horizontalSpacing, driveSlider.getBottom() - shadowPadding / 2, bigKnobSize,
+                         18);
 
     // Bypass button at bottom-right
     saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 30, 50, 20);
@@ -433,16 +446,10 @@ void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSiz
     int labelHeight = groupBounds.getHeight() * 0.08f;
 
     // High Shelf layout
-    auto hsBounds = highShelfGroup.getLocalBounds().reduced(margin);
-    highShelfLabel.setBounds(hsBounds.removeFromTop(headerHeightSmall));
+    auto hsBounds = highShelfGroup.getLocalBounds().reduced(6);
+    highShelfLabel.setBounds(hsBounds.removeFromTop(20));
 
-    // Proportional label padding based on available width
-    const int labelPadding = hsBounds.getWidth() * 0.15f;
-    int centerX = hsBounds.getX() + (hsBounds.getWidth() - bigKnobSize) / 2;
-    int knobY = hsBounds.getY() + (hsBounds.getHeight() - bigKnobSize - labelHeight) / 2;
-
-    trebleSlider.setBounds(centerX - labelPadding / 2, knobY, bigKnobSize + labelPadding, bigKnobSize);
-    trebleLabel.setBounds(trebleSlider.getX() + labelPadding / 2, trebleSlider.getBottom(), bigKnobSize, labelHeight);
+    layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
 
     // High-Mid layout
     auto hmBounds = highMidGroup.getLocalBounds().reduced(margin);
@@ -579,25 +586,26 @@ void NineStripProcessorEditor::layoutGain()
     masterBypassButton.setBounds(gainBounds.removeFromBottom(30).reduced(4, 2));
 
     // Use remaining space for sliders
-    auto gainSliders = gainBounds.reduced(0, 4);  // Small vertical padding
+    auto gainSliders = gainBounds.reduced(0, 4);
     gainSliders.removeFromBottom(20);
 
-    // Calculate fader width based on available space - scale between 20-50px
+    // Calculate fader width with shadow padding
+    const int shadowPadding = 30;  // Extra space for fader shadow
     const int faderWidth = juce::jlimit(20, 50, gainSliders.getWidth() / 4);
 
     auto inputArea = gainSliders.removeFromLeft(gainSliders.getWidth() / 2).reduced(2);
     inputGainLabel.setBounds(inputArea.removeFromBottom(20));
 
-    // Center the fader horizontally in its area
-    const int inputCenterX = inputArea.getX() + (inputArea.getWidth() - faderWidth) / 2;
-    inputGainSlider.setBounds(inputCenterX, inputArea.getY(), faderWidth, inputArea.getHeight());
+    // Center the fader with shadow padding
+    const int inputCenterX = inputArea.getX() + (inputArea.getWidth() - faderWidth - shadowPadding) / 2;
+    inputGainSlider.setBounds(inputCenterX, inputArea.getY(), faderWidth + shadowPadding, inputArea.getHeight());
 
     auto outputArea = gainSliders.reduced(2);
     outputGainLabel.setBounds(outputArea.removeFromBottom(20));
 
-    // Center the fader horizontally in its area
-    const int outputCenterX = outputArea.getX() + (outputArea.getWidth() - faderWidth) / 2;
-    outputGainSlider.setBounds(outputCenterX, outputArea.getY(), faderWidth, outputArea.getHeight());
+    // Center the fader with shadow padding
+    const int outputCenterX = outputArea.getX() + (outputArea.getWidth() - faderWidth - shadowPadding) / 2;
+    outputGainSlider.setBounds(outputCenterX, outputArea.getY(), faderWidth + shadowPadding, outputArea.getHeight());
 }
 
 void NineStripProcessorEditor::updatePresetComboBox()
@@ -642,7 +650,8 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
 {
     const int horizontalSpacing = 16;
     const int verticalSpacing = 20;
-    const int labelPadding = 50;  // Extra width on each slider for min/max labels
+    const int labelPadding = 50;   // Extra width on each slider for min/max labels
+    const int shadowPadding = 40;  // Extra space for shadow (30px radius + offset)
 
     int triangleWidth = bigKnobSize * 2 + horizontalSpacing;
     int triangleHeight = bigKnobSize + smallKnobSize + verticalSpacing;
@@ -650,32 +659,40 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
     int triangleX = bounds.getX() + (bounds.getWidth() - triangleWidth) / 2;
     int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 - 20 : bounds.getY();
 
-    // Top row - add labelPadding to width, offset x by half
-    topLeft.setBounds(triangleX - labelPadding / 2, triangleY, bigKnobSize + labelPadding, bigKnobSize);
-    topLeftLabel.setBounds(topLeft.getX() + labelPadding / 2, topLeft.getBottom(), bigKnobSize, 20);
+    // Top left - add shadow padding to all sides
+    topLeft.setBounds(triangleX - labelPadding / 2 - shadowPadding / 2, triangleY - shadowPadding / 2,
+                      bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
+    topLeftLabel.setBounds(topLeft.getX() + labelPadding / 2 + shadowPadding / 2, topLeft.getBottom() - shadowPadding / 2,
+                           bigKnobSize, 20);
 
-    topRight.setBounds(triangleX + bigKnobSize + horizontalSpacing - labelPadding / 2, triangleY, bigKnobSize + labelPadding,
-                       bigKnobSize);
-    topRightLabel.setBounds(topRight.getX() + labelPadding / 2, topRight.getBottom(), bigKnobSize, 20);
+    // Top right - add shadow padding to all sides
+    topRight.setBounds(triangleX + bigKnobSize + horizontalSpacing - labelPadding / 2 - shadowPadding / 2,
+                       triangleY - shadowPadding / 2, bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
+    topRightLabel.setBounds(topRight.getX() + labelPadding / 2 + shadowPadding / 2, topRight.getBottom() - shadowPadding / 2,
+                            bigKnobSize, 20);
 
-    // Bottom - small knob with padding
+    // Bottom - small knob with shadow padding
     int bottomY = triangleY + bigKnobSize + verticalSpacing;
     int bottomX = triangleX + (triangleWidth - smallKnobSize) / 2;
 
-    bottom.setBounds(bottomX - labelPadding / 2, bottomY, smallKnobSize + labelPadding, smallKnobSize);
-    bottomLabel.setBounds(bottom.getX() + labelPadding / 2, bottom.getBottom(), smallKnobSize, 20);
+    bottom.setBounds(bottomX - labelPadding / 2 - shadowPadding / 2, bottomY - shadowPadding / 2,
+                     smallKnobSize + labelPadding + shadowPadding, smallKnobSize + shadowPadding);
+    bottomLabel.setBounds(bottom.getX() + labelPadding / 2 + shadowPadding / 2, bottom.getBottom() - shadowPadding / 2,
+                          smallKnobSize, 20);
 }
 
 void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label,
                                                   int knobSize)
 {
     const int labelPadding = 50;
+    const int shadowPadding = 40;  // Extra space for shadow (30px radius + offset)
 
     int centerX = bounds.getX() + (bounds.getWidth() - knobSize) / 2;
-    int centerY = bounds.getY() + (bounds.getHeight() - knobSize) / 2;
+    int centerY = bounds.getY() + (bounds.getHeight() - knobSize - 40) / 2;
 
-    knob.setBounds(centerX - labelPadding / 2, centerY, knobSize + labelPadding, knobSize);
-    label.setBounds(knob.getX() + labelPadding / 2, knob.getBottom(), knobSize, 20);
+    knob.setBounds(centerX - labelPadding / 2 - shadowPadding / 2, centerY - shadowPadding / 2,
+                   knobSize + labelPadding + shadowPadding, knobSize + shadowPadding);
+    label.setBounds(knob.getX() + labelPadding / 2 + shadowPadding / 2, knob.getBottom() - shadowPadding / 2, knobSize, 20);
 }
 
 void NineStripProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)

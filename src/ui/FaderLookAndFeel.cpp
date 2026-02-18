@@ -13,6 +13,11 @@ void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wid
 {
     if (style != juce::Slider::LinearVertical) return;
 
+    // Reserve space for shadow (20px radius + offset)
+    constexpr auto shadowMargin = 15.0f;
+    x += static_cast<int>(shadowMargin);
+    width -= static_cast<int>(shadowMargin * 2);
+
     // Scale track and thumb based on width
     const auto trackWidth = static_cast<float>(width) * 0.2f;
     const auto thumbWidth = static_cast<float>(width) * 0.7f;

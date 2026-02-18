@@ -25,6 +25,9 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
    private:
+    const int baseWidth = 600;
+    const int baseHeight = 600;
+
     NineStripProcessor& audioProcessor;
 
     KnobLookAndFeel knobSkeuomorphicLook;
@@ -47,6 +50,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::Component consoleSatGroup;
     juce::Label consoleSatLabel;
     juce::Slider consoleTypeSlider;
+    juce::Label consoleTypeValueLabel;
     juce::Slider driveSlider;
     juce::Label driveLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> consoleTypeAttachment;

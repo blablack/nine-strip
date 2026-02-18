@@ -13,6 +13,15 @@ KnobLookAndFeel::KnobLookAndFeel()
 void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
                                        float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
 {
+    // Reserve space for shadow
+    constexpr auto shadowMargin = 20.0f;  // Half of shadow radius + offset
+
+    // Reduce the drawing area to leave room for shadow
+    x += static_cast<int>(shadowMargin);
+    y += static_cast<int>(shadowMargin);
+    width -= static_cast<int>(shadowMargin * 2);
+    height -= static_cast<int>(shadowMargin * 2);
+
     const auto minDimension = static_cast<float>(std::min(width, height));
     const bool smallMode{(minDimension <= 60)};
     constexpr auto dialSizeRatio{0.35f};
@@ -35,6 +44,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     const auto thumbColour{findColour(juce::Slider::thumbColourId)};
 
     bool hasTextBox = slider.getTextBoxPosition() != juce::Slider::NoTextBox;
+    bool noTextAround = static_cast<bool>(slider.getProperties()["noTextAround"]);
 
     const auto baseDiameter{minDimension * baseSizeRatio};
     const auto baseRadius{baseDiameter / 2.0f};
@@ -48,7 +58,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
 
     g.fillPath(dialBase);
 
-    if (!smallMode && !hasTextBox)
+    if (!smallMode && !hasTextBox && !noTextAround)
     {
         const auto innerTickCircleDiameter{minDimension * innerTickCircleRatio};
         const auto outerRadius{outerTickCircleDiameter / 2.0f};
@@ -115,7 +125,7 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     g.setColour(knobColour);
     g.fillPath(innerDial);
 
-    if (!smallMode && !hasTextBox)
+    if (!smallMode && !hasTextBox && !noTextAround)
     {
         g.setFont(juce::FontOptions{}.withHeight(juce::jlimit(10.0f, 20.0f, outerTickCircleDiameter / 8.0f)));
         const auto textSize = juce::jlimit(20, 80, width - juce::roundToInt(centerX + baseRadius));
@@ -131,4 +141,37 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
         g.drawFittedText(maxText, static_cast<int>(centerX + baseRadius), static_cast<int>(centerY + baseRadius), textSize,
                          textSize, juce::Justification::topLeft, 1);
     }
+}
+
+juce::Slider::SliderLayout KnobLookAndFeel::getSliderLayout(juce::Slider& slider)
+{
+    juce::Slider::SliderLayout layout;
+
+    auto bounds = slider.getLocalBounds();
+
+    // Match your external label position
+    const int labelHeight = 20;  // matches your layoutLabel.setBounds(..., 20);
+    const int labelGap = 4;      // small gap between knob and textbox
+
+    if (slider.getTextBoxPosition() != juce::Slider::NoTextBox)
+    {
+        const int textHeight = slider.getTextBoxHeight();
+        const int textWidth = slider.getTextBoxWidth();
+
+        // Reserve space for knob + gap + label-height
+        auto knobArea = bounds;
+        knobArea.removeFromBottom(labelHeight + labelGap);
+
+        layout.sliderBounds = knobArea;  // knob draws here
+
+        // Textbox goes in the bottom strip (where your external label sits)
+        auto textArea = bounds.removeFromBottom(labelHeight);
+        layout.textBoxBounds = juce::Rectangle<int>(textWidth, textHeight).withCentre(textArea.getCentre());
+    }
+    else
+    {
+        layout.sliderBounds = bounds;
+    }
+
+    return layout;
 }
