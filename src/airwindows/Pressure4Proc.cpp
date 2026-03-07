@@ -10,6 +10,8 @@
 
 void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFrames)
 {
+    resetGRTracking();
+
     float* inputL = inputs[0];
     float* inputR = inputs[1];
     float* outputL = outputs[0];
@@ -139,10 +141,14 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
         }
-        blockMinCoefficient = std::min<double>(coefficient, blockMinCoefficient);
+        if (grSampleIndex < static_cast<int>(gainReductionBuffer.size()))
+            gainReductionBuffer[grSampleIndex++] = static_cast<float>(coefficient);
+
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
         // rather than inflate it
+
+        flip = !flip;
 
         if (outputGain != 1.0)
         {
@@ -207,6 +213,8 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
 
 void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sampleFrames)
 {
+    resetGRTracking();
+
     double* inputL = inputs[0];
     double* inputR = inputs[1];
     double* outputL = outputs[0];
@@ -336,10 +344,14 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
         }
-        blockMinCoefficient = std::min<double>(coefficient, blockMinCoefficient);
+        if (grSampleIndex < static_cast<int>(gainReductionBuffer.size()))
+            gainReductionBuffer[grSampleIndex++] = static_cast<float>(coefficient);
+
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
         // rather than inflate it
+
+        flip = !flip;
 
         if (outputGain != 1.0)
         {

@@ -111,7 +111,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     juce::AudioBuffer<float> meterBufferFloat;
     juce::AudioBuffer<double> meterBufferDouble;
     template <typename SampleType>
-    void updateMeters(const juce::AudioBuffer<SampleType> &buffer);
+    void updateMeters(const juce::AudioBuffer<SampleType> &buffer, int numSamples);
 
     juce::AudioBuffer<float> emptyMeterBufferFloat;
     juce::AudioBuffer<double> emptyMeterBufferDouble;
@@ -120,9 +120,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     const float grBallisticsFilterAttackTime{150.0f};
     const float grBallisticsFilterReleaseTime{300.0f};
     juce::AudioBuffer<float> grMeterBufferFloat;
-    juce::AudioBuffer<double> grMeterBufferDouble;
-    template <typename SampleType>
-    void updateGRMeter(float coefficientGain, int numSamples);
+    std::vector<float> grBypassBuffer;
+    void updateGRMeter(const std::vector<float> &grBuffer, int numSamples);
 
     std::atomic<float> measuredLevelL{-60.0f};
     std::atomic<float> measuredLevelR{-60.0f};

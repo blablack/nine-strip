@@ -7,8 +7,8 @@
 #ifndef __Pressure4_H
 #define __Pressure4_H
 
-#include <atomic>
 #include <cstdint>
+#include <vector>
 
 class Pressure4
 {
@@ -30,10 +30,13 @@ class Pressure4
     void setParameter(int index, float value);
     float getParameter(int index);
     void setSampleRate(double sr) { sampleRate = sr; }
+    void setSamplesPerBlock(int numSamples)
+    {
+        gainReductionBuffer.assign(numSamples, 1.0f);
+        grSampleIndex = 0;
+    }
 
-    float getGainReduction() { return currentGainReduction; }
-    void resetGRTracking() { blockMinCoefficient = 1.0f; }
-    void finalizeGR() { currentGainReduction.store(blockMinCoefficient); }
+    [[nodiscard]] const std::vector<float>& getGainReductionBuffer() const { return gainReductionBuffer; }
 
    private:
     double sampleRate;
@@ -54,8 +57,10 @@ class Pressure4
     float C;  // parameters. Always 0-1, and we scale/alter them elsewhere.
     float D;
 
-    std::atomic<float> currentGainReduction{1.0f};
-    float blockMinCoefficient = 1.0f;  // Reset per block
+    void resetGRTracking() { grSampleIndex = 0; }
+
+    std::vector<float> gainReductionBuffer;
+    int grSampleIndex = 0;
 };
 
 #endif
