@@ -1,13 +1,15 @@
 #include "NeedleVUMeter.h"
 
-#include <math.h>
-
+#include <cmath>
 #include <utility>
 
 #include "BinaryData.h"
 
 NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
-    : getLevelFunc(std::move(levelGetter)), meterType(type), imageAspectRatio(backgroundWidth / backgroundHeight)
+    : getLevelFunc(std::move(levelGetter)),
+      meterType(type),
+      imageAspectRatio(backgroundWidth / backgroundHeight),
+      ballistics(type == MeterType::Level ? -60.0f : 0.0f)
 {
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::needlevu_png, BinaryData::needlevu_pngSize);
     peakOnImage = juce::ImageCache::getFromMemory(BinaryData::peakon_png, BinaryData::peakon_pngSize);
@@ -117,22 +119,21 @@ void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds)
 
 void NeedleVUMeter::timerCallback()
 {
-    currentLevel = getLevelFunc();  // Raw dBFS RMS
+    const float rawDb = getLevelFunc();  // dBFS RMS (Level) or GR dB (GainReduction)
+
+    currentLevel = ballistics.tick(rawDb);  // smooth through second-order ballistic
+
     if (meterType == MeterType::Level)
     {
-        float vuLevel = currentLevel + 21.0f;  // Convert to VU
-
-        // Check if we've hit peak threshold
-        if (vuLevel >= peakThreshold)
+        const float rawVU = rawDb + 21.0f;  // raw (pre-ballistic) VU for peak LED
+        if (rawVU >= peakThreshold)
         {
             isPeakLit = true;
-            peakHoldCounter = peakHoldDuration;  // Reset the hold counter
+            peakHoldCounter = peakHoldDuration;
         }
-
-        // Decrement hold counter
         if (peakHoldCounter > 0)
         {
-            peakHoldCounter--;
+            --peakHoldCounter;
             isPeakLit = true;
         }
         else

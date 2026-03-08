@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <functional>
 
+#include "VUMeterBallistics.h"
+
 class NeedleVUMeter : public juce::Component, private juce::Timer
 {
    public:
@@ -25,6 +27,8 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
 
    private:
     MeterType meterType;
+
+    VUMeterBallistics ballistics;
 
     void drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds) const;
 

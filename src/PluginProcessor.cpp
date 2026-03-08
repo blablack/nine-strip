@@ -390,43 +390,43 @@ bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) cons
 template <typename SampleType>
 void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffer, int numSamples)
 {
-    auto &meterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+    const int nCh = buffer.getNumChannels();
+    const float inv = 1.0f / static_cast<float>(numSamples);
+
+    auto rmsDb = [&](int ch) -> float
     {
-        if constexpr (std::is_same_v<SampleType, float>)
-            return meterBufferFloat;
-        else
-            return meterBufferDouble;
-    }();
+        const SampleType *d = buffer.getReadPointer(juce::jmin(ch, nCh - 1));
+        float sum = 0.0f;
+        for (int i = 0; i < numSamples; ++i) sum += static_cast<float>(d[i]) * static_cast<float>(d[i]);
+        const float rms = std::sqrt(sum * inv);
+        return (rms > 1e-6f) ? 20.0f * std::log10(rms) : -60.0f;
+    };
 
-    meterBuffer.copyFrom(0, 0, buffer, 0, 0, numSamples);
-    meterBuffer.copyFrom(1, 0, buffer, 1, 0, numSamples);
-
-    juce::dsp::AudioBlock<SampleType> block(meterBuffer.getArrayOfWritePointers(), 2, 0, static_cast<size_t>(numSamples));
-    juce::dsp::ProcessContextReplacing<SampleType> context(block);
-    ballisticsFilter.process(context);
-
-    float levelL = meterBuffer.getSample(0, numSamples - 1);
-    float levelR = meterBuffer.getSample(1, numSamples - 1);
-
-    measuredLevelL.store(juce::Decibels::gainToDecibels(levelL, -60.0f));
-    measuredLevelR.store(juce::Decibels::gainToDecibels(levelR, -60.0f));
+    measuredLevelL.store(rmsDb(0), std::memory_order_relaxed);
+    measuredLevelR.store(rmsDb(1), std::memory_order_relaxed);
 }
+
+template void NineStripProcessor::updateMeters<float>(const juce::AudioBuffer<float> &, int);
+template void NineStripProcessor::updateMeters<double>(const juce::AudioBuffer<double> &, int);
 
 void NineStripProcessor::updateGRMeter(const std::vector<float> &grBuffer, int numSamples)
 {
-    numSamples = std::min(numSamples, static_cast<int>(grBuffer.size()));
-    if (numSamples == 0) return;
+    const int count = std::min(numSamples, static_cast<int>(grBuffer.size()));
+    if (count == 0)
+    {
+        gainReduction.store(0.0f, std::memory_order_relaxed);
+        return;
+    }
 
-    for (int i = 0; i < numSamples; ++i) grMeterBufferFloat.setSample(0, i, std::clamp(grBuffer[i], 0.0001f, 1.0f));
+    float sum = 0.0f;
+    for (int i = 0; i < count; ++i) sum += grBuffer[i];  // linear gain multipliers (0.0–1.0)
 
-    // Only process the valid portion
-    juce::dsp::AudioBlock<float> block(grMeterBufferFloat.getArrayOfWritePointers(), 1, 0, static_cast<size_t>(numSamples));
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    grBallisticsFilter.process(context);
+    const float avg = sum / static_cast<float>(count);
 
-    float smoothedCoeff = grMeterBufferFloat.getSample(0, numSamples - 1);
-    float grDB = (smoothedCoeff >= 0.999f) ? 0.0f : juce::Decibels::gainToDecibels(smoothedCoeff);
-    gainReduction.store(std::min(grDB, 0.0f));
+    // Convert linear multiplier → dB  (1.0 → 0 dB, 0.5 → -6 dB, etc.)
+    const float grDb = (avg > 1e-6f) ? 20.0f * std::log10(avg) : -60.0f;
+
+    gainReduction.store(grDb, std::memory_order_relaxed);
 }
 
 template <typename SampleType>
