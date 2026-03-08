@@ -167,7 +167,15 @@ jobs:
       - name: Validate Plugin (macOS)
         if: runner.os == 'macOS'
         run: |
+          # Validate VST3
           ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+
+          # Install AU component so auval can find it
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -r build/src/NineStrip_artefacts/Release/AU/NineStrip.component ~/Library/Audio/Plug-Ins/Components/
+
+          # Validate AU — args are: type subtype(PLUGIN_CODE) manufacturer(PLUGIN_MANUFACTURER_CODE)
+          auval -v aufx NnSt No28
 
       - name: Validate Plugin (Windows)
         if: runner.os == 'Windows'
@@ -200,6 +208,7 @@ jobs:
         run: |
           mkdir -p NineStrip
           cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          cp -r build/src/NineStrip_artefacts/Release/AU/NineStrip.component NineStrip/   
           cp -r build/src/NineStrip_artefacts/Release/Standalone/NineStrip.app NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
@@ -260,6 +269,7 @@ jobs:
             For unsigned builds, you may need to remove the quarantine flag:
             ```bash
             xattr -d -r com.apple.quarantine /path/to/NineStrip.vst3
+            xattr -d -r com.apple.quarantine /path/to/NineStrip.component
             xattr -d -r com.apple.quarantine /path/to/NineStrip.app
             ```
           draft: false

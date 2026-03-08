@@ -33,18 +33,19 @@ juce_add_plugin(NineStrip
     FORMATS 
     # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
             Standalone 
-            # AU
+            AU
             # AUv3 
             VST3 
             LV2
             # Unity 
             ${AAX_BUILD_FLAG}               
+    BUNDLE_ID "com.no28.ninestrip"
     VST3_CATEGORIES "Fx" 
     LV2URI "http://github.com/blablack/nine-strip"
     AU_MAIN_TYPE "kAudioUnitType_Effect"
     # AU_SANDBOX_SAFE TRUE
     # AAX_CATEGORY ""
-    # HARDENED_RUNTIME_ENABLED # macOS app settings
+    HARDENED_RUNTIME_ENABLED TRUE
     # HARDENED_RUNTIME_OPTIONS
     # APP_SANDBOX_ENABLED
     # APP_SANDBOX_INHERIT
