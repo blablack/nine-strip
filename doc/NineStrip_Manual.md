@@ -755,8 +755,8 @@ Presets are stored as XML files in your system's standard plugin preset location
 
 # Contact & Support
 
-- **GitHub**: https://github.com/blablack/NineStrip/
-- **Issues**: https://github.com/blablack/NineStrip/issues
+- **GitHub**: https://github.com/blablack/nine-strip/
+- **Issues**: https://github.com/blablack/nine-strip/issues
 
 ---
 

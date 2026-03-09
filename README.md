@@ -1,6 +1,6 @@
 # Nine Strip
 
-A VST3 channel strip plugin built with JUCE framework, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool. Also available as a standalone application.
+A VST3/AU/LV2 channel strip plugin built with JUCE, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool. Also available as a standalone application.
 
 ![Screenshot](pics/screenshot.png)
 
@@ -9,7 +9,9 @@ A VST3 channel strip plugin built with JUCE framework, incorporating classic Air
 NineStrip is a complete channel strip solution that combines console modeling, filtering, EQ, and dynamics processing in a single plugin. Built on proven Airwindows algorithms, it provides a streamlined workflow for mixing and mastering tasks.
 
 **Available formats:**
-- VST3 plugin (for use in DAWs)
+- VST3 plugin (Windows, macOS, Linux)
+- AU plugin (macOS only)
+- LV2 plugin (Linux only)
 - Standalone application (for independent audio processing)
 
 ## Signal Chain
@@ -46,107 +48,9 @@ PURESTGAIN - Output Gain
 
 ## Installation
 
-### Linux
+Download the latest release for your platform from the [Releases page](https://github.com/blablack/nine-strip/releases).
 
-Download and extract `NineStrip-Linux.tar.gz`:
-   ```bash
-   tar -xzf NineStrip-Linux.tar.gz
-   cd NineStrip
-   ```
-
-**VST3 Plugin:**
-Copy to your VST3 directory:
-   ```bash
-   cp -r NineStrip.vst3 ~/.vst3/
-   ```
-   Or system-wide:
-   ```bash
-   sudo cp -r NineStrip.vst3 /usr/lib/vst3/
-   ```
-
-**LV2 Plugin:**
-Copy to your LV2 directory:
-   ```bash
-   cp -r NineStrip.lv2 ~/.lv2/
-   ```
-   Or system-wide:
-   ```bash
-   sudo cp -r NineStrip.lv2 /usr/lib/lv2/
-   ```
-
-**Standalone Application:**
-Run directly:
-   ```bash
-   ./NineStrip
-   ```
-
-Rescan plugins in your DAW after installing VST3 or LV2.
-
-
-### macOS
-
-Download and extract `NineStrip-macOS.zip`:
-   ```bash
-   unzip NineStrip-macOS.zip
-   cd NineStrip
-   ```
-
-Remove the macOS quarantine flag from all bundles:
-   ```bash
-   xattr -rd com.apple.quarantine NineStrip.vst3
-   xattr -rd com.apple.quarantine NineStrip.component
-   xattr -rd com.apple.quarantine NineStrip.app
-   ```
-
-**VST3 Plugin:**
-Copy to your VST3 directory:
-   ```bash
-   cp -r NineStrip.vst3 ~/Library/Audio/Plug-Ins/VST3/
-   ```
-   Or system-wide:
-   ```bash
-   sudo cp -r NineStrip.vst3 /Library/Audio/Plug-Ins/VST3/
-   ```
-
-**AU Plugin:**
-Copy to your Components directory:
-   ```bash
-   cp -r NineStrip.component ~/Library/Audio/Plug-Ins/Components/
-   ```
-   Or system-wide:
-   ```bash
-   sudo cp -r NineStrip.component /Library/Audio/Plug-Ins/Components/
-   ```
-   Then force macOS to re-register the component:
-   ```bash
-   killall -9 AudioComponentRegistrar
-   ```
-
-**Standalone Application:**
-Drag `NineStrip.app` to your Applications folder, or run directly from the current directory.
-
-Rescan plugins in your DAW after installing VST3 or AU.
-
-
-### Windows
-
-Download and extract `NineStrip-Windows.zip` — you should see:
-   ```
-   NineStrip/
-   ├── NineStrip.vst3
-   └── NineStrip.exe
-   ```
-
-**VST3 Plugin:**
-Copy `NineStrip.vst3` to your VST3 directory:
-   ```
-   C:\Program Files\Common Files\VST3\
-   ```
-
-**Standalone Application:**
-Run `NineStrip.exe` directly or place it in a convenient location.
-
-Rescan plugins in your DAW after installing VST3.
+For detailed installation instructions, see the included `NineStrip_Manual.pdf`.
 
 
 ## Building from Source
@@ -160,6 +64,8 @@ ninja -C build
 
 Built artifacts will be in:
 - VST3: `build/src/NineStrip_artefacts/Release/VST3/`
+- LV2: `build/src/NineStrip_artefacts/Release/LV2/`
+- AU: `build/src/NineStrip_artefacts/Release/AU/` (macOS only)
 - Standalone: `build/src/NineStrip_artefacts/Release/Standalone/`
 
 ### Compiling documentation
