@@ -48,67 +48,106 @@ PURESTGAIN - Output Gain
 
 ### Linux
 
-**VST3 Plugin:**
-1. Download the `NineStrip.vst3` bundle
-2. Copy to your VST3 directory:
+Download and extract `NineStrip-Linux.tar.gz`:
    ```bash
-   mkdir -p ~/.vst3
+   tar -xzf NineStrip-Linux.tar.gz
+   cd NineStrip
+   ```
+
+**VST3 Plugin:**
+Copy to your VST3 directory:
+   ```bash
    cp -r NineStrip.vst3 ~/.vst3/
    ```
-3. Rescan plugins in your DAW
+   Or system-wide:
+   ```bash
+   sudo cp -r NineStrip.vst3 /usr/lib/vst3/
+   ```
 
-**Alternative system-wide installation:**
-```bash
-sudo cp -r NineStrip.vst3 /usr/lib/vst3/
-```
+**LV2 Plugin:**
+Copy to your LV2 directory:
+   ```bash
+   cp -r NineStrip.lv2 ~/.lv2/
+   ```
+   Or system-wide:
+   ```bash
+   sudo cp -r NineStrip.lv2 /usr/lib/lv2/
+   ```
 
 **Standalone Application:**
-1. Download the `NineStrip` executable
-2. Make it executable and run:
+Run directly:
    ```bash
-   chmod +x NineStrip
    ./NineStrip
    ```
 
+Rescan plugins in your DAW after installing VST3 or LV2.
+
+
 ### macOS
 
-**VST3 Plugin:**
-1. Download the `NineStrip.vst3` bundle
-2. **Remove macOS quarantine flag**  
-   macOS Gatekeeper blocks unsigned plugins with a "plugin is damaged" error. Until this plugin is code-signed, you'll need to remove the quarantine flag using Terminal:
-   
+Download and extract `NineStrip-macOS.zip`:
    ```bash
-   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.vst3
+   unzip NineStrip-macOS.zip
+   cd NineStrip
    ```
 
-3. Copy to one of these locations:
+Remove the macOS quarantine flag from all bundles:
+   ```bash
+   xattr -rd com.apple.quarantine NineStrip.vst3
+   xattr -rd com.apple.quarantine NineStrip.component
+   xattr -rd com.apple.quarantine NineStrip.app
    ```
-   ~/Library/Audio/Plug-Ins/VST3/        (user)
-   /Library/Audio/Plug-Ins/VST3/         (system)
+
+**VST3 Plugin:**
+Copy to your VST3 directory:
+   ```bash
+   cp -r NineStrip.vst3 ~/Library/Audio/Plug-Ins/VST3/
    ```
-4. Rescan plugins in your DAW
+   Or system-wide:
+   ```bash
+   sudo cp -r NineStrip.vst3 /Library/Audio/Plug-Ins/VST3/
+   ```
+
+**AU Plugin:**
+Copy to your Components directory:
+   ```bash
+   cp -r NineStrip.component ~/Library/Audio/Plug-Ins/Components/
+   ```
+   Or system-wide:
+   ```bash
+   sudo cp -r NineStrip.component /Library/Audio/Plug-Ins/Components/
+   ```
+   Then force macOS to re-register the component:
+   ```bash
+   killall -9 AudioComponentRegistrar
+   ```
 
 **Standalone Application:**
-1. Download the `NineStrip.app` bundle
-2. Remove quarantine flag:
-   ```bash
-   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.app
-   ```
-3. Drag to Applications folder or run directly
+Drag `NineStrip.app` to your Applications folder, or run directly from the current directory.
+
+Rescan plugins in your DAW after installing VST3 or AU.
+
 
 ### Windows
 
+Download and extract `NineStrip-Windows.zip` — you should see:
+   ```
+   NineStrip/
+   ├── NineStrip.vst3
+   └── NineStrip.exe
+   ```
+
 **VST3 Plugin:**
-1. Download the `NineStrip.vst3` bundle
-2. Copy to your VST3 directory:
+Copy `NineStrip.vst3` to your VST3 directory:
    ```
    C:\Program Files\Common Files\VST3\
    ```
-3. Rescan plugins in your DAW
 
 **Standalone Application:**
-1. Download `NineStrip.exe`
-2. Run directly or place in a convenient location
+Run `NineStrip.exe` directly or place it in a convenient location.
+
+Rescan plugins in your DAW after installing VST3.
+
 
 ## Building from Source
 

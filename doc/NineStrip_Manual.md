@@ -79,86 +79,113 @@ The signal chain implements a conventional channel strip topology: input gain st
 
 # Installation
 
-NineStrip is available in two formats:
+NineStrip is available in the following formats:
 - **VST3 Plugin** - For use within digital audio workstations (DAWs)
+- **LV2 Plugin** - For use within LV2-compatible DAWs (Linux only)
+- **AU Plugin** - For use within AU-compatible DAWs (macOS only)
 - **Standalone Application** - For independent audio processing
+
 
 ## Linux
 
+Download and extract `NineStrip-Linux.tar.gz`:
+```bash
+tar -xzf NineStrip-Linux.tar.gz
+cd NineStrip
+```
+
 ### VST3 Plugin
 
-1. Download the `NineStrip.vst3` bundle
-2. Copy to your VST3 directory:
+1. Copy to your VST3 directory:
    ```bash
-   mkdir -p ~/.vst3
    cp -r NineStrip.vst3 ~/.vst3/
    ```
-3. Rescan plugins in your DAW
+2. Rescan plugins in your DAW
 
 **Alternative system-wide installation:**
 ```bash
 sudo cp -r NineStrip.vst3 /usr/lib/vst3/
 ```
 
+### LV2 Plugin
+
+1. Copy to your LV2 directory:
+   ```bash
+   cp -r NineStrip.lv2 ~/.lv2/
+   ```
+2. Rescan plugins in your DAW
+
+**Alternative system-wide installation:**
+```bash
+sudo cp -r NineStrip.lv2 /usr/lib/lv2/
+```
+
 ### Standalone Application
 
-1. Download the `NineStrip` executable
-2. Make it executable:
-   ```bash
-   chmod +x NineStrip
-   ```
-3. Run directly or move to a convenient location:
-   ```bash
-   ./NineStrip
-   ```
+Run directly:
+```bash
+./NineStrip
+```
+
 
 ## macOS
 
+Download and extract `NineStrip-macOS.zip`, then remove the macOS quarantine flag from all bundles before installing. macOS Gatekeeper blocks unsigned plugins with a "plugin is damaged" error. Until this plugin is code-signed, run the following in Terminal from the extracted folder:
+
+```bash
+xattr -rd com.apple.quarantine NineStrip.vst3
+xattr -rd com.apple.quarantine NineStrip.component
+xattr -rd com.apple.quarantine NineStrip.app
+```
+
 ### VST3 Plugin
 
-1. Download the `NineStrip.vst3` bundle
-2. **Remove macOS quarantine flag**  
-   macOS Gatekeeper blocks unsigned plugins with a "plugin is damaged" error. Until this plugin is code-signed, you'll need to remove the quarantine flag using Terminal:
-   
-   ```bash
-   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.vst3
-   ```
-
-3. Copy to one of these locations:
+1. Copy to one of these locations:
    ```
    ~/Library/Audio/Plug-Ins/VST3/        (user)
    /Library/Audio/Plug-Ins/VST3/         (system)
    ```
-4. Rescan plugins in your DAW
+2. Rescan plugins in your DAW
 
-### Standalone Application
+### AU Plugin
 
-1. Download the `NineStrip.app` bundle
-2. Remove quarantine flag:
+1. Copy to one of these locations:
+   ```
+   ~/Library/Audio/Plug-Ins/Components/        (user)
+   /Library/Audio/Plug-Ins/Components/         (system)
+   ```
+2. Force macOS to re-register the component:
    ```bash
-   xattr -rd com.apple.quarantine ~/Downloads/NineStrip.app
-   ```
-3. Drag to Applications folder or run directly
-
-## Windows
-
-### VST3 Plugin
-
-1. Download the `NineStrip.vst3` bundle
-2. Copy to your VST3 directory:
-   ```
-   C:\Program Files\Common Files\VST3\
+   killall -9 AudioComponentRegistrar
    ```
 3. Rescan plugins in your DAW
 
 ### Standalone Application
 
-1. Download `NineStrip.exe`
-2. Run directly or place in a convenient location (e.g., Program Files)
+Drag `NineStrip.app` to your Applications folder, or run directly from the extracted folder.
+
+
+## Windows
+
+Download and extract `NineStrip-Windows.zip`.
+
+### VST3 Plugin
+
+1. Copy `NineStrip.vst3` to your VST3 directory:
+   ```
+   C:\Program Files\Common Files\VST3\
+   ```
+2. Rescan plugins in your DAW
+
+### Standalone Application
+
+Run `NineStrip.exe` directly or place it in a convenient location (e.g., Program Files).
+
 
 # Using the Standalone Application
 
 The standalone version of NineStrip operates identically to the plugin version but runs as an independent application, allowing you to process audio without a DAW.
+
 
 ## Audio Configuration
 
