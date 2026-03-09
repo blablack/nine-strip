@@ -54,9 +54,9 @@ void PurestGain::processReplacing(float** inputs, float** outputs, int sampleFra
     // D is 0-1 and you must set global parameters in PurestGain.SetParameter() to use it as a 'popup'
     // assign values here, possibly using const values as they won't change in this context
 
+    targetgain = pow(10.0, settingchase / 20.0);
     while (--sampleFrames >= 0)
     {
-        targetgain = pow(10.0, settingchase / 20.0);
         // now we have the target in our temp variable
 
         chasespeed *= 0.9999;
@@ -152,9 +152,9 @@ void PurestGain::processDoubleReplacing(double** inputs, double** outputs, int s
     double inputSampleL;
     double inputSampleR;
 
+    targetgain = pow(10.0, settingchase / 20.0);
     while (--sampleFrames >= 0)
     {
-        targetgain = pow(10.0, settingchase / 20.0);
         // now we have the target in our temp variable
 
         chasespeed *= 0.9999;

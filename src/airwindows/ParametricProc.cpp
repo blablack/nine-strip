@@ -14,10 +14,6 @@ void Parametric::processReplacing(float** inputs, float** outputs, int sampleFra
     float* out1 = outputs[0];
     float* out2 = outputs[1];
 
-    double overallscale = 1.0;
-    overallscale /= 44100.0;
-    overallscale *= sampleRate;
-
     high[biqs_freq] = (((pow(A, 3) * 14500.0) + 1500.0) / sampleRate);
     if (high[biqs_freq] < 0.0001) high[biqs_freq] = 0.0001;
     high[biqs_nonlin] = B;
@@ -272,10 +268,6 @@ void Parametric::processDoubleReplacing(double** inputs, double** outputs, int s
     double* in2 = inputs[1];
     double* out1 = outputs[0];
     double* out2 = outputs[1];
-
-    double overallscale = 1.0;
-    overallscale /= 44100.0;
-    overallscale *= sampleRate;
 
     high[biqs_freq] = (((pow(A, 3) * 14500.0) + 1500.0) / sampleRate);
     if (high[biqs_freq] < 0.0001) high[biqs_freq] = 0.0001;

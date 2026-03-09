@@ -105,23 +105,13 @@ class NineStripProcessor : public juce::AudioProcessor,
     Interstage interstage;
 
     // Level meters
-    juce::dsp::BallisticsFilter<float> ballisticsFilter;
-    const float ballisticsFilterAttackTime{300.0f};
-    const float ballisticsFilterReleaseTime{300.0f};
-    juce::AudioBuffer<float> meterBufferFloat;
-    juce::AudioBuffer<double> meterBufferDouble;
     template <typename SampleType>
     void updateMeters(const juce::AudioBuffer<SampleType> &buffer, int numSamples);
 
     juce::AudioBuffer<float> emptyMeterBufferFloat;
     juce::AudioBuffer<double> emptyMeterBufferDouble;
 
-    juce::dsp::BallisticsFilter<float> grBallisticsFilter;
-    const float grBallisticsFilterAttackTime{150.0f};
-    const float grBallisticsFilterReleaseTime{300.0f};
-    juce::AudioBuffer<float> grMeterBufferFloat;
-    std::vector<float> grBypassBuffer;
-    void updateGRMeter(const std::vector<float> &grBuffer, int numSamples);
+    void updateGRMeter(float gainReductionLinear);
 
     std::atomic<float> measuredLevelL{-60.0f};
     std::atomic<float> measuredLevelR{-60.0f};

@@ -299,7 +299,6 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     baxandall2.setSampleRate(sampleRate);
     parametric.setSampleRate(sampleRate);
     pressure4.setSampleRate(sampleRate);
-    pressure4.setSamplesPerBlock(samplesPerBlock);
     interstage.setSampleRate(sampleRate);
     inputPurestGain.setSampleRate(sampleRate);
     outputPurestGain.setSampleRate(sampleRate);
@@ -356,29 +355,11 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     outputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("outputGain")->load());
 
-    ballisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2});
-    ballisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
-    ballisticsFilter.setAttackTime(ballisticsFilterAttackTime);
-    ballisticsFilter.setReleaseTime(ballisticsFilterReleaseTime);
-    meterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
-    meterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
     emptyMeterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
     emptyMeterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
-
-    grBallisticsFilter.prepare({sampleRate, static_cast<juce::uint32>(samplesPerBlock), 1});
-    grBallisticsFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::peak);
-    grBallisticsFilter.setAttackTime(grBallisticsFilterAttackTime);
-    grBallisticsFilter.setReleaseTime(grBallisticsFilterReleaseTime);
-    grMeterBufferFloat.setSize(1, samplesPerBlock, false, false, true);
-    grBypassBuffer.assign(samplesPerBlock, 1.0f);
 }
 
-void NineStripProcessor::releaseResources()
-{
-    dcBlocker.reset();
-    ballisticsFilter.reset();
-    grBallisticsFilter.reset();
-}
+void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
 
 bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
@@ -409,23 +390,9 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
 template void NineStripProcessor::updateMeters<float>(const juce::AudioBuffer<float> &, int);
 template void NineStripProcessor::updateMeters<double>(const juce::AudioBuffer<double> &, int);
 
-void NineStripProcessor::updateGRMeter(const std::vector<float> &grBuffer, int numSamples)
+void NineStripProcessor::updateGRMeter(const float gainReductionLinear)
 {
-    const int count = std::min(numSamples, static_cast<int>(grBuffer.size()));
-    if (count == 0)
-    {
-        gainReduction.store(0.0f, std::memory_order_relaxed);
-        return;
-    }
-
-    float sum = 0.0f;
-    for (int i = 0; i < count; ++i) sum += grBuffer[i];  // linear gain multipliers (0.0–1.0)
-
-    const float avg = sum / static_cast<float>(count);
-
-    // Convert linear multiplier → dB  (1.0 → 0 dB, 0.5 → -6 dB, etc.)
-    const float grDb = (avg > 1e-6f) ? 20.0f * std::log10(avg) : -60.0f;
-
+    const float grDb = (gainReductionLinear > 1e-6f) ? 20.0f * std::log10(gainReductionLinear) : -60.0f;
     gainReduction.store(grDb, std::memory_order_relaxed);
 }
 
@@ -454,7 +421,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
             emptyMeterBuffer.clear();
             updateMeters(emptyMeterBuffer, buffer.getNumSamples());
 
-            updateGRMeter(grBypassBuffer, buffer.getNumSamples());
+            updateGRMeter(1.0f);  // No gain reduction when bypassed
         }
 
         return;  // Early exit, pass audio through untouched
@@ -532,12 +499,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
 
         if (meteringNeeded)
         {
-            updateGRMeter(pressure4.getGainReductionBuffer(), buffer.getNumSamples());
+            updateGRMeter(pressure4.getGainReductionLinear());
         }
     }
     else if (meteringNeeded)
     {
-        updateGRMeter(grBypassBuffer, buffer.getNumSamples());
+        updateGRMeter(1.0f);
     }
 
     if constexpr (std::is_same_v<SampleType, float>)

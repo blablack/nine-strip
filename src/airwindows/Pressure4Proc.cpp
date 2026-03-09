@@ -3,14 +3,14 @@
  *  Copyright (c) 2016 airwindows, Airwindows uses the MIT license
  * ======================================== */
 
-#include <algorithm>
 #include <cmath>
 
 #include "Pressure4.h"
 
 void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFrames)
 {
-    resetGRTracking();
+    const int totalFrames = sampleFrames;
+    float blockSum = 0.0f;
 
     float* inputL = inputs[0];
     float* inputR = inputs[1];
@@ -141,8 +141,8 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
         }
-        if (grSampleIndex < static_cast<int>(gainReductionBuffer.size()))
-            gainReductionBuffer[grSampleIndex++] = static_cast<float>(coefficient);
+
+        blockSum += static_cast<float>(coefficient);
 
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
@@ -209,11 +209,14 @@ void Pressure4::processReplacing(float** inputs, float** outputs, int sampleFram
         *outputL++;
         *outputR++;
     }
+
+    if (totalFrames > 0) gainReductionAvg.store(blockSum / static_cast<float>(totalFrames), std::memory_order_relaxed);
 }
 
 void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sampleFrames)
 {
-    resetGRTracking();
+    const int totalFrames = sampleFrames;
+    float blockSum = 0.0f;
 
     double* inputL = inputs[0];
     double* inputR = inputs[1];
@@ -344,8 +347,8 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
             inputSampleL *= coefficient;
             inputSampleR *= coefficient;
         }
-        if (grSampleIndex < static_cast<int>(gainReductionBuffer.size()))
-            gainReductionBuffer[grSampleIndex++] = static_cast<float>(coefficient);
+
+        blockSum += static_cast<float>(coefficient);
 
         // applied compression with vari-vari-µ-µ-µ-µ-µ-µ-is-the-kitten-song o/~
         // applied gain correction to control output level- tends to constrain sound
@@ -411,4 +414,6 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
         *outputL++;
         *outputR++;
     }
+
+    gainReductionAvg.store(blockSum / static_cast<float>(totalFrames), std::memory_order_relaxed);
 }
