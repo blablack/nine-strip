@@ -75,6 +75,14 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     juce::AudioProcessorValueTreeState apvts;
 
+    // Cached APVTS parameter pointers — set once in prepareToPlay, read on audio thread
+    std::atomic<float> *paramMasterBypass = nullptr;
+    std::atomic<float> *paramSatBypass = nullptr;
+    std::atomic<float> *paramFilterBypass = nullptr;
+    std::atomic<float> *paramEqBypass = nullptr;
+    std::atomic<float> *paramCompBypass = nullptr;
+    std::atomic<float> *paramInputMeasured = nullptr;
+
     const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive",    "hipass", "ls_tite",  "hp_poles",
                                                     "lowpass",   "lp_sft_hrd",  "lp_poles", "treble", "bass",     "hm_freq",
                                                     "highmid",   "hm_reso",     "pressure", "speed",  "mewiness", "outputGain"};

@@ -355,6 +355,13 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     outputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("outputGain")->load());
 
+    paramMasterBypass = apvts.getRawParameterValue("masterBypass");
+    paramSatBypass = apvts.getRawParameterValue("saturationBypass");
+    paramFilterBypass = apvts.getRawParameterValue("filterBypass");
+    paramEqBypass = apvts.getRawParameterValue("eqBypass");
+    paramCompBypass = apvts.getRawParameterValue("compressorBypass");
+    paramInputMeasured = apvts.getRawParameterValue("inputMeasured");
+
     emptyMeterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
     emptyMeterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
 }
@@ -401,7 +408,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
 {
     juce::ScopedNoDenormals noDenormals;
 
-    const bool masterBypass = apvts.getRawParameterValue("masterBypass")->load() > 0.5f;
+    const bool masterBypass = paramMasterBypass->load(std::memory_order_relaxed) > 0.5f;
     const bool meteringNeeded = editorOpen.load() && !isNonRealtime();
 
     // Master bypass - skip all processing
@@ -427,12 +434,12 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         return;  // Early exit, pass audio through untouched
     }
 
-    const bool saturationBypass = apvts.getRawParameterValue("saturationBypass")->load() > 0.5f;
-    const bool filterBypass = apvts.getRawParameterValue("filterBypass")->load() > 0.5f;
-    const bool eqBypass = apvts.getRawParameterValue("eqBypass")->load() > 0.5f;
-    const bool compressorBypass = apvts.getRawParameterValue("compressorBypass")->load() > 0.5f;
+    const bool saturationBypass = paramSatBypass->load(std::memory_order_relaxed) > 0.5f;
+    const bool filterBypass = paramFilterBypass->load(std::memory_order_relaxed) > 0.5f;
+    const bool eqBypass = paramEqBypass->load(std::memory_order_relaxed) > 0.5f;
+    const bool compressorBypass = paramCompBypass->load(std::memory_order_relaxed) > 0.5f;
 
-    const bool inputMeasured = apvts.getRawParameterValue("inputMeasured")->load() > 0.5f;
+    const bool inputMeasured = paramInputMeasured->load(std::memory_order_relaxed) > 0.5f;
     const bool inputMeteringNeeded = meteringNeeded && inputMeasured;
     const bool outputMeteringNeeded = meteringNeeded && !inputMeasured;
 
