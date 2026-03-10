@@ -1,4 +1,4 @@
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 
 if(DEFINED ENV{AAX_SDK_PATH})
     set(AAX_SDK_PATH $ENV{AAX_SDK_PATH})
@@ -55,11 +55,13 @@ juce_add_plugin(NineStrip
 
     PRODUCT_NAME "NineStrip")        # The name of the final 
 
-target_compile_features(NineStrip PUBLIC cxx_std_17)
+juce_generate_juce_header(NineStrip)
+
+target_compile_features(NineStrip PRIVATE cxx_std_17)
 
 
 target_compile_definitions(NineStrip
-    PUBLIC
+    PRIVATE
     # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
     JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
     JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
@@ -85,7 +87,7 @@ target_sources(NineStrip PRIVATE
     DCBlocker.cpp
 )
 
-target_link_libraries(NineStrip PUBLIC
+target_link_libraries(NineStrip PRIVATE
 AirwindowsDSP
 NineStripUI
 NineStripAssets
@@ -106,6 +108,3 @@ juce::juce_gui_extra
 #juce::juce_opengl
 #juce::juce_product_unlocking
 )
-
-juce_generate_juce_header(NineStrip)
-
