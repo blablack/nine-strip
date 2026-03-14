@@ -244,9 +244,11 @@ jobs:
 
       - name: Extract release notes
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          awk "/^## \[${VERSION}\]/,/^## \[/{if (/^## \[/ && !/^## \[${VERSION}\]/) exit; print}" \
+          VERSION=${GITHUB_REF_NAME}
+          ESCAPED_VERSION=$(echo "$VERSION" | sed 's/\./\\./g')
+          awk "/^## \[${ESCAPED_VERSION}\]/,/^## \[/{if (/^## \[/ && !/^## \[${ESCAPED_VERSION}\]/) exit; print}" \
             CHANGELOG.md | tail -n +2 > RELEASE_NOTES.md
+
           cat >> RELEASE_NOTES.md << 'EOF'
 
           ### macOS Security Note
