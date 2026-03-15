@@ -5,4 +5,9 @@ CompileFlags:
     - -Ilib/JUCE/modules
     - -Isrc/airwindows
     - -Ibuild/src/juce_binarydata_JuceLogoBinary/JuceLibraryCode
+    - "--gcc-toolchain=/usr"
+    - "--target=x86_64-linux-gnu"
 
+Diagnostics:
+  Suppress:
+    - builtin_definition
