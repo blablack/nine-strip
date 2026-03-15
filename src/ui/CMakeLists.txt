@@ -1,4 +1,5 @@
 add_library(NineStripUI STATIC
+    CircularKnob.cpp
     KnobLookAndFeel.cpp
     FaderLookAndFeel.cpp
     NeedleVUMeter.cpp

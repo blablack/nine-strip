@@ -253,7 +253,7 @@ void NineStripProcessorEditor::setupGain()
         audioProcessor.getAPVTS(), "masterBypass", masterBypassButton);
 }
 
-void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label,
+void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, CircularKnob& slider, juce::Label& label,
                                              const juce::String& paramID, const juce::String& labelText, juce::Colour knobColor,
                                              std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment)
 {
@@ -643,9 +643,9 @@ void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce:
     label.setColour(juce::Label::textColourId, juce::Colours::white);
 }
 
-void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft,
-                                                   juce::Label& topLeftLabel, juce::Slider& topRight,
-                                                   juce::Label& topRightLabel, juce::Slider& bottom, juce::Label& bottomLabel,
+void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, CircularKnob& topLeft,
+                                                   juce::Label& topLeftLabel, CircularKnob& topRight,
+                                                   juce::Label& topRightLabel, CircularKnob& bottom, juce::Label& bottomLabel,
                                                    int bigKnobSize, int smallKnobSize, bool centerVertically)
 {
     const int horizontalSpacing = 16;
@@ -681,7 +681,7 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
                           smallKnobSize, 20);
 }
 
-void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label,
+void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label,
                                                   int knobSize)
 {
     const int labelPadding = 50;

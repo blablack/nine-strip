@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "ui/CircularKnob.h"
 #include "ui/FaderLookAndFeel.h"
 #include "ui/GlowButton.h"
 #include "ui/KnobLookAndFeel.h"
@@ -49,9 +50,9 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Console & Saturation
     juce::Component consoleSatGroup;
     juce::Label consoleSatLabel;
-    juce::Slider consoleTypeSlider;
+    CircularKnob consoleTypeSlider;
     juce::Label consoleTypeValueLabel;
-    juce::Slider driveSlider;
+    CircularKnob driveSlider;
     juce::Label driveLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> consoleTypeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
@@ -61,7 +62,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // High Pass Filter
     juce::Component highPassGroup;
     juce::Label highPassLabel;
-    juce::Slider hipassSlider, hpLsTiteSlider, hpPolesSlider;
+    CircularKnob hipassSlider, hpLsTiteSlider, hpPolesSlider;
     juce::Label hipassLabel, hpLsTiteLabel, hpPolesLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hipassAttachment, hpLsTiteAttachment,
         hpPolesAttachment;
@@ -69,7 +70,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Low Pass Filter
     juce::Component lowPassGroup;
     juce::Label lowPassLabel;
-    juce::Slider lowpassSlider, lpSftHrdSlider, lpPolesSlider;
+    CircularKnob lowpassSlider, lpSftHrdSlider, lpPolesSlider;
     juce::Label lowpassLabel, lpSftHrdLabel, lpPolesLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowpassAttachment, lpSftHrdAttachment,
         lpPolesAttachment;
@@ -81,21 +82,21 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // High Shelf
     juce::Component highShelfGroup;
     juce::Label highShelfLabel;
-    juce::Slider trebleSlider;
+    CircularKnob trebleSlider;
     juce::Label trebleLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> trebleAttachment;
 
     // High-Mid EQ
     juce::Component highMidGroup;
     juce::Label highMidLabel;
-    juce::Slider hmFreqSlider, hmGainSlider, hmResoSlider;
+    CircularKnob hmFreqSlider, hmGainSlider, hmResoSlider;
     juce::Label hmFreqLabel, hmGainLabel, hmResoLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hmFreqAttachment, hmGainAttachment, hmResoAttachment;
 
     // Low Shelf
     juce::Component lowShelfGroup;
     juce::Label lowShelfLabel;
-    juce::Slider bassSlider;
+    CircularKnob bassSlider;
     juce::Label bassLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bassAttachment;
 
@@ -106,7 +107,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Compressor
     juce::Component compressorGroup;
     juce::Label compressorLabel;
-    juce::Slider pressureSlider, speedSlider, mewinessSlider;
+    CircularKnob pressureSlider, speedSlider, mewinessSlider;
     juce::Label pressureLabel, speedLabel, mewinessLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pressureAttachment, speedAttachment,
         mewinessAttachment;
@@ -149,16 +150,16 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     void setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title);
 
-    void addRotaryKnob(juce::Component& parent, juce::Slider& slider, juce::Label& label, const juce::String& paramID,
+    void addRotaryKnob(juce::Component& parent, CircularKnob& slider, juce::Label& label, const juce::String& paramID,
                        const juce::String& labelText, juce::Colour knobColor,
                        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment);
 
-    static void layoutTriangleKnobs(juce::Rectangle<int> bounds, juce::Slider& topLeft, juce::Label& topLeftLabel,
-                                    juce::Slider& topRight, juce::Label& topRightLabel, juce::Slider& bottom,
+    static void layoutTriangleKnobs(juce::Rectangle<int> bounds, CircularKnob& topLeft, juce::Label& topLeftLabel,
+                                    CircularKnob& topRight, juce::Label& topRightLabel, CircularKnob& bottom,
                                     juce::Label& bottomLabel, int bigKnobSize, int smallKnobSize,
                                     bool centerVertically = true);  // Default to centered
 
-    static void layoutCenteredKnob(juce::Rectangle<int> bounds, juce::Slider& knob, juce::Label& label, int knobSize);
+    static void layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label, int knobSize);
 
     static juce::Rectangle<int> constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio);
 
