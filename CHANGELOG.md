@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.1.0] - 2026-03-XX
+### Added
+- Replaced Highpass2/Lowpass2 with Capacitor2
+
+### Fixed
+- Knob grabbing fix
+- DSP optimizations
+
 ## [v0.0.4] - 2026-03-10
 ### Added
 - AU format support

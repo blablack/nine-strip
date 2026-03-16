@@ -60,20 +60,11 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
 
     // High Pass Filter
-    juce::Component highPassGroup;
-    juce::Label highPassLabel;
-    CircularKnob hipassSlider, hpLsTiteSlider, hpPolesSlider;
-    juce::Label hipassLabel, hpLsTiteLabel, hpPolesLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hipassAttachment, hpLsTiteAttachment,
-        hpPolesAttachment;
-
-    // Low Pass Filter
-    juce::Component lowPassGroup;
-    juce::Label lowPassLabel;
-    CircularKnob lowpassSlider, lpSftHrdSlider, lpPolesSlider;
-    juce::Label lowpassLabel, lpSftHrdLabel, lpPolesLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowpassAttachment, lpSftHrdAttachment,
-        lpPolesAttachment;
+    juce::Component filterGroup;
+    juce::Label filterLabel;
+    CircularKnob lowpassSlider, hipassSlider, nonLinSlider;
+    juce::Label lowpassLabel, hipassLabel, nonLinLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowpassAttachment, hipassAttachment, nonLinAttachment;
 
     // Filter Bypass
     GlowButton filterBypassButton{"Byp"};

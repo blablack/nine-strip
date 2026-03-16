@@ -114,25 +114,16 @@ void NineStripProcessorEditor::setupConsoleSection()
 void NineStripProcessorEditor::setupFiltersSection()
 {
     // High Pass Filter
-    setupGroupComponent(highPassGroup, highPassLabel, "HIGH PASS");
+    setupGroupComponent(filterGroup, filterLabel, "FILTERS");
 
-    addRotaryKnob(highPassGroup, hipassSlider, hipassLabel, "hipass", "Freq", juce::Colours::green.darker(), hipassAttachment);
-    addRotaryKnob(highPassGroup, hpLsTiteSlider, hpLsTiteLabel, "ls_tite", "Loose/Tight", juce::Colours::green.darker(),
-                  hpLsTiteAttachment);
-    addRotaryKnob(highPassGroup, hpPolesSlider, hpPolesLabel, "hp_poles", "Slope", juce::Colours::green.darker(),
-                  hpPolesAttachment);
-
-    // Low Pass Filter
-    setupGroupComponent(lowPassGroup, lowPassLabel, "LOW PASS");
-
-    addRotaryKnob(lowPassGroup, lowpassSlider, lowpassLabel, "lowpass", "Freq", juce::Colours::blue.darker(),
+    addRotaryKnob(filterGroup, hipassSlider, hipassLabel, "hipass", "High Pass", juce::Colours::green.darker(),
+                  hipassAttachment);
+    addRotaryKnob(filterGroup, nonLinSlider, nonLinLabel, "non_lin", "Non-Linearity", juce::Colours::blue.darker(),
+                  nonLinAttachment);
+    addRotaryKnob(filterGroup, lowpassSlider, lowpassLabel, "lowpass", "Low Pass", juce::Colours::purple.darker(),
                   lowpassAttachment);
-    addRotaryKnob(lowPassGroup, lpSftHrdSlider, lpSftHrdLabel, "lp_sft_hrd", "Soft/Hard", juce::Colours::blue.darker(),
-                  lpSftHrdAttachment);
-    addRotaryKnob(lowPassGroup, lpPolesSlider, lpPolesLabel, "lp_poles", "Slope", juce::Colours::blue.darker(),
-                  lpPolesAttachment);
 
-    lowPassGroup.addAndMakeVisible(filterBypassButton);
+    filterGroup.addAndMakeVisible(filterBypassButton);
     filterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getAPVTS(), "filterBypass", filterBypassButton);
 }
@@ -350,8 +341,7 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
 
     // Console + Filters - spans rows 2-4, column 1
     mainGrid.items.add(juce::GridItem(consoleSatGroup).withArea(2, 1, 3, 2));
-    mainGrid.items.add(juce::GridItem(highPassGroup).withArea(3, 1, 4, 2));
-    mainGrid.items.add(juce::GridItem(lowPassGroup).withArea(4, 1, 5, 2));
+    mainGrid.items.add(juce::GridItem(filterGroup).withArea(3, 1, 5, 2));
 
     // EQ - spans rows 2-4, column 2
     mainGrid.items.add(juce::GridItem(highShelfGroup).withArea(2, 2, 3, 3));
@@ -411,29 +401,45 @@ void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
 
 void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKnobSize)
 {
-    // Calculate proportional values based on group bounds
-    auto groupBounds = highPassGroup.getLocalBounds();
-    int margin = groupBounds.getWidth() * 0.02f;
-    int headerHeight = groupBounds.getHeight() * 0.15f;
+    auto groupBounds = filterGroup.getLocalBounds().reduced(6);
+    int margin = jmax(4, static_cast<int>(groupBounds.getWidth() * 0.02f));
 
-    // High Pass layout
-    auto hpBounds = highPassGroup.getLocalBounds().reduced(margin);
-    highPassLabel.setBounds(hpBounds.removeFromTop(headerHeight));
-    layoutTriangleKnobs(hpBounds, hipassSlider, hipassLabel, hpPolesSlider, hpPolesLabel, hpLsTiteSlider, hpLsTiteLabel,
-                        bigKnobSize, smallKnobSize);
+    filterLabel.setBounds(groupBounds.removeFromTop(20));
 
-    // Low Pass layout
-    auto lpBounds = lowPassGroup.getLocalBounds().reduced(margin);
-    lowPassLabel.setBounds(lpBounds.removeFromTop(headerHeight));
-    layoutTriangleKnobs(lpBounds, lowpassSlider, lowpassLabel, lpPolesSlider, lpPolesLabel, lpSftHrdSlider, lpSftHrdLabel,
-                        bigKnobSize, smallKnobSize);
+    const int shadowPadding = 40;
+    const int labelHeight = 18;
 
-    // Bypass button - proportional sizing
-    int buttonWidth = lpBounds.getWidth() * 0.2f;
-    int buttonHeight = lpBounds.getHeight() * 0.08f;
-    int buttonMargin = margin;
+    // Fixed content height (knobs + labels)
+    int contentHeight = bigKnobSize + labelHeight + smallKnobSize + labelHeight + bigKnobSize + labelHeight;
 
-    filterBypassButton.setBounds(lpBounds.getRight() - 52, lpBounds.getBottom() - 20, 50, 20);
+    // Distribute leftover space as 3 gaps (top + 2 between knobs)
+    int leftover = groupBounds.getHeight() - contentHeight;
+    int verticalSpacing = jmax(4, leftover / 5);
+
+    int startY = groupBounds.getY() + verticalSpacing;
+    int knobX = groupBounds.getCentreX() - bigKnobSize / 2;
+
+    // Hipass knob
+    hipassSlider.setBounds(knobX - shadowPadding / 2, startY - shadowPadding / 2, bigKnobSize + shadowPadding,
+                           bigKnobSize + shadowPadding);
+    hipassLabel.setBounds(knobX, hipassSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
+
+    // NonLin knob
+    int nonLinY = startY + bigKnobSize + labelHeight + verticalSpacing;
+    int nonLinX = groupBounds.getCentreX() - smallKnobSize / 2;
+    nonLinSlider.setBounds(nonLinX - shadowPadding / 2, nonLinY - shadowPadding / 2, smallKnobSize + shadowPadding,
+                           smallKnobSize + shadowPadding);
+    nonLinLabel.setBounds(nonLinX, nonLinSlider.getBottom() - shadowPadding / 2, smallKnobSize, labelHeight);
+
+    // Lowpass knob
+    int lowpassY = nonLinY + smallKnobSize + labelHeight + verticalSpacing;
+    lowpassSlider.setBounds(knobX - shadowPadding / 2, lowpassY - shadowPadding / 2, bigKnobSize + shadowPadding,
+                            bigKnobSize + shadowPadding);
+    lowpassLabel.setBounds(knobX, lowpassSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
+
+    // Bypass button
+    filterBypassButton.setBounds(filterGroup.getLocalBounds().getRight() - margin - 55,
+                                 filterGroup.getLocalBounds().getBottom() - margin - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
@@ -516,7 +522,8 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     grMeter.setBounds(grMeterBounds);
 
     // Bypass button at bottom-right
-    compressorBypassButton.setBounds(compBounds.getRight() - 55, compBounds.getBottom() - 20, 50, 20);
+    compressorBypassButton.setBounds(compressorGroup.getLocalBounds().getRight() - margin - 55,
+                                     compressorGroup.getLocalBounds().getBottom() - margin - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutMeters()

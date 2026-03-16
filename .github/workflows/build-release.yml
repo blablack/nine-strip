@@ -246,8 +246,11 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME}
           ESCAPED_VERSION=$(echo "$VERSION" | sed 's/\./\\./g')
-          awk "/^## \[${ESCAPED_VERSION}\]/,/^## \[/{if (/^## \[/ && !/^## \[${ESCAPED_VERSION}\]/) exit; print}" \
-            CHANGELOG.md | tail -n +2 > RELEASE_NOTES.md
+          awk "
+            /^## \[${ESCAPED_VERSION}\]/ { found=1; next }
+            found && /^## \[/            { exit }
+            found                        { print }
+          " CHANGELOG.md > RELEASE_NOTES.md
 
           cat >> RELEASE_NOTES.md << 'EOF'
 

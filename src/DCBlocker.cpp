@@ -21,23 +21,31 @@ void DCBlocker::reset()
 template <typename SampleType>
 void DCBlocker::processStereo(SampleType** channels, int numSamples)
 {
-    SampleType* left = channels[0];
-    SampleType* right = channels[1];
+    SampleType* __restrict__ left = channels[0];
+    SampleType* __restrict__ right = channels[1];
+
+    // Cache state in locals to avoid repeated member access through 'this'
+    const double a = alpha;
+    double xpL = x_prevL, ypL = y_prevL;
+    double xpR = x_prevR, ypR = y_prevR;
 
     for (int i = 0; i < numSamples; ++i)
     {
-        // Process left channel
-        double yL = left[i] - x_prevL + alpha * y_prevL;
-        x_prevL = left[i];
-        y_prevL = yL;
-        left[i] = static_cast<SampleType>(yL);
+        const double inL = static_cast<double>(left[i]);
+        const double inR = static_cast<double>(right[i]);
 
-        // Process right channel
-        double yR = right[i] - x_prevR + alpha * y_prevR;
-        x_prevR = right[i];
-        y_prevR = yR;
+        const double yL = inL - xpL + a * ypL;
+        const double yR = inR - xpR + a * ypR;
+
+        xpL = inL; ypL = yL;
+        xpR = inR; ypR = yR;
+
+        left[i] = static_cast<SampleType>(yL);
         right[i] = static_cast<SampleType>(yR);
     }
+
+    x_prevL = xpL; y_prevL = ypL;
+    x_prevR = xpR; y_prevR = ypR;
 }
 
 // Explicit template instantiations

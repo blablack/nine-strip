@@ -5,13 +5,13 @@
 #include "DCBlocker.h"
 #include "PresetManager.h"
 #include "airwindows/Baxandall2.h"
+#include "airwindows/Capacitor2.h"
 #include "airwindows/Channel9.h"
-#include "airwindows/Highpass2.h"
 #include "airwindows/Interstage.h"
-#include "airwindows/Lowpass2.h"
 #include "airwindows/Parametric.h"
 #include "airwindows/Pressure4.h"
 #include "airwindows/PurestGain.h"
+
 
 //==============================================================================
 /**
@@ -102,8 +102,7 @@ class NineStripProcessor : public juce::AudioProcessor,
     std::unique_ptr<PresetManager> presetManager;
 
     Channel9 channel9;
-    Highpass2 highpass2;
-    Lowpass2 lowpass2;
+    Capacitor2 capacitor2;
     Baxandall2 baxandall2;
     Parametric parametric;
     Pressure4 pressure4;
