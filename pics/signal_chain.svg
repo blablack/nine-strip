@@ -7,6 +7,9 @@
    width="400"
    height="900"
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   inkscape:export-filename="signal_chain.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -20,9 +23,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.38"
-     inkscape:cx="188.76812"
-     inkscape:cy="91.666667"
+     inkscape:zoom="0.73"
+     inkscape:cx="186.9863"
+     inkscape:cy="555.47945"
      inkscape:window-width="1366"
      inkscape:window-height="705"
      inkscape:window-x="0"
@@ -161,7 +164,7 @@
      class="text-main"
      x="199.16797"
      y="211"
-     id="text3">Console Emulation</text>
+     id="text3">Console Emulation*</text>
   <text
      class="text-sub"
      x="198.97949"
@@ -186,12 +189,12 @@
      class="text-main"
      x="198.58594"
      y="301"
-     id="text5">High Pass Filter</text>
+     id="text5">High &amp; Low Pass Filters</text>
   <text
      class="text-sub"
      x="198.80957"
      y="321"
-     id="text6">Highpass2</text>
+     id="text6">Capacitor2</text>
   <line
      class="arrow"
      x1="199"
@@ -211,12 +214,12 @@
      class="text-main"
      x="198.58594"
      y="391"
-     id="text7">Low Pass Filter</text>
+     id="text7">Bass &amp; Treble Shelves</text>
   <text
      class="text-sub"
      x="198.80957"
      y="411"
-     id="text8">Lowpass2</text>
+     id="text8">Baxandall2</text>
   <line
      class="arrow"
      x1="199"
@@ -236,12 +239,12 @@
      class="text-main"
      x="198.79297"
      y="481"
-     id="text9">Bass &amp; Treble Shelves</text>
+     id="text9">Parametric Mid EQ</text>
   <text
      class="text-sub"
      x="198.80957"
      y="501"
-     id="text10">Baxandall2</text>
+     id="text10">Parametric</text>
   <line
      class="arrow"
      x1="199"
@@ -261,12 +264,7 @@
      class="text-main"
      x="198.80078"
      y="571"
-     id="text11">Parametric Mid EQ</text>
-  <text
-     class="text-sub"
-     x="198.66602"
-     y="591"
-     id="text12">Parametric</text>
+     id="text11">DC Blocker</text>
   <line
      class="arrow"
      x1="199"
@@ -287,7 +285,7 @@
      x="198.58594"
      y="660"
      id="text11-2"
-     style="font-weight:bold;font-size:16px;font-family:'Liberation Sans', Arial, sans-serif;text-anchor:middle;fill:#ecf0f1">DC Blocker</text>
+     style="font-weight:bold;font-size:16px;font-family:'Liberation Sans', Arial, sans-serif;text-anchor:middle;fill:#ecf0f1">Compressor</text>
   <line
      class="arrow"
      x1="199"
@@ -305,15 +303,21 @@
      height="60"
      id="rect12" />
   <text
+     class="text-sub"
+     x="198.66602"
+     y="681"
+     id="text12"
+     style="opacity:1">Pressure4</text>
+  <text
      class="text-main"
      x="198.79297"
      y="751"
-     id="text13">Compressor</text>
+     id="text13">Console Emulation*</text>
   <text
      class="text-sub"
      x="198.68359"
      y="771"
-     id="text14">Pressure4</text>
+     id="text14">Channel9</text>
   <line
      class="arrow"
      x1="199"

@@ -54,7 +54,7 @@ header-includes: |
 
 \vspace{0.5cm}
 
-{\large Version 0.0.3}
+{\large Version 0.1.0}
 
 \vspace{1cm}
 
@@ -230,10 +230,15 @@ The NineStrip interface is organized into a single-window layout divided into th
 
 **Left Column - Filtering & Console:**
 
-- **Console** section (top) - Console modeling with Drive control and bypass
+- **Console** section (top)
+  - Pre/Post button
+  - Console modeling 
+  - Drive control
+  - Bypass
 - **Filters** section
-  - **High Pass** section - Frequency, Slope, and Loose/Tight controls
-  - **Low Pass** section - Frequency, Slope, and Soft/Hard controls
+  - High Pass
+  - Non-Linearity 
+  - Low Pass
   - Bypass
 
 **Center Column - Equalization:**
@@ -266,6 +271,10 @@ The interface uses color-coded knobs for quick visual identification: orange for
 # Signal Chain
 
 ![](../pics/signal_chain.svg)
+
+
+CHANNEL9 is instantiated once but runs at either the Pre (right after Interstage) or Post (right before Output) position depending on the 'Pre/Post' parameter.
+Both slots are never active simultaneously.
 
 
 # NineStrip Functional Blocks
@@ -337,99 +346,32 @@ Each console type adjusts the high-pass filter characteristics, slew clipping th
 
 \pagebreak
 
-## Airwindows Highpass2
+## Airwindows Capacitor2
 
-The Highpass2 section provides sophisticated high-pass filtering based on AirWindows Highpass2. This multi-pole IIR (Infinite Impulse Response) filter removes low-frequency content while offering unique tonal characteristics through its interleaved filtering approach.
+The Filters section provides high-pass and low-pass filtering based on Airwindows Capacitor2 — an analog-modeled IIR filter that simulates the behaviour of barium titanate ceramic capacitors, whose capacitance value drops under voltage pressure. Both filters run simultaneously through the same processing chain, cycling through six interleaved IIR filter stages per sample.
 
-### Highpass
+### High Pass
 
-Controls the cutoff frequency of the high-pass filter, progressively removing low-frequency content as the value increases. At zero, the filter has minimal effect; at maximum, aggressive low-frequency attenuation is applied.
+Controls the cutoff frequency of the high-pass filter, removing low-frequency content as the value increases. At zero, the filter has minimal effect.
 
-**Unique Characteristic**: Unlike conventional high-pass filters, Highpass2 employs an interleaved IIR filtering technique that simultaneously reduces extreme high-frequency content. This creates a more natural, analog-like quality by softening the uppermost frequencies while filtering lows, resulting in a gentler overall frequency response.
+**Range:** 0 to +10
 
-### Loose/Tight
+### Low Pass
 
-Adjusts the filter's response characteristics based on signal amplitude, ranging from -10 (Loose) to +10 (Tight). This control shapes how the filter behaves in relation to the input signal level.
+Controls the cutoff frequency of the low-pass filter, removing high-frequency content as the value decreases. At ten, the filter has minimal effect.
 
-**Tight (positive values)**: The filter responds more aggressively to louder signals. Increases filtering on high-level material while maintaining more low-frequency content on quiet signals. Creates a dynamic response where the filter "clamps down" more on strong transients and loud passages.
+**Range:** 0 to +10
 
-**Center (0.0)**: Neutral response where the filter behaves consistently regardless of signal level.
+### Non-Linearity
 
-**Loose (negative values)**: The filter responds more to quiet signals. Increases filtering on low-level material while allowing louder signals to retain more low-frequency content. This can help control subsonic rumble and noise floor issues while preserving punch in prominent elements.
+This is the defining feature of Capacitor2. It models the real-world behaviour of barium titanate capacitors, where the signal voltage itself modulates the cutoff frequency — asymmetrically, on a sample-by-sample basis.
 
-**Note**: Extreme settings (full Loose or full Tight) can produce experimental behaviors, particularly with very quiet signals. For standard mixing applications, moderate settings typically yield the most musical results.
+- **At zero**: Behaves like a clean, transparent filter
+- **Low values**: Adds a subtle analog flavour and slight transient boosting
+- **High values**: Creates an expander-like effect where peak energy increases — not from dynamics processing, but from the frequency modulation itself. Can produce aggressive distortion and grinding at extreme settings
 
-### Poles
+**Range:** -10 to +10
 
-Determines the filter slope steepness by controlling the number of cascaded filter stages, ranging from 0 to 4.0.
-
-- **0.0-1.0**: Single-pole filtering (6 dB/octave) with the gentlest slope and most transparent character
-- **1.0-2.0**: Two-pole filtering (12 dB/octave) providing moderate attenuation
-- **2.0-3.0**: Three-pole filtering (18 dB/octave) for more aggressive low-frequency removal
-- **3.0-4.0**: Four-pole filtering (24 dB/octave) delivering the steepest slope and most pronounced effect
-
-Each additional pole stage increases the filter's steepness while introducing more of Highpass2's characteristic high-frequency softening. The control uses progressive wet/dry blending between stages, allowing smooth transitions and partial pole values for fine-tuning.
-
-### Processing Architecture
-
-Highpass2 utilizes an interleaved IIR filter design that alternates between two sets of filter coefficients on successive samples. This approach provides:
-
-- Natural-sounding high-pass filtering with reduced digital artifacts
-- Subtle high-frequency roll-off that mimics analog behavior
-- Dynamic response control through the Loose/Tight parameter
-- Scalable filter slope via cascaded stages
-
-The interleaved processing creates a softer, more organic quality compared to standard digital high-pass filters, making it particularly effective for transparent low-frequency control without harsh resonances or phase artifacts.
-
-\pagebreak
-
-## Airwindows Lowpass2
-
-The Lowpass2 section provides sophisticated low-pass filtering based on AirWindows Lowpass2. This multi-pole IIR (Infinite Impulse Response) filter removes high-frequency content while offering dynamic amplitude-dependent filtering characteristics through its interleaved processing approach.
-
-### Lowpass
-
-Controls the cutoff frequency of the low-pass filter, progressively removing high-frequency content as the value increases. At zero, the filter has minimal effect; at maximum, aggressive high-frequency attenuation is applied.
-
-**Unique Characteristic**: Unlike conventional low-pass filters, Lowpass2 employs an interleaved IIR filtering technique that preserves extreme high-frequency content. Frequencies near the Nyquist limit (e.g., 22kHz at 44.1kHz sample rate) are minimally affected, providing enhanced clarity in the retained frequency range while still smoothly rolling off mid-high frequencies.
-
-### Soft/Hard
-
-Adjusts the filter's dynamic response characteristics based on signal amplitude, ranging from -10 (Soft) to +10 (Hard). This control creates amplitude-dependent filtering behavior on a sample-by-sample basis, producing effects distinctly different from traditional envelope followers.
-
-**Soft (negative values)**: The filter rolls off more aggressively on louder signals. High-level material experiences increased filtering while quieter sounds retain more high-frequency content. Creates a smoothing effect where transients and peaks are mellowed, resulting in a "softer" overall character. Useful for taming harsh high-frequency peaks while preserving detail in quieter passages.
-
-**Center (0.0)**: Neutral response where the filter behaves consistently regardless of signal level.
-
-**Hard (positive values)**: The filter rolls off more aggressively on quieter signals. Low-level material experiences increased filtering while louder sounds break through with more high-frequency content. Creates a dynamic "opening" effect where transients and peaks punch through brighter. Can produce characteristic artifacts including spiky, crunchy textures on complex material, particularly effective for creative sound design applications.
-
-**Sound Design Applications**: Extreme Hard settings can create unique effects on noise and complex signals, producing wind-like textures, dynamic crackle, and movement-based filtering. The sample-level processing creates textures unachievable with traditional envelope-controlled filters.
-
-### Poles
-
-Determines the filter slope steepness by controlling the number of cascaded filter stages, ranging from 0 to 4.0.
-
-**0.0-1.0**: Single-pole filtering (6 dB/octave) with the gentlest slope, offering subtle high-frequency roll-off and maximum transparency
-
-**1.0-2.0**: Two-pole filtering (12 dB/octave) providing moderate attenuation with a balanced character
-
-**2.0-3.0**: Three-pole filtering (18 dB/octave) for more pronounced low-pass effect
-
-**3.0-4.0**: Four-pole filtering (24 dB/octave) delivering the steepest slope and most dramatic filtering
-
-Each additional pole stage increases the filter's steepness and intensifies the Soft/Hard control's effect. The control uses progressive wet/dry blending between stages, allowing smooth transitions and partial pole values for fine-tuning. Higher pole counts amplify the dynamic filtering behaviors, making the Soft/Hard parameter more pronounced.
-
-### Processing Architecture
-
-Lowpass2 utilizes an interleaved IIR filter design that alternates between two sets of filter coefficients on successive samples. This approach provides:
-
-- Smooth low-pass filtering with preservation of ultra-high frequencies
-- Dynamic amplitude-dependent filtering operating at the sample level
-- More organic, less "digital" sound quality compared to standard filters
-- Scalable filter slope via cascaded stages
-- Creative sound design potential through extreme parameter combinations
-
-The interleaved processing creates a unique tonal character that combines traditional filtering with dynamic response characteristics. The Soft/Hard control's sample-level operation produces averaging effects that distinguish it from envelope-based filtering, enabling both subtle mixing applications and extreme creative effects.
 
 \pagebreak
 

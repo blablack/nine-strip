@@ -21,11 +21,9 @@ PURESTGAIN - Input Gain
     ↓
 INTERSTAGE - Analog Conditioning
     ↓
-CHANNEL9 - Console model + Saturation + Drive
+CHANNEL9* - Console model + Saturation + Drive
     ↓
-HIGHPASS2 - High Pass
-    ↓
-LOWPASS2 - Low Pass
+CAPACITRO2 - High & Low Pass
     ↓
 BAXANDALL2 - Bass and Treble Shelves
     ↓
@@ -35,8 +33,12 @@ DC BLOCKER - DC Offset Removal
     ↓
 PRESSURE4 - Compressor
     ↓
+CHANNEL9* - Console model + Saturation + Drive
+    ↓
 PURESTGAIN - Output Gain
 ```
+
+__CHANNEL9 runs either Pre (after Input Gain/Interstage) or Post (before Output Gain), never both simultaneously.__
 
 ## Features
 
