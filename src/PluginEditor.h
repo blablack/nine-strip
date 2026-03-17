@@ -36,6 +36,9 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     KnobLookAndFeel knobSkeuomorphicLook;
     FaderLookAndFeel faderSkeuomorphicLook;
 
+    juce::Image backgroundImage;
+    juce::Image scaledBackground;
+
     juce::ComponentBoundsConstrainer constrainer;
 
     // Main layout grid

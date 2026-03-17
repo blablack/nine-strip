@@ -26,6 +26,8 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     setConstrainer(&constrainer);
     setResizable(false, true);
 
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+
     setSize(width, height);
 
     setupPresetPanel();
@@ -111,6 +113,7 @@ void NineStripProcessorEditor::setupConsoleSection()
         audioProcessor.getAPVTS(), "saturationBypass", saturationBypassButton);
 
     consoleSatGroup.addAndMakeVisible(saturationInputButton);
+    saturationInputButton.setToggleState(true, juce::dontSendNotification);
     bool isInput = audioProcessor.getAPVTS().getRawParameterValue("saturationInput")->load() > 0.5f;
     saturationInputButton.setButtonText(isInput ? "Pre" : "Post");
     saturationInputButton.setClickingTogglesState(false);
@@ -286,22 +289,33 @@ NineStripProcessorEditor::~NineStripProcessorEditor()
 
 void NineStripProcessorEditor::paint(juce::Graphics& g)
 {
-    auto backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
-    g.drawImage(backgroundImage, getLocalBounds().toFloat());
+    if (scaledBackground.isValid())
+    {
+        g.drawImageAt(scaledBackground, 0, 0);
+    }
+    else
+    {
+        g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+        g.drawImage(backgroundImage, getLocalBounds().toFloat());
+    }
 }
 
 void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    if (parameterID == "inputMeasured")
-    {
-        bool isInputMode = newValue > 0.5f;
-        vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
-        vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
-    }
-    else if (parameterID == "saturationInput")
-    {
-        saturationInputButton.setButtonText(newValue > 0.5f ? "Pre" : "Post");
-    }
+    juce::MessageManager::callAsync(
+        [this, parameterID, newValue]()
+        {
+            if (parameterID == "inputMeasured")
+            {
+                bool isInputMode = newValue > 0.5f;
+                vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
+                vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
+            }
+            else if (parameterID == "saturationInput")
+            {
+                saturationInputButton.setButtonText(newValue > 0.5f ? "Pre" : "Post");
+            }
+        });
 }
 
 void NineStripProcessorEditor::resized()
@@ -310,6 +324,14 @@ void NineStripProcessorEditor::resized()
     {
         props->setValue("editorWidth", getWidth());
         props->setValue("editorHeight", getHeight());
+    }
+
+    if (backgroundImage.isValid())
+    {
+        scaledBackground = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+        juce::Graphics bg(scaledBackground);
+        bg.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+        bg.drawImage(backgroundImage, getLocalBounds().toFloat());
     }
 
     // Window size
@@ -636,7 +658,7 @@ void NineStripProcessorEditor::updatePresetComboBox()
     presetComboBox.clear(juce::dontSendNotification);
 
     auto& presetManager = audioProcessor.getPresetManager();
-    auto presets = presetManager.getAllPresets();
+    auto presets = PresetManager::getAllPresets();
 
     int itemId = 1;
     for (const auto& preset : presets)

@@ -13,6 +13,7 @@ Checks: "clang-diagnostic-*,\
   -modernize-use-trailing-return-type,\
   -readability-magic-numbers,\
   -cppcoreguidelines-avoid-magic-numbers,\
+  -cppcoreguidelines-avoid-c-arrays,\
   -readability-uppercase-literal-suffix,\
   -cppcoreguidelines-owning-memory,\
   -google-readability-braces-around-statements,\

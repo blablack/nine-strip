@@ -20,12 +20,37 @@ NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
 
 NeedleVUMeter::~NeedleVUMeter() { stopTimer(); }
 
+void NeedleVUMeter::resized()
+{
+    if (backgroundImage.isNull()) return;
+
+    scaledBackground = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+    juce::Graphics g(scaledBackground);
+    g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+    g.drawImage(backgroundImage, getLocalBounds().toFloat(), juce::RectanglePlacement::centred);
+
+    float scale =
+        juce::jmin(static_cast<float>(getWidth()) / backgroundWidth, static_cast<float>(getHeight()) / backgroundHeight);
+
+    int ps = juce::roundToInt(peakSize * scale);
+    if (ps > 0)
+    {
+        scaledPeakOnImage = peakOnImage.rescaled(ps, ps, juce::Graphics::highResamplingQuality);
+        scaledPeakOffImage = peakOffImage.rescaled(ps, ps, juce::Graphics::highResamplingQuality);
+    }
+}
+
 void NeedleVUMeter::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
+    g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+
     // 1. Draw full background image maintaining aspect ratio
-    g.drawImage(backgroundImage, bounds, juce::RectanglePlacement::centred);
+    if (scaledBackground.isValid())
+        g.drawImageAt(scaledBackground, 0, 0);
+    else
+        g.drawImage(backgroundImage, bounds, juce::RectanglePlacement::centred);
 
     // 2. Calculate scaled border sizes based on image dimensions
     float scaleX = bounds.getWidth() / backgroundWidth;
@@ -47,9 +72,19 @@ void NeedleVUMeter::paint(juce::Graphics& g)
         juce::Rectangle<float> peakBounds(offsetX, offsetY, peakScaled, peakScaled);
 
         if (isPeakLit)
-            g.drawImage(peakOnImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        {
+            if (scaledPeakOnImage.isValid())
+                g.drawImageAt(scaledPeakOnImage, static_cast<int>(offsetX), static_cast<int>(offsetY));
+            else
+                g.drawImage(peakOnImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        }
         else
-            g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        {
+            if (scaledPeakOffImage.isValid())
+                g.drawImageAt(scaledPeakOffImage, static_cast<int>(offsetX), static_cast<int>(offsetY));
+            else
+                g.drawImage(peakOffImage, peakBounds, juce::RectanglePlacement::stretchToFit);
+        }
     }
 
     // 3. Set clipping region to exclude borders

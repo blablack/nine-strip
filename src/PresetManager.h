@@ -5,7 +5,7 @@
 class PresetManager : public juce::AudioProcessorValueTreeState::Listener
 {
    public:
-    PresetManager(juce::AudioProcessorValueTreeState& apvts);
+    explicit PresetManager(juce::AudioProcessorValueTreeState& apvts);
     ~PresetManager() override;
 
     void savePreset(const juce::String& presetName);
@@ -14,10 +14,10 @@ class PresetManager : public juce::AudioProcessorValueTreeState::Listener
     void loadNextPreset();
     void loadPreviousPreset();
 
-    juce::StringArray getAllPresets() const;
-    juce::String getCurrentPreset() const;
+    [[nodiscard]] static juce::StringArray getAllPresets();
+    [[nodiscard]] juce::String getCurrentPreset() const;
 
-    bool isPresetModified() const { return isModified; }
+    [[nodiscard]] bool isPresetModified() const { return isModified; }
     void markAsModified() { isModified = true; }
     void markAsUnmodified() { isModified = false; }
 
@@ -25,7 +25,7 @@ class PresetManager : public juce::AudioProcessorValueTreeState::Listener
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
    private:
-    juce::File getDefaultDirectory() const;
+    [[nodiscard]] static juce::File getDefaultDirectory();
 
     juce::AudioProcessorValueTreeState& valueTreeState;
     juce::String currentPreset;

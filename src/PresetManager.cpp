@@ -25,7 +25,7 @@ PresetManager::~PresetManager()
     }
 }
 
-void PresetManager::parameterChanged(const juce::String& parameterID, float newValue)
+void PresetManager::parameterChanged(const juce::String&, float)
 {
     // ✅ Any parameter change marks preset as modified (if a preset is loaded)
     if (!currentPreset.isEmpty())
@@ -34,7 +34,7 @@ void PresetManager::parameterChanged(const juce::String& parameterID, float newV
     }
 }
 
-juce::File PresetManager::getDefaultDirectory() const  //
+juce::File PresetManager::getDefaultDirectory()
 {
     juce::File rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
 
@@ -147,7 +147,7 @@ void PresetManager::loadPreviousPreset()
     loadPreset(presets[previousIndex]);
 }
 
-juce::StringArray PresetManager::getAllPresets() const
+juce::StringArray PresetManager::getAllPresets()
 {
     juce::StringArray presets;
 

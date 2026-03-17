@@ -21,6 +21,7 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
     ~NeedleVUMeter() override;
 
     void paint(juce::Graphics& g) override;
+    void resized() override;
     void timerCallback() override;
 
     [[nodiscard]] float getAspectRatio() const { return imageAspectRatio; }
@@ -36,8 +37,11 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
     float currentLevel = -60.0f;
 
     juce::Image backgroundImage;
+    juce::Image scaledBackground;
     juce::Image peakOnImage;
+    juce::Image scaledPeakOnImage;
     juce::Image peakOffImage;
+    juce::Image scaledPeakOffImage;
 
     bool isPeakLit = false;
     int peakHoldCounter = 0;
