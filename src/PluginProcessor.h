@@ -76,6 +76,7 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     // Cached APVTS parameter pointers — set once in prepareToPlay, read on audio thread
     std::atomic<float> *paramMasterBypass = nullptr;
+    std::atomic<float> *paramSaturationInput = nullptr;
     std::atomic<float> *paramSatBypass = nullptr;
     std::atomic<float> *paramFilterBypass = nullptr;
     std::atomic<float> *paramEqBypass = nullptr;

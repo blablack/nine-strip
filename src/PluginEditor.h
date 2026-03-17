@@ -29,6 +29,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     const int baseWidth = 600;
     const int baseHeight = 600;
 
+    const int baseMargin = 3;
+
     NineStripProcessor& audioProcessor;
 
     KnobLookAndFeel knobSkeuomorphicLook;
@@ -58,6 +60,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
     GlowButton saturationBypassButton{"Byp"};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> saturationBypassAttachment;
+
+    GlowButton saturationInputButton{"Pre"};
 
     // High Pass Filter
     juce::Component filterGroup;

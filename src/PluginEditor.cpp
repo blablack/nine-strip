@@ -109,6 +109,18 @@ void NineStripProcessorEditor::setupConsoleSection()
     consoleSatGroup.addAndMakeVisible(saturationBypassButton);
     saturationBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getAPVTS(), "saturationBypass", saturationBypassButton);
+
+    consoleSatGroup.addAndMakeVisible(saturationInputButton);
+    bool isInput = audioProcessor.getAPVTS().getRawParameterValue("saturationInput")->load() > 0.5f;
+    saturationInputButton.setButtonText(isInput ? "Pre" : "Post");
+    saturationInputButton.setClickingTogglesState(false);
+    saturationInputButton.onClick = [this]()
+    {
+        auto* param = audioProcessor.getAPVTS().getParameter("saturationInput");
+        bool newIsInput = !(param->getValue() > 0.5f);
+        param->setValueNotifyingHost(newIsInput ? 1.0f : 0.0f);
+        saturationInputButton.setButtonText(newIsInput ? "Pre" : "Post");
+    };
 }
 
 void NineStripProcessorEditor::setupFiltersSection()
@@ -180,7 +192,7 @@ void NineStripProcessorEditor::setupMeters()
     metersGroup.addAndMakeVisible(needleVUMeterR);
 
     metersGroup.addAndMakeVisible(vuMeterInputButton);
-    vuMeterInputButton.setClickingTogglesState(false);  // Add this!
+    vuMeterInputButton.setClickingTogglesState(false);
     vuMeterInputButton.onClick = [this]()
     {
         // If already on, do nothing
@@ -213,6 +225,7 @@ void NineStripProcessorEditor::setupMeters()
 
     // Listen for parameter changes
     audioProcessor.getAPVTS().addParameterListener("inputMeasured", this);
+    audioProcessor.getAPVTS().addParameterListener("saturationInput", this);
 }
 
 void NineStripProcessorEditor::setupGain()
@@ -268,6 +281,7 @@ NineStripProcessorEditor::~NineStripProcessorEditor()
 {
     audioProcessor.editorStateChanged(false);
     audioProcessor.getAPVTS().removeParameterListener("inputMeasured", this);
+    audioProcessor.getAPVTS().removeParameterListener("saturationInput", this);
 }
 
 void NineStripProcessorEditor::paint(juce::Graphics& g)
@@ -283,6 +297,10 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
         bool isInputMode = newValue > 0.5f;
         vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
         vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
+    }
+    else if (parameterID == "saturationInput")
+    {
+        saturationInputButton.setButtonText(newValue > 0.5f ? "Pre" : "Post");
     }
 }
 
@@ -373,36 +391,46 @@ void NineStripProcessorEditor::layoutPresetPanel()
 
 void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
 {
-    auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(6);
+    auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(baseMargin);
 
     consoleSatLabel.setBounds(consoleBounds.removeFromTop(20));
 
     const int horizontalSpacing = 16;
     const int shadowPadding = 40;
+    const int buttonHeight = 20;
+    const int buttonWidth = 60;
+    const int buttonMargin = 10;
+
+    // Pre/Post button centered at top, below label
+    saturationInputButton.setBounds(consoleBounds.getCentreX() - buttonWidth / 2, consoleBounds.getY() + buttonMargin,
+                                    buttonWidth, buttonHeight);
 
     int totalWidth = bigKnobSize * 2 + horizontalSpacing;
     int startX = consoleBounds.getCentreX() - (totalWidth / 2);
-    int knobY = consoleBounds.getY() + (consoleBounds.getHeight() - bigKnobSize - 40) / 2;
 
-    // Console type knob - expand bounds for shadow
+    // Push knobY down to sit below the button
+    int knobAreaTop = consoleBounds.getY() + buttonHeight + buttonMargin * 2;
+    int knobAreaHeight = consoleBounds.getHeight() - buttonHeight - buttonMargin * 2;
+    int knobY = knobAreaTop + (knobAreaHeight - bigKnobSize - 40) / 2;
+
+    // Console type knob
     consoleTypeSlider.setBounds(startX - shadowPadding / 2, knobY - shadowPadding / 2, bigKnobSize + shadowPadding,
                                 bigKnobSize + shadowPadding);
     consoleTypeValueLabel.setBounds(startX, consoleTypeSlider.getBottom() - shadowPadding / 2, bigKnobSize, 18);
 
-    // Drive knob - expand bounds for shadow
+    // Drive knob
     driveSlider.setBounds(startX + bigKnobSize + horizontalSpacing - shadowPadding / 2, knobY - shadowPadding / 2,
                           bigKnobSize + shadowPadding, bigKnobSize + shadowPadding);
     driveLabel.setBounds(startX + bigKnobSize + horizontalSpacing, driveSlider.getBottom() - shadowPadding / 2, bigKnobSize,
                          18);
 
     // Bypass button at bottom-right
-    saturationBypassButton.setBounds(consoleBounds.getRight() - 52, consoleBounds.getBottom() - 30, 50, 20);
+    saturationBypassButton.setBounds(consoleBounds.getRight() - 50, consoleBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKnobSize)
 {
-    auto groupBounds = filterGroup.getLocalBounds().reduced(6);
-    int margin = jmax(4, static_cast<int>(groupBounds.getWidth() * 0.02f));
+    auto groupBounds = filterGroup.getLocalBounds().reduced(baseMargin);
 
     filterLabel.setBounds(groupBounds.removeFromTop(20));
 
@@ -438,72 +466,61 @@ void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKn
     lowpassLabel.setBounds(knobX, lowpassSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
 
     // Bypass button
-    filterBypassButton.setBounds(filterGroup.getLocalBounds().getRight() - margin - 55,
-                                 filterGroup.getLocalBounds().getBottom() - margin - 20, 50, 20);
+    filterBypassButton.setBounds(groupBounds.getRight() - 50, groupBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
 {
     // Calculate proportional values
     auto groupBounds = highShelfGroup.getLocalBounds();
-    int margin = groupBounds.getWidth() * 0.02f;
     int headerHeightLarge = groupBounds.getHeight() * 0.15f;
-    int headerHeightSmall = groupBounds.getHeight() * 0.08f;
-    int labelHeight = groupBounds.getHeight() * 0.08f;
 
     // High Shelf layout
-    auto hsBounds = highShelfGroup.getLocalBounds().reduced(6);
+    auto hsBounds = highShelfGroup.getLocalBounds().reduced(baseMargin);
     highShelfLabel.setBounds(hsBounds.removeFromTop(20));
 
     layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
 
     // High-Mid layout
-    auto hmBounds = highMidGroup.getLocalBounds().reduced(margin);
+    auto hmBounds = highMidGroup.getLocalBounds().reduced(baseMargin);
     highMidLabel.setBounds(hmBounds.removeFromTop(headerHeightLarge));
     layoutTriangleKnobs(hmBounds, hmFreqSlider, hmFreqLabel, hmGainSlider, hmGainLabel, hmResoSlider, hmResoLabel, bigKnobSize,
                         smallKnobSize);
 
     // Low Shelf layout
-    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(margin);
+    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(baseMargin);
     lowShelfLabel.setBounds(lsBounds.removeFromTop(headerHeightLarge));
     layoutCenteredKnob(lsBounds, bassSlider, bassLabel, bigKnobSize);
 
-    // Bypass button - proportional sizing
-    int buttonWidth = lsBounds.getWidth() * 0.2f;
-    int buttonHeight = lsBounds.getHeight() * 0.08f;
-    int buttonMargin = margin;
-
-    eqBypassButton.setBounds(lsBounds.getRight() - 52, lsBounds.getBottom() - 20, 50, 20);
+    eqBypassButton.setBounds(lsBounds.getRight() - 50, lsBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
 {
     // Calculate proportional values
-    auto groupBounds = compressorGroup.getLocalBounds();
-    int margin = jmax(4, static_cast<int>(groupBounds.getWidth() * 0.02f));
+    auto groupBounds = compressorGroup.getLocalBounds().reduced(baseMargin);
     int headerHeight = jmax(20, static_cast<int>(groupBounds.getHeight() * 0.15f));
 
-    auto compBounds = compressorGroup.getLocalBounds().reduced(margin);
-    compressorLabel.setBounds(compBounds.removeFromTop(headerHeight));
+    compressorLabel.setBounds(groupBounds.removeFromTop(headerHeight));
 
-    auto triangleBounds = compBounds.withTrimmedTop(0);
+    auto triangleBounds = groupBounds.withTrimmedTop(0);
     // Triangle knobs at top (not centered vertically)
     layoutTriangleKnobs(triangleBounds, pressureSlider, pressureLabel, speedSlider, speedLabel, mewinessSlider, mewinessLabel,
                         bigKnobSize, smallKnobSize, false);
 
     // Calculate proportional spacing for meter area
-    int knobBottomSpacing = jmax(20, static_cast<int>(compBounds.getHeight() * 0.08f));  // 8% spacing after knobs
-    int buttonAreaHeight = jmax(25, static_cast<int>(compBounds.getHeight() * 0.1f));    // 10% for button area
+    int knobBottomSpacing = jmax(20, static_cast<int>(groupBounds.getHeight() * 0.08f));  // 8% spacing after knobs
+    int buttonAreaHeight = jmax(25, static_cast<int>(groupBounds.getHeight() * 0.1f));    // 10% for button area
 
     int topY = mewinessSlider.getBottom() + knobBottomSpacing;
-    int bottomY = compBounds.getBottom() - buttonAreaHeight;
+    int bottomY = groupBounds.getBottom() - buttonAreaHeight;
     int availableHeight = bottomY - topY;
 
     // Use proportional width for meter (e.g., 80% of available width)
-    int meterMaxWidth = jmax(100, static_cast<int>(compBounds.getWidth() * 0.8f));
+    int meterMaxWidth = jmax(100, static_cast<int>(groupBounds.getWidth() * 0.8f));
 
     // Create area for the meter with proportional height
-    juce::Rectangle<int> meterArea(compBounds.getX(), topY, compBounds.getWidth(),
+    juce::Rectangle<int> meterArea(groupBounds.getX(), topY, groupBounds.getWidth(),
                                    jmax(50, static_cast<int>(availableHeight * 0.75f))  // Use 75% of available height
     );
 
@@ -518,17 +535,16 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     }
 
     // Center both horizontally and vertically in available space
-    grMeterBounds.setCentre(compBounds.getCentreX(), topY + availableHeight / 2);
+    grMeterBounds.setCentre(groupBounds.getCentreX(), topY + availableHeight / 2);
     grMeter.setBounds(grMeterBounds);
 
     // Bypass button at bottom-right
-    compressorBypassButton.setBounds(compressorGroup.getLocalBounds().getRight() - margin - 55,
-                                     compressorGroup.getLocalBounds().getBottom() - margin - 20, 50, 20);
+    compressorBypassButton.setBounds(groupBounds.getRight() - 50, groupBounds.getBottom() - 20, 50, 20);
 }
 
 void NineStripProcessorEditor::layoutMeters()
 {
-    auto metersBounds = metersGroup.getLocalBounds().reduced(2);
+    auto metersBounds = metersGroup.getLocalBounds().reduced(baseMargin);
 
     auto buttonArea = metersBounds.removeFromBottom(30).reduced(4, 2);
 
@@ -586,7 +602,7 @@ juce::Rectangle<int> NineStripProcessorEditor::constrainToAspectRatio(juce::Rect
 
 void NineStripProcessorEditor::layoutGain()
 {
-    auto gainBounds = gainGroup.getLocalBounds().reduced(6);
+    auto gainBounds = gainGroup.getLocalBounds().reduced(2);
     gainBounds.removeFromTop(18);  // Space for group title
 
     // Reserve space for button at bottom

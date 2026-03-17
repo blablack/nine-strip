@@ -236,6 +236,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 
     // Bypass switches
     layout.add(std::make_unique<juce::AudioParameterBool>("masterBypass", "Master Bypass", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("saturationInput", "Saturation Input", true));
     layout.add(std::make_unique<juce::AudioParameterBool>("saturationBypass", "Saturation Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
@@ -319,6 +320,7 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     outputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("outputGain")->load());
 
     paramMasterBypass = apvts.getRawParameterValue("masterBypass");
+    paramSaturationInput = apvts.getRawParameterValue("saturationInput");
     paramSatBypass = apvts.getRawParameterValue("saturationBypass");
     paramFilterBypass = apvts.getRawParameterValue("filterBypass");
     paramEqBypass = apvts.getRawParameterValue("eqBypass");
@@ -392,6 +394,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
         return;  // Early exit, pass audio through untouched
     }
 
+    const bool saturationInput = paramSaturationInput->load(std::memory_order_relaxed) > 0.5f;
     const bool saturationBypass = paramSatBypass->load(std::memory_order_relaxed) > 0.5f;
     const bool filterBypass = paramFilterBypass->load(std::memory_order_relaxed) > 0.5f;
     const bool eqBypass = paramEqBypass->load(std::memory_order_relaxed) > 0.5f;
@@ -411,19 +414,18 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
 
     if (inputMeteringNeeded) updateMeters(buffer, numSamples);
 
+    if constexpr (std::is_same_v<SampleType, float>)
+        interstage.processReplacing(channels, channels, numSamples);
+    else
+        interstage.processDoubleReplacing(channels, channels, numSamples);
+
     // Process through the plugin chain
-    if (!saturationBypass)
+    if (!saturationBypass && saturationInput)
     {
         if constexpr (std::is_same_v<SampleType, float>)
-        {
-            interstage.processReplacing(channels, channels, numSamples);
             channel9.processReplacing(channels, channels, numSamples);
-        }
         else
-        {
-            interstage.processDoubleReplacing(channels, channels, numSamples);
             channel9.processDoubleReplacing(channels, channels, numSamples);
-        }
     }
 
     if (!filterBypass)
@@ -469,6 +471,14 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     else if (meteringNeeded)
     {
         updateGRMeter(1.0f);
+    }
+
+    if (!saturationBypass && !saturationInput)
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+            channel9.processReplacing(channels, channels, numSamples);
+        else
+            channel9.processDoubleReplacing(channels, channels, numSamples);
     }
 
     if constexpr (std::is_same_v<SampleType, float>)
