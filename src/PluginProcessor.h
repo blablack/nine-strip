@@ -12,7 +12,6 @@
 #include "airwindows/Pressure4.h"
 #include "airwindows/PurestGain.h"
 
-
 //==============================================================================
 /**
  */
@@ -83,9 +82,9 @@ class NineStripProcessor : public juce::AudioProcessor,
     std::atomic<float> *paramCompBypass = nullptr;
     std::atomic<float> *paramInputMeasured = nullptr;
 
-    const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive",    "hipass", "ls_tite",  "hp_poles",
-                                                    "lowpass",   "lp_sft_hrd",  "lp_poles", "treble", "bass",     "hm_freq",
-                                                    "highmid",   "hm_reso",     "pressure", "speed",  "mewiness", "outputGain"};
+    const std::vector<juce::String> parameterIDs = {"inputGain", "consoleType", "drive", "lowpass",  "hipass",
+                                                    "non_lin",   "treble",      "bass",  "hm_freq",  "highmid",
+                                                    "hm_reso",   "pressure",    "speed", "mewiness", "outputGain"};
 
     std::atomic<bool> editorOpen{false};
 

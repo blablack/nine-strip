@@ -222,7 +222,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
 
     // Mewiness - display as -10 to +10
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "mewiness", "Mewiness", juce::NormalisableRange<float>(0.0f, 1.0f), 0.5f,
+        "mewiness", "Mewiness", juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f,
         juce::AudioParameterFloatAttributes()
             .withStringFromValueFunction([](float value, int) { return juce::String((value * 20.0f) - 10.0f, 1); })
             .withValueFromStringFunction([](const juce::String &text) { return (text.getFloatValue() + 10.0f) / 20.0f; })));

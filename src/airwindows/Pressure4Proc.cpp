@@ -415,5 +415,5 @@ void Pressure4::processDoubleReplacing(double** inputs, double** outputs, int sa
         *outputR++;
     }
 
-    gainReductionAvg.store(blockSum / static_cast<float>(totalFrames), std::memory_order_relaxed);
+    if (totalFrames > 0) gainReductionAvg.store(blockSum / static_cast<float>(totalFrames), std::memory_order_relaxed);
 }
