@@ -75,7 +75,15 @@ NineStrip is a JUCE-based channel strip plugin that implements a comprehensive s
 
 The DSP foundation of this plugin comes from Chris Johnson's AirWindows collection - a well-regarded library of audio processors known for their sonic characteristics and computational efficiency. By integrating these processors into a single plugin architecture, NineStrip offers a cohesive processing environment with consistent routing and control.
 
-The signal chain implements a conventional channel strip topology: input gain staging, console emulation with harmonic saturation, high-pass and low-pass filtering, three-band EQ (bass and treble shelves with parametric mid control), dynamic range compression, and output gain. Each processing stage can be independently bypassed, allowing for flexible configuration based on source material requirements.
+The signal chain implements a conventional channel strip topology:
+- Input gain staging
+- Console emulation with harmonic saturation
+- High-pass and low-pass filtering
+- Three-band EQ — bass and treble shelves with a parametric mid
+- Dynamic range compression
+- Output gain
+
+Each processing stage can be independently bypassed, allowing for flexible configuration based on source material requirements.
 
 # Installation
 
@@ -226,13 +234,13 @@ All presets are shared between plugin and standalone versions.
 
 # Operation
 
-The NineStrip interface is organized into a single-window layout divided into three main columns:
+The NineStrip interface is organised into a single-window layout divided into three main columns:
 
 **Left Column - Filtering & Console:**
 
 - **Console** section (top)
   - Pre/Post button
-  - Console modeling 
+  - Console modelling 
   - Drive control
   - Bypass
 - **Filters** section
@@ -270,6 +278,8 @@ The interface uses color-coded knobs for quick visual identification: orange for
 
 # Signal Chain
 
+The diagram below shows the fixed processing order. Understanding the signal flow is useful when making decisions about gain staging, filter placement, and the Pre/Post console position.
+
 ![](../pics/signal_chain.svg)
 
 
@@ -289,7 +299,7 @@ Interstage operates transparently in the background with no user controls. It pr
 
 **Transparency by Design:** On naturally balanced audio, Interstage may produce no audible change. The processing only engages when confronted with extreme digital characteristics—unnaturally aggressive transients or excessive slew rates.
 
-**Non-Destructive Processing:** Interstage does not alter gain staging, add harmonic distortion, or compress dynamics. Peaks may increase slightly on heavily limited material as subsonic energy gets reorganized—this is normal analog-like behavior.
+**Non-Destructive Processing:** Interstage does not alter gain staging, add harmonic distortion, or compress dynamics. Peaks may increase slightly on heavily limited material as subsonic energy gets reorganised—this is normal analog-like behaviour.
 
 ### Bass Conditioning
 
@@ -301,17 +311,9 @@ Restricts extreme treble slew rates based on overall signal energy. Normal audio
 
 **Signal-Dependent Response:** Louder, more energetic signals trigger progressively more high-frequency containment. Quiet passages retain full brightness. This mimics how analog components naturally respond to varying signal levels.
 
-### Processing Architecture
-
-**Three-Pole IIR Highpass:** Cascaded filtering provides gentle low-frequency shaping characteristic of capacitor-coupled analog stages.
-
-**Lowpass Reference Generation:** Creates a smoothed reference signal representing overall circuit energy.
-
-**Adaptive Slew Limiting:** Restricts high-frequency slew rates by comparing against the lowpass reference rather than the direct signal, creating analog-like treble behavior responsive to overall signal energy.
 
 \pagebreak
 
-\pagebreak
 
 ## Airwindows Channel9
 
@@ -322,33 +324,40 @@ Select from five distinct console models, each calibrated to emulate the sonic c
 
 - **Neve** - Extended high-frequency response with a slightly darker, fuller low end. Features the most open top-end extension (rolling off around 30kHz) with minimal low-frequency roll-off. Ideal for adding depth and a "large format hit record" quality.
 - **API** - Clean and punchy character with slightly less extended highs than Neve. Maintains excellent clarity while adding subtle analog warmth. Well-suited for drums, vocals, and instruments requiring presence.
-- **SSL** - Large-format console sound with high-frequency roll-off closer to the audible range (around 24-26kHz). Reflects the behavior of consoles with multiple processing stages. Delivers a polished, professional sound associated with modern productions.
+- **SSL** - Large-format console sound with high-frequency roll-off closer to the audible range (around 24-26kHz). Reflects the behaviour of consoles with multiple processing stages. Delivers a polished, professional sound associated with modern productions.
 - **TEAC** - Budget mixer character with more aggressive low and high-frequency roll-off within the audible range. Provides distinctive coloration useful for lo-fi aesthetics, electronic music, and intentional frequency sculpting. Slightly darker overall tonality.
 - **Mackie** - Prosumer mixer model, brighter than TEAC but with similar limited frequency response. Tighter low-end control and characteristic midrange presence. Useful for shaping synthesizers and adding "budget mixer" vibe to electronic productions.
 
 ### Drive
-Controls the amount of saturation applied to the signal, ranging from 0% to 200%.
+Controls the amount of saturation applied to the signal.
 
-0-5: Gradually introduces Spiral saturation - a clean, smooth harmonic enhancement that adds body without excessive thickness. The processing crossfades from dry to fully saturated, preserving transient information.
+**Range:** 0 to 10 
 
-5-10: Crossfades from Spiral into Density mode, adding fuller harmonic thickness characteristic of traditional console channels. Higher settings produce more pronounced saturation and "bigness."
+0-5: Gradually introduces a clean, transparent saturation - a clean, smooth harmonic enhancement that adds body without excessive thickness. The processing crossfades from dry to fully saturated, preserving transient information.
+
+5-10: Crossfades into a thicker saturation, adding fuller harmonic thickness characteristic of traditional console channels. Higher settings produce more pronounced saturation and "bigness."
 
 ### Processing Architecture
 
-Channel9 employs a sophisticated multi-stage processing chain:
+Channel9 employs a multi-stage processing chain:
 
-1. **Ultrasonic Filtering** - Sample-rate-aware filtering that eliminates aliasing artifacts while maintaining a subtle presence lift in the upper frequencies, characteristic of high-end analog consoles
-2. **Analog-Style High-Pass** - Subtle filtering modeling capacitor behavior in analog circuits, preventing subsonic buildup
-Saturation Stage - Smooth harmonic enhancement using Spiral (clean) and Density (thick) algorithms
-3. **Slew Clipping** - Emulates op-amp speed limitations, adding realistic analog behavior to transients
+1. **Ultrasonic Filtering** — Rather than a clean brick-wall cut, the filter introduces a slight presence lift just before it rolls off — the same characteristic rise you get from real analog hardware as it approaches the edge of its frequency range. The filter is also sample-rate aware: if the rolloff point would fall below the Nyquist frequency of the current session (half the sample rate), it disengages entirely rather than applying a filter in the wrong place.
 
-Each console type adjusts the high-pass filter characteristics, slew clipping thresholds, and ultrasonic filter response to match the sonic signature of the modeled hardware.
+2. **Analog-Style High-Pass** — Uses the same capacitor-modelling approach as Capacitor2, preventing subsonic buildup through filtering that behaves more like a real component than a fixed digital cutoff.
+
+3. **Saturation Stage** — From 0–5, the Drive control crossfades into a clean, transparent saturation that preserves transient detail. From 5–10, it transitions into a thicker, fuller harmonic character that adds weight and density to the signal. The saturation stage also acts as the anchor point for aliasing control — the ultrasonic filter cleans up anything the saturation introduces before it reaches the audible range.
+
+4. **Slew Clipping** — Emulates the speed limitations of op-amps, adding realistic analog behaviour to transients. The threshold is calibrated per console type: expensive large-format desks clip gently, while budget mixers — built from cheaper op-amps — clip more aggressively.
+
+Each console type adjusts the high-pass filter characteristics, slew clipping thresholds, and ultrasonic filter response to match the sonic signature of the modelled hardware.
+
 
 \pagebreak
 
+
 ## Airwindows Capacitor2
 
-The Filters section provides high-pass and low-pass filtering based on Airwindows Capacitor2 — an analog-modeled IIR filter that simulates the behaviour of barium titanate ceramic capacitors, whose capacitance value drops under voltage pressure. Both filters run simultaneously through the same processing chain, cycling through six interleaved IIR filter stages per sample.
+Based on Airwindows Capacitor2, the Filters section provides high-pass and low-pass filtering that simulates the behaviour of barium titanate ceramic capacitors — components whose capacitance value drops under voltage pressure. Unlike conventional digital filters, Capacitor2 modulates its cutoff frequency in response to the signal itself, producing an organic, analog-like character that changes with the music.
 
 ### High Pass
 
@@ -370,8 +379,18 @@ This is the defining feature of Capacitor2. It models the real-world behaviour o
 - **Low values**: Adds a subtle analog flavour and slight transient boosting
 - **High values**: Creates an expander-like effect where peak energy increases — not from dynamics processing, but from the frequency modulation itself. Can produce aggressive distortion and grinding at extreme settings
 
-**Range:** -10 to +10
+**Range:** 0 to +10
 
+> **Note:** Non-Linearity increases the output level of the filtered signal. If you notice unexpected gain changes in the compressor or output stage, check this control first.
+
+
+### Processing Architecture
+
+Capacitor2 is built around the idea that a real capacitor doesn't behave the same way at every moment — its character shifts depending on the signal passing through it. The filter achieves this by continuously adjusting its cutoff frequency in response to the instantaneous signal level, rather than sitting at a fixed point the way a conventional digital filter does.
+
+To avoid the harshness that rapid filter movement would normally cause, the processing cycles through six slightly different filter configurations on successive samples. This gives the overall response a smoothness and irregularity closer to analog hardware than a single static filter stage could achieve.
+
+Parameter changes — including automation — are also smoothed internally, so adjusting the High Pass, Low Pass, or Non-Linearity controls never produces clicks or abrupt shifts.
 
 \pagebreak
 
@@ -429,25 +448,23 @@ The gentle slope means the effect extends deep into sub-bass territory and affec
 - Both controls cut: Creates mid-range emphasis
 - One boosted, one cut: Tilts overall frequency balance toward the boosted range
 
-The extremely wide Q values mean these interactions create broad, gentle tonal shifts rather than narrow frequency sculpting. The mathematical relationship between the shelves ensures complementary behavior across the frequency spectrum.
+The extremely wide Q values mean these interactions create broad, gentle tonal shifts rather than narrow frequency sculpting. The mathematical relationship between the shelves ensures complementary behaviour across the frequency spectrum.
 
 ### Processing Architecture
 
-Baxandall2 is a clean implementation of the classic Baxandall shelving EQ topology without analog modeling or saturation. Key characteristics:
+Baxandall2 is built around the observation that the most musical EQ moves rarely draw attention to themselves — they shift the overall tonal balance in a way that feels inevitable rather than processed. The classic Baxandall topology achieves this by using extremely wide shelving curves that start their influence far outside the audible range and arrive at the target frequency having already built momentum. There are no sharp edges, no audible pivot points — just a tilt in one direction or the other.
 
-**Gentle Shelving Curves:** Uses very wide Q values (treble: 0.4, bass: 0.2) creating smooth, musical slopes rather than sharp parametric-style curves.
+To keep this behaviour consistent across different gain settings, the center frequency of each shelf adjusts automatically as the gain changes, maintaining the optimal curve shape rather than letting the response skew as the control is pushed further. This means a subtle 2dB lift and a significant 10dB lift both feel proportionate and natural.
 
-**Extended Response:** The shelving curves extend well beyond the audible range, contributing to a transparent, natural tonal character.
+Because the slopes are so wide and gradual, large adjustments have minimal impact on phase response — transients stay intact, stereo imaging doesn't shift, and the changes read as tonal rather than corrective.
 
-**Minimal Phase Impact:** Large gain adjustments can be made without significantly affecting transient response or stereo imaging.
-
-**Adaptive Frequency:** The center frequency of each shelf automatically adjusts based on gain setting to maintain optimal response curves.
 
 \pagebreak
 
+
 ## Airwindows Parametric
 
-The Hi-Mid EQ section provides precise frequency sculpting based on AirWindows Parametric. This implementation uses a "Stacked Biquad with Reversed Neutron Flow" architecture, employing three cascaded biquad filters with nonlinear characteristics for musical-sounding frequency adjustment.
+The Hi-Mid EQ section provides precise frequency sculpting based on AirWindows Parametric. This implementation employs three cascaded biquad filters with nonlinear characteristics, producing musical-sounding frequency adjustment with a more complex and organic response than a conventional single-stage parametric EQ.
 
 ### Frequency
 
@@ -471,7 +488,7 @@ Controls the amount of boost or cut applied at the selected frequency.
 - **Zero (0):** No gain change, band is effectively bypassed
 - **Positive values (0 to +10):** Progressive boost at the selected frequency, enhancing presence and emphasizing desired tonal characteristics
 
-**Gain Behavior:** When gain exceeds unity (positive values), the algorithm applies additional gain multiplication, creating more pronounced effects at higher settings. This nonlinear gain structure provides subtle adjustments at low settings and increasingly bold tonal shaping at higher values.
+**Gain behaviour:** When gain exceeds unity (positive values), the algorithm applies additional gain multiplication, creating more pronounced effects at higher settings. This nonlinear gain structure provides subtle adjustments at low settings and increasingly bold tonal shaping at higher values.
 
 ### Q (Resonance)
 
@@ -485,42 +502,37 @@ Controls the bandwidth of the parametric filter, determining how narrow or wide 
 - **Medium values (3-7):** Moderate bandwidth providing balanced control for typical mixing tasks
 - **Higher values (7-10):** Narrower bandwidth creating more surgical, precise frequency targeting. Useful for notching specific problem frequencies or adding focused presence
 
-**Dynamic Q Behavior:** The resonance calculation incorporates both the gain setting and the frequency, creating a frequency-dependent Q that naturally widens at higher frequencies and narrows at lower frequencies. This mimics the behavior of classic analog parametric EQs
+**Dynamic Q behaviour:** The resonance calculation incorporates both the gain setting and the frequency, creating a frequency-dependent Q that naturally widens at higher frequencies and narrows at lower frequencies. This mimics the behaviour of classic analog parametric EQs
 
 ### Processing Architecture
 
-The Hi-Mid EQ uses AirWindows' cascaded biquad filtering design:
+Where a conventional parametric EQ uses a single filter stage, the Hi-Mid EQ runs three biquad filters in series, each with a slightly different Q value. The result is a steeper, more complex frequency response that behaves less like a surgical digital cut and more like the kind of broad, interconnected shaping you get from a well-designed analog circuit — neighbouring frequencies are gently affected rather than left with an abrupt edge.
 
-**Three-Stage Filter:** Uses three biquad filters in series with different Q values, creating steeper slopes and more complex frequency response than typical single-stage parametric EQs.
+At extreme boost or cut settings, where digital EQ can start to sound harsh or fatiguing, the processing applies subtle signal-dependent gain modulation that softens those edges and introduces a slight harmonic character. The harder you push it, the more it eases back from clinical precision toward something more natural.
 
-**Nonlinear Processing:** Signal-dependent gain modulation prevents harsh digital artifacts, particularly at extreme boost or cut settings, adding subtle harmonic enhancement for a more analog character.
+Rather than replacing the input signal with the filtered version, the equalised component is summed back in parallel with the original. This preserves the integrity of the source material — the EQ adds to what's there rather than reprocessing the whole signal, which keeps adjustments feeling transparent even at significant gain settings.
 
-**Parallel Summing:** The filtered signal is added to the original signal rather than replacing it, preserving the source material's integrity while adding the equalized component for more transparent, musical adjustments.
 
 \pagebreak
 
+
 ## DC Blocker
 
-The DC Blocker removes DC offset (unwanted zero-frequency content) from the audio signal. DC offset can occur from analog-to-digital conversion, certain processing algorithms, or accumulation through a signal chain, and can cause issues with headroom, compression behavior, and speaker damage in extreme cases.
+The DC Blocker removes DC offset (unwanted zero-frequency content) from the audio signal. DC offset can occur from analog-to-digital conversion, certain processing algorithms, or accumulation through a signal chain, and can cause issues with headroom, compression behaviour, and speaker damage in extreme cases.
 
 ### Operation
 
 The DC blocker operates transparently in the background with no user controls. It processes both channels identically using a high-pass filter with a 5 Hz cutoff frequency.
 
-### Processing Architecture
+DC offset — a constant voltage bias sitting on top of an audio signal — is invisible to the ear but causes real problems downstream: wasted headroom, clicks on plugin bypass, and unwanted interactions with saturation and limiting stages. The DC Blocker removes it with a first-order IIR high-pass filter tuned to 5 Hz, a cutoff so far below the audible range that even the deepest sub-bass frequencies pass through completely untouched.
 
-**High-Pass Filter Design:** Implements a first-order IIR high-pass filter specifically tuned to remove only DC and near-DC content while leaving the audible frequency range completely untouched.
+The filter coefficients adjust automatically based on the project sample rate, so the 5 Hz cutoff stays consistent whether the session is running at 44.1kHz, 96kHz, or higher. Each channel maintains its own independent filter state, preventing any left-right interaction.
 
-**5 Hz Cutoff:** The extremely low cutoff frequency (5 Hz) ensures that even the deepest bass frequencies remain unaffected. Musical content starts well above this threshold, making the filtering completely transparent.
-
-**Sample Rate Adaptive:** The filter coefficients automatically adjust based on the project sample rate, maintaining consistent behavior at 44.1kHz, 48kHz, 96kHz, and higher sample rates.
-
-**Independent Stereo Processing:** Each channel maintains its own filter state, preventing any inter-channel artifacts while efficiently removing DC offset from both left and right signals.
-
-This processing stage runs continuously and requires no configuration, silently protecting your signal chain from DC offset issues.
+The processing runs continuously with no configuration required.
 
 
 \pagebreak
+
 
 ## Airwindows Pressure4
 
@@ -556,7 +568,7 @@ Controls the attack and release characteristics of the compressor.
 
 ### Mewiness (µ)
 
-Controls the compression ratio behavior and character, ranging from negative µ (mu) through neutral to positive µ.
+Controls the compression ratio behaviour and character, ranging from negative µ (mu) through neutral to positive µ.
 
 **Range:** -10 to +10 
 
@@ -564,7 +576,7 @@ Controls the compression ratio behavior and character, ranging from negative µ 
 
 **Negative values (-10 to 0):**
 
-- Creates "negative µ" compression behavior
+- Creates "negative µ" compression behaviour
 - Preserves attack transients while still compressing
 - Produces effects similar to parallel compression or "New York compression"
 - Lower negative values create more pronounced transient preservation
@@ -572,13 +584,13 @@ Controls the compression ratio behavior and character, ranging from negative µ 
 
 **Zero (0):**
 
-- Standard compression behavior
+- Standard compression behaviour
 - Linear ratio response
 - Most similar to traditional compressor operation
 
 **Positive values (0 to +10):**
 
-- Creates "positive µ" (variable-mu) compression behavior
+- Creates "positive µ" (variable-mu) compression behaviour
 - Increases ratio as compression depth increases
 - Harder compression on peaks, creating a "squashing" effect
 - Higher positive values create more extreme ratio changes
@@ -586,21 +598,17 @@ Controls the compression ratio behavior and character, ranging from negative µ 
 
 ### Processing Architecture
 
-Pressure4 employs several techniques that distinguish it from conventional compressors:
+Most digital compressors apply gain reduction as a smooth, calculated response to a detected signal level. Pressure4 does something different at the sample level: it alternates between two slightly different compression coefficients on every consecutive sample. The difference between them is tiny, but the effect accumulates into compression behaviour that is measurably smoother at extreme settings — fewer artifacts, less of the pumping harshness that appears when a conventional compressor is pushed hard.
 
-**Dual-Sample Processing:** Uses alternating compression coefficients that flip on each sample, reducing artifacts and creating smoother compression behavior, particularly at extreme settings.
+Stereo processing is handled as a single linked operation. Both channels are analysed together and receive identical gain reduction, so the stereo image stays locked even under heavy compression — the kind of image narrowing you get from unlinked stereo compressors doesn't happen here.
 
-**Linked Stereo Operation:** Analyzes both channels together and applies identical gain reduction to preserve stereo imaging and prevent image shifts during compression.
+Attack and release times aren't fixed values — they shift continuously based on the incoming signal level and the current compression state, responding to the shape of the music rather than following a predetermined curve. At the output stage, soft clipping prevents digital overs without hard limiting, which is where much of the characteristic warmth comes from: the compressor can be pushed into significant gain reduction without the result sounding clinical or brittle.
 
-**Program-Dependent Behavior:** Attack and release speeds continuously adjust based on input signal level and compression state, responding organically to musical content.
+Timing calculations adjust automatically for sample rate, so the compression behaviour stays consistent regardless of the project settings.
 
-**Analog-Style Saturation:** Final stage uses soft clipping to prevent digital overs while allowing high compression amounts. This contributes to the "warm" character even at moderate settings.
-
-**Sample Rate Compensation:** Timing calculations automatically adjust for sample rate, ensuring consistent compression behavior regardless of project settings.
-
-**Gain Reduction Metering:** Visual feedback of compression activity is provided through the gain reduction meter in the interface.
 
 \pagebreak
+
 
 ## Airwindows PurestGain
 
@@ -620,17 +628,11 @@ Both Input and Output Gain controls operate identically.
 
 ### Processing Architecture
 
-PurestGain is designed as a minimal-impact gain stage with several optimizations for transparency:
+Most gain plugins do more to a signal than their controls suggest. Cascading multiple instances, automating levels, or even just passing audio through an inactive stage can introduce small cumulative artifacts — rounding errors, quantization noise, interpolation glitches — that individually are inaudible but build up across a complex session. PurestGain is designed around eliminating each of those sources one at a time.
 
-**Single-Stage Processing:** Performs gain adjustment as a single multiply operation, minimizing cumulative artifacts compared to multi-stage gain plugins.
+The gain adjustment itself is a single multiply operation. At 0 dB, the signal bypasses processing entirely rather than passing through a unity-gain multiply, preserving complete bit-transparency. When the gain is changed — whether by hand or through automation — an adaptive interpolation system smooths the transition at the sample level, removing the zipper noise that appears when parameter changes are applied abruptly.
 
-**True Bypass at Unity:** When set to 0 dB, the signal passes through completely unprocessed, preserving bit-transparency.
-
-**Floating-Point Noise Shaping:** Applies specialized dithering to the 32-bit floating-point audio bus to minimize quantization artifacts, particularly important when cascading multiple gain stages.
-
-**Smooth Parameter Changes:** Uses an adaptive interpolation system to eliminate zipper noise (audible clicks from rapid parameter adjustments) while maintaining responsive control.
-
-The sonic benefits are most apparent when using multiple instances in series, making very small gain adjustments, or processing material with extended reverb tails and quiet ambience.
+The least obvious optimisation is floating-point noise shaping: a form of specialised dithering that pushes the tiny rounding errors introduced by digital arithmetic into frequencies where they cause the least damage. On a single instance it makes no audible difference. Across a session with many gain stages, the effect is a cleaner noise floor and better preserved detail in quiet material — reverb tails, room ambience, and fades that would otherwise accumulate a very slight graininess.
  
 # Presets
 
