@@ -2,6 +2,12 @@
 
 #include <cmath>
 
+#if defined(_MSC_VER)
+#define RESTRICT __restrict
+#else
+#define RESTRICT __restrict__
+#endif
+
 DCBlocker::DCBlocker() : alpha(0.0), x_prevL(0.0), y_prevL(0.0), x_prevR(0.0), y_prevR(0.0) {}
 
 DCBlocker::~DCBlocker() {}
@@ -21,8 +27,8 @@ void DCBlocker::reset()
 template <typename SampleType>
 void DCBlocker::processStereo(SampleType** channels, int numSamples)
 {
-    SampleType* __restrict__ left = channels[0];
-    SampleType* __restrict__ right = channels[1];
+    SampleType* RESTRICT left = channels[0];
+    SampleType* RESTRICT right = channels[1];
 
     // Cache state in locals to avoid repeated member access through 'this'
     const double a = alpha;
@@ -37,15 +43,19 @@ void DCBlocker::processStereo(SampleType** channels, int numSamples)
         const double yL = inL - xpL + a * ypL;
         const double yR = inR - xpR + a * ypR;
 
-        xpL = inL; ypL = yL;
-        xpR = inR; ypR = yR;
+        xpL = inL;
+        ypL = yL;
+        xpR = inR;
+        ypR = yR;
 
         left[i] = static_cast<SampleType>(yL);
         right[i] = static_cast<SampleType>(yR);
     }
 
-    x_prevL = xpL; y_prevL = ypL;
-    x_prevR = xpR; y_prevR = ypR;
+    x_prevL = xpL;
+    y_prevL = ypL;
+    x_prevR = xpR;
+    y_prevR = ypR;
 }
 
 // Explicit template instantiations
