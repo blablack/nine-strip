@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.0] - 2026-03-XX
+## [v0.1.0] - 2026-03-19
 ### Added
 - Replaced Highpass2/Lowpass2 with Capacitor2
 - Channel9 (saturation) can now be pre/post
