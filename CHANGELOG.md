@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.1.1] - 2026-04-16
+
+### Fixed
+- Linux: improved compatibility with older distros (Ubuntu 22.04+, Debian 12+)
+
 ## [v0.1.0] - 2026-03-19
 ### Added
 - Replaced Highpass2/Lowpass2 with Capacitor2

@@ -43,7 +43,7 @@ jobs:
       matrix:
         include:
           - name: Linux
-            os: ubuntu-latest
+            os: ubuntu-22.04
             artifact: NineStrip-Linux.tar.gz
             cc: gcc
             cxx: g++
