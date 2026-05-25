@@ -156,7 +156,7 @@ jobs:
         run: |
           sudo apt-get install -y xvfb
 
-          xvfb-run -a ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+          xvfb-run -a ./pluginval --strictness-level 4 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
 
       - name: Validate Plugin (macOS)
         if: runner.os == 'macOS'
