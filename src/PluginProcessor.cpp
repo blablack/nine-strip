@@ -333,6 +333,21 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
 
+void NineStripProcessor::resetCapacitor2State()
+{
+    // Reset IIR state in-place without touching Airwindows source.
+    // Capacitor2's destructor is a no-op and all members are POD/value types,
+    // so placement-new is safe here. This runs only when NaN is already present
+    // in the output (i.e. audio was already broken), never during normal playback.
+    const double sr = getSampleRate() > 0.0 ? getSampleRate() : 44100.0;
+    capacitor2.~Capacitor2();
+    new (&capacitor2) Capacitor2(sr);
+    capacitor2.setParameter(Capacitor2::kParamD, 1.0f);
+    capacitor2.setParameter(Capacitor2::kParamA, apvts.getRawParameterValue("lowpass")->load());
+    capacitor2.setParameter(Capacitor2::kParamB, apvts.getRawParameterValue("hipass")->load());
+    capacitor2.setParameter(Capacitor2::kParamC, apvts.getRawParameterValue("non_lin")->load());
+}
+
 bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
     // Only support stereo
@@ -431,12 +446,21 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     if (!filterBypass)
     {
         if constexpr (std::is_same_v<SampleType, float>)
-        {
             capacitor2.processReplacing(channels, channels, numSamples);
-        }
         else
-        {
             capacitor2.processDoubleReplacing(channels, channels, numSamples);
+
+        // Capacitor2's dielectric nonlinearity can make the IIR feedback coefficient
+        // go negative (non_lin≈1 + lowpass≈1 + negative-peak audio), causing permanent
+        // NaN in the filter state. Detect it, clear this block, and reset the state.
+        bool nanDetected = false;
+        for (int i = 0; i < numSamples && !nanDetected; ++i)
+            nanDetected = !std::isfinite(channels[0][i]) || !std::isfinite(channels[1][i]);
+        if (nanDetected)
+        {
+            resetCapacitor2State();
+            for (int i = 0; i < numSamples; ++i)
+                channels[0][i] = channels[1][i] = SampleType(0);
         }
     }
 

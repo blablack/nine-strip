@@ -99,6 +99,8 @@ class NineStripProcessor : public juce::AudioProcessor,
     template <typename SampleType>
     void processBlockInternal(juce::AudioBuffer<SampleType> &buffer);
 
+    void resetCapacitor2State();
+
     std::unique_ptr<PresetManager> presetManager;
 
     Channel9 channel9;

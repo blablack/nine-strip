@@ -43,7 +43,7 @@ jobs:
       matrix:
         include:
           - name: Linux
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             artifact: NineStrip-Linux.tar.gz
             cc: gcc
             cxx: g++
@@ -156,7 +156,7 @@ jobs:
         run: |
           sudo apt-get install -y xvfb
 
-          xvfb-run -a ./pluginval --strictness-level 3 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+          xvfb-run -a ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
 
       - name: Validate Plugin (macOS)
         if: runner.os == 'macOS'
