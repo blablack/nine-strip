@@ -5,6 +5,9 @@
 ### Added
 - Juce 8.0.13
 
+### Fixed
+- Replaces the raw this capture with a juce::Component::SafePointer<NineStripProcessorEditor>. When the editor is destroyed, the SafePointer automatically becomes null, so the async callback does nothing instead of crashing.
+
 ## [v0.1.1] - 2026-04-16
 
 ### Fixed

@@ -1,7 +1,9 @@
 # files
 compile_commands.json
 NineStrip_Manual.pdf
+CLAUDE.md
 
 # folders
 build
 .cache
+.claude

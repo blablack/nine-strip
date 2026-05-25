@@ -303,17 +303,19 @@ void NineStripProcessorEditor::paint(juce::Graphics& g)
 void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
     juce::MessageManager::callAsync(
-        [this, parameterID, newValue]()
+        [safeThis = juce::Component::SafePointer<NineStripProcessorEditor>(this), parameterID, newValue]()
         {
+            if (safeThis == nullptr) return;
+
             if (parameterID == "inputMeasured")
             {
                 bool isInputMode = newValue > 0.5f;
-                vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
-                vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
+                safeThis->vuMeterInputButton.setToggleState(isInputMode, juce::dontSendNotification);
+                safeThis->vuMeterOutputButton.setToggleState(!isInputMode, juce::dontSendNotification);
             }
             else if (parameterID == "saturationInput")
             {
-                saturationInputButton.setButtonText(newValue > 0.5f ? "Pre" : "Post");
+                safeThis->saturationInputButton.setButtonText(newValue > 0.5f ? "Pre" : "Post");
             }
         });
 }
