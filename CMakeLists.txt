@@ -7,7 +7,7 @@ endif()
 
 project(nine-strip
     LANGUAGES C CXX
-    VERSION 0.1.1
+    VERSION 0.1.2
     DESCRIPTION "Nine-Strip audio plugin"
 )
 
