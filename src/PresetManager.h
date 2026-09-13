@@ -21,6 +21,13 @@ class PresetManager : public juce::AudioProcessorValueTreeState::Listener
     void markAsModified() { isModified = true; }
     void markAsUnmodified() { isModified = false; }
 
+    // Restore the preset name/modified flag from saved host state without reading the preset file
+    void setCurrentPreset(const juce::String& presetName, bool modified)
+    {
+        currentPreset = presetName;
+        isModified = modified;
+    }
+
     // AudioProcessorValueTreeState::Listener
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 

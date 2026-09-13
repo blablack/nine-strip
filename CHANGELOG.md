@@ -6,6 +6,9 @@
 - Juce 9.0.2
 - Velocity-based knob drag sensitivity, with a modifier key (Ctrl/Cmd/Alt) to switch to normal distance-based dragging
 
+### Fixed
+- Reopening a saved session no longer re-loads the preset file from disk, which was discarding any parameter tweaks made after loading a preset. The host's saved state is now authoritative; the preset name and its modified marker are restored for display only.
+
 ## [v0.1.3] - 2026-08-22
 
 ### Added

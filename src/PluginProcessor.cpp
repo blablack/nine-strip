@@ -526,9 +526,13 @@ void NineStripProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     auto state = apvts.copyState();
 
-    // Add current preset name to the state
+    // Add current preset name (and whether it has been tweaked) to the state
     auto presetName = presetManager->getCurrentPreset();
-    if (!presetName.isEmpty()) state.setProperty("currentPreset", presetName, nullptr);
+    if (!presetName.isEmpty())
+    {
+        state.setProperty("currentPreset", presetName, nullptr);
+        state.setProperty("presetModified", presetManager->isPresetModified(), nullptr);
+    }
 
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
@@ -544,11 +548,14 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes)
             auto valueTree = juce::ValueTree::fromXml(*xmlState);
             apvts.replaceState(valueTree);
 
-            // Restore preset name
+            // Restore the preset name for display only. The parameter values just restored
+            // from the host are authoritative; re-loading the preset file here would
+            // overwrite any tweaks made after the preset was loaded.
             if (valueTree.hasProperty("currentPreset"))
             {
                 auto presetName = valueTree.getProperty("currentPreset").toString();
-                presetManager->loadPreset(presetName);
+                const bool modified = static_cast<bool>(valueTree.getProperty("presetModified", false));
+                presetManager->setCurrentPreset(presetName, modified);
 
                 // Notify editor to update UI
                 if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetComboBox();
