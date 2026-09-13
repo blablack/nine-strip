@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.1.4] - XXXX-XX-XX
+
+### Added
+- Juce 9.0.2
+
 ## [v0.1.3] - 2026-08-22
 
 ### Added
