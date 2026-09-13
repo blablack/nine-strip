@@ -54,7 +54,7 @@ header-includes: |
 
 \vspace{0.5cm}
 
-{\large Version 0.1.4}
+{\large Version 0.1.5}
 
 \vspace{1cm}
 

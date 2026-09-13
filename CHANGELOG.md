@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.5] - XXXX-XX-XX
+## [v0.1.5] - 2026-09-13
 
 ### Added
 - CLAP plugin format (Windows, macOS, Linux), built with clap-juce-extensions and validated with clap-validator in CI
