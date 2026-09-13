@@ -31,7 +31,7 @@ class Pressure4
     float getParameter(int index);
     void setSampleRate(double sr) { sampleRate = sr; }
 
-    [[nodiscard]] float getGainReductionLinear() const { return gainReductionAvg.load(std::memory_order_relaxed); }
+    [[nodiscard]] float getGainReductionLinear() const { return gainReductionMin.load(std::memory_order_relaxed); }
 
    private:
     double sampleRate;
@@ -52,7 +52,7 @@ class Pressure4
     float C;  // parameters. Always 0-1, and we scale/alter them elsewhere.
     float D;
 
-    std::atomic<float> gainReductionAvg{1.0f};  // block-average coefficient, audio thread writes
+    std::atomic<float> gainReductionMin{1.0f};  // block-min coefficient (deepest reduction), audio thread writes
 };
 
 #endif
