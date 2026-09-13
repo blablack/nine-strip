@@ -89,6 +89,7 @@ Each processing stage can be independently bypassed, allowing for flexible confi
 
 NineStrip is available in the following formats:
 - **VST3 Plugin** - For use within digital audio workstations (DAWs)
+- **CLAP Plugin** - For use within CLAP-compatible DAWs (Bitwig, REAPER, Ardour, FL Studio, Studio One, ...)
 - **LV2 Plugin** - For use within LV2-compatible DAWs (Linux only)
 - **AU Plugin** - For use within AU-compatible DAWs (macOS only)
 - **Standalone Application** - For independent audio processing
@@ -113,6 +114,19 @@ cd NineStrip
 **Alternative system-wide installation:**
 ```bash
 sudo cp -r NineStrip.vst3 /usr/lib/vst3/
+```
+
+### CLAP Plugin
+
+1. Copy to your CLAP directory:
+   ```bash
+   cp NineStrip.clap ~/.clap/
+   ```
+2. Rescan plugins in your DAW
+
+**Alternative system-wide installation:**
+```bash
+sudo cp NineStrip.clap /usr/lib/clap/
 ```
 
 ### LV2 Plugin
@@ -143,6 +157,7 @@ Download and extract `NineStrip-macOS.zip`, then remove the macOS quarantine fla
 ```bash
 xattr -rd com.apple.quarantine NineStrip.vst3
 xattr -rd com.apple.quarantine NineStrip.component
+xattr -rd com.apple.quarantine NineStrip.clap
 xattr -rd com.apple.quarantine NineStrip.app
 ```
 
@@ -152,6 +167,15 @@ xattr -rd com.apple.quarantine NineStrip.app
    ```
    ~/Library/Audio/Plug-Ins/VST3/        (user)
    /Library/Audio/Plug-Ins/VST3/         (system)
+   ```
+2. Rescan plugins in your DAW
+
+### CLAP Plugin
+
+1. Copy to one of these locations:
+   ```
+   ~/Library/Audio/Plug-Ins/CLAP/        (user)
+   /Library/Audio/Plug-Ins/CLAP/         (system)
    ```
 2. Rescan plugins in your DAW
 
@@ -182,6 +206,14 @@ Download and extract `NineStrip-Windows.zip`.
 1. Copy `NineStrip.vst3` to your VST3 directory:
    ```
    C:\Program Files\Common Files\VST3\
+   ```
+2. Rescan plugins in your DAW
+
+### CLAP Plugin
+
+1. Copy `NineStrip.clap` to your CLAP directory:
+   ```
+   C:\Program Files\Common Files\CLAP\
    ```
 2. Rescan plugins in your DAW
 

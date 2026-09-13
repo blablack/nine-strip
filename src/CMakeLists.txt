@@ -57,6 +57,11 @@ juce_add_plugin(NineStrip
 
 juce_generate_juce_header(NineStrip)
 
+# CLAP is not a native JUCE format; clap-juce-extensions wraps the existing target.
+clap_juce_extensions_plugin(TARGET NineStrip
+    CLAP_ID "com.no28.ninestrip"
+    CLAP_FEATURES audio-effect stereo)
+
 target_compile_features(NineStrip PRIVATE cxx_std_17)
 
 

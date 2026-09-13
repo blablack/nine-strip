@@ -38,6 +38,8 @@ jobs:
     name: Build ${{ matrix.name }}
     needs: build-manual
     runs-on: ${{ matrix.os }}
+    env:
+      CLAP_VALIDATOR_VERSION: "0.4.1"
     strategy:
       fail-fast: false
       matrix:
@@ -181,12 +183,45 @@ jobs:
         run: |
           .\pluginval.exe --strictness-level 5 --validate-in-process --output-dir . --vst3 build\src\NineStrip_artefacts\Release\VST3\NineStrip.vst3
 
+      # Validate the CLAP with clap-validator (pluginval does not cover CLAP)
+      - name: Download clap-validator (Linux/macOS)
+        if: runner.os != 'Windows'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download ${{ env.CLAP_VALIDATOR_VERSION }} --repo free-audio/clap-validator --pattern "*${{ runner.os == 'Linux' && 'ubuntu' || 'macos-universal' }}*" --output clap-validator.zip
+          unzip -o clap-validator.zip
+          tar -xzf clap-validator-*.tar.gz
+          chmod +x clap-validator
+
+      - name: Download clap-validator (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download ${{ env.CLAP_VALIDATOR_VERSION }} --repo free-audio/clap-validator --pattern "*windows*" --output clap-validator.zip
+          Expand-Archive -Path clap-validator.zip -DestinationPath .
+
+      - name: Validate CLAP (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a ./clap-validator validate build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap | tee clap-validator-log.txt
+
+      - name: Validate CLAP (macOS)
+        if: runner.os == 'macOS'
+        run: ./clap-validator validate build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap | tee clap-validator-log.txt
+
+      - name: Validate CLAP (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\clap-validator.exe validate build\src\NineStrip_artefacts\Release\CLAP\NineStrip.clap | Tee-Object -FilePath clap-validator-log.txt
+
       # Upload logs
       - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pluginval-log-${{ matrix.name }}
+          name: validation-logs-${{ matrix.name }}
           path: "*.txt"
 
       # Package Linux
@@ -196,6 +231,7 @@ jobs:
           mkdir -p NineStrip
           cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
           cp -r build/src/NineStrip_artefacts/Release/LV2/NineStrip.lv2 NineStrip/
+          cp build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap NineStrip/
           cp build/src/NineStrip_artefacts/Release/Standalone/NineStrip NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           tar -czf ${{ matrix.artifact }} NineStrip
@@ -207,6 +243,7 @@ jobs:
           mkdir -p NineStrip
           cp -r build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
           cp -r build/src/NineStrip_artefacts/Release/AU/NineStrip.component NineStrip/   
+          cp -r build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap NineStrip/
           cp -r build/src/NineStrip_artefacts/Release/Standalone/NineStrip.app NineStrip/
           cp doc/NineStrip_Manual.pdf NineStrip/
           ditto -c -k --sequesterRsrc --keepParent NineStrip ${{ matrix.artifact }}
@@ -218,6 +255,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path NineStrip
           Copy-Item -Recurse build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3 NineStrip/
+          Copy-Item build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap NineStrip/
           Copy-Item build/src/NineStrip_artefacts/Release/Standalone/NineStrip.exe NineStrip/
           Copy-Item doc/NineStrip_Manual.pdf NineStrip/
           Compress-Archive -Path NineStrip -DestinationPath ${{ matrix.artifact }}
@@ -259,6 +297,7 @@ jobs:
           ```bash
           xattr -d -r com.apple.quarantine /path/to/NineStrip.vst3
           xattr -d -r com.apple.quarantine /path/to/NineStrip.component
+          xattr -d -r com.apple.quarantine /path/to/NineStrip.clap
           xattr -d -r com.apple.quarantine /path/to/NineStrip.app
           ```
           EOF

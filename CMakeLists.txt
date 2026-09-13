@@ -27,4 +27,7 @@ endif()
 # Enable JUCE. Do not use find_package to prevent from mix up with one globally installed.
 add_subdirectory(lib/JUCE)
 
+# Unofficial CLAP wrapper for JUCE plugins (free-audio/clap-juce-extensions).
+add_subdirectory(lib/clap-juce-extensions EXCLUDE_FROM_ALL)
+
 add_subdirectory(src)

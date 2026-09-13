@@ -372,8 +372,8 @@ void NineStripProcessor::resetCapacitor2State()
 {
     // Reset IIR state in-place without touching Airwindows source.
     // Capacitor2's destructor is a no-op and all members are POD/value types,
-    // so placement-new is safe here. This runs only when NaN is already present
-    // in the output (i.e. audio was already broken), never during normal playback.
+    // so placement-new is safe here. This runs only when the output is already broken
+    // (see guardStageOutput), never during normal playback.
     const double sr = getSampleRate() > 0.0 ? getSampleRate() : 44100.0;
     capacitor2.~Capacitor2();
     new (&capacitor2) Capacitor2(sr);
@@ -381,6 +381,17 @@ void NineStripProcessor::resetCapacitor2State()
     capacitor2.setParameter(Capacitor2::kParamA, apvts.getRawParameterValue("lowpass")->load());
     capacitor2.setParameter(Capacitor2::kParamB, apvts.getRawParameterValue("hipass")->load());
     capacitor2.setParameter(Capacitor2::kParamC, apvts.getRawParameterValue("non_lin")->load());
+}
+
+void NineStripProcessor::resetChannel9State(Channel9 &channel9)
+{
+    // Same placement-new trick as resetCapacitor2State(); see guardStageOutput() for why.
+    const double sr = getSampleRate() > 0.0 ? getSampleRate() : 44100.0;
+    channel9.~Channel9();
+    new (&channel9) Channel9(sr);
+    channel9.setParameter(Channel9::kParamC, 1.0f);  // output gain
+    channel9.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
+    channel9.setParameter(Channel9::kParamB, apvts.getRawParameterValue("drive")->load());
 }
 
 bool NineStripProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
@@ -470,6 +481,27 @@ void processCrossfadedStage(juce::LinearSmoothedValue<float> &mix, bool active, 
     crossfadeStereo(live, scratch, mix, numSamples);
 }
 }  // namespace
+
+// Capacitor2 and Channel9 both have a one-pole IIR whose coefficient scales with the input
+// amplitude ("dielectric" nonlinearity). Hot enough input pushes the coefficient past the stable
+// range and the state grows exponentially: a burst of ever-louder garbage, then inf/NaN, and the
+// stage never recovers - also while bypassed-warm, where nobody hears it until it is re-engaged.
+// No legitimate signal gets anywhere near this level (+120 dBFS), so treat it like NaN: silence
+// this block and let the caller rebuild the stage.
+constexpr double kStageSanityLimit = 1.0e6;
+
+template <typename SampleType, typename ResetFn>
+void guardStageOutput(SampleType **ch, int numSamples, ResetFn &&reset)
+{
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const bool sane = std::fabs(double(ch[0][i])) < kStageSanityLimit && std::fabs(double(ch[1][i])) < kStageSanityLimit;
+        if (sane) continue;  // NaN compares false, so it fails this test too
+        reset();
+        for (int j = 0; j < numSamples; ++j) ch[0][j] = ch[1][j] = SampleType(0);
+        return;
+    }
+}
 
 template <typename SampleType>
 void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buffer)
@@ -564,6 +596,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
                                    channel9Pre.processReplacing(ch, ch, numSamples);
                                else
                                    channel9Pre.processDoubleReplacing(ch, ch, numSamples);
+                               guardStageOutput(ch, numSamples, [&] { resetChannel9State(channel9Pre); });
                            });
 
     processCrossfadedStage(filterMix, !filterBypass, channels, scratch, numSamples,
@@ -574,17 +607,9 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
                                else
                                    capacitor2.processDoubleReplacing(ch, ch, numSamples);
 
-                               // Capacitor2's dielectric nonlinearity can make the IIR feedback coefficient
-                               // go negative (non_lin≈1 + lowpass≈1 + negative-peak audio), causing permanent
-                               // NaN in the filter state. Detect it, clear this block, and reset the state.
-                               bool nanDetected = false;
-                               for (int i = 0; i < numSamples && !nanDetected; ++i)
-                                   nanDetected = !std::isfinite(ch[0][i]) || !std::isfinite(ch[1][i]);
-                               if (nanDetected)
-                               {
-                                   resetCapacitor2State();
-                                   for (int i = 0; i < numSamples; ++i) ch[0][i] = ch[1][i] = SampleType(0);
-                               }
+                               // Blows up with non_lin≈1 + lowpass≈1 + negative peaks, or any hot signal
+                               // (e.g. +40 dB input gain) with hipass or lowpass near max.
+                               guardStageOutput(ch, numSamples, [&] { resetCapacitor2State(); });
                            });
 
     processCrossfadedStage(eqMix, !eqBypass, channels, scratch, numSamples,
@@ -628,6 +653,7 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
                                    channel9Post.processReplacing(ch, ch, numSamples);
                                else
                                    channel9Post.processDoubleReplacing(ch, ch, numSamples);
+                               guardStageOutput(ch, numSamples, [&] { resetChannel9State(channel9Post); });
                            });
 
     if constexpr (std::is_same_v<SampleType, float>)
@@ -687,6 +713,10 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes)
                 // Notify editor to update UI
                 if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetComboBox();
             }
+
+            // Wrappers that don't watch individual parameters (CLAP) need to be told that every
+            // value may have changed; VST3/AU treat this as a harmless "preset changed" notice.
+            updateHostDisplay(ChangeDetails().withProgramChanged(true));
         }
     }
 }

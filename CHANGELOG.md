@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.1.5] - XXXX-XX-XX
+
+### Added
+- CLAP plugin format (Windows, macOS, Linux), built with clap-juce-extensions and validated with clap-validator in CI
+
+### Fixed
+- Driving a hot signal (e.g. maximum input gain) into the filter section with the hi-pass or low-pass near their limits, or into the saturation section, could make that stage burst into loud garbage and then go permanently silent (NaN/inf) until the plugin was reloaded. Such a stage is now reset immediately instead of blasting the burst through the output gain.
+- CLAP hosts are told to re-read every parameter after a session or preset is restored, so their automation lanes and generic UIs match the restored state
+
 ## [v0.1.4] - 2026-09-13
 
 ### Added

@@ -1,6 +1,6 @@
 # Nine Strip
 
-A VST3/AU/LV2 channel strip plugin built with JUCE, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool. Also available as a standalone application.
+A VST3/AU/CLAP/LV2 channel strip plugin built with JUCE, incorporating classic Airwindows processing algorithms into a comprehensive mixing tool. Also available as a standalone application.
 
 ![Screenshot](pics/screenshot.png)
 
@@ -10,6 +10,7 @@ NineStrip is a complete channel strip solution that combines console modeling, f
 
 **Available formats:**
 - VST3 plugin (Windows, macOS, Linux)
+- CLAP plugin (Windows, macOS, Linux)
 - AU plugin (macOS only)
 - LV2 plugin (Linux only)
 - Standalone application (for independent audio processing)
@@ -66,6 +67,7 @@ ninja -C build
 
 Built artifacts will be in:
 - VST3: `build/src/NineStrip_artefacts/Release/VST3/`
+- CLAP: `build/src/NineStrip_artefacts/Release/CLAP/`
 - LV2: `build/src/NineStrip_artefacts/Release/LV2/`
 - AU: `build/src/NineStrip_artefacts/Release/AU/` (macOS only)
 - Standalone: `build/src/NineStrip_artefacts/Release/Standalone/`

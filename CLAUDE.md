@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-Nine-Strip is a JUCE-based audio plugin (VST3/AU/LV2, optional AAX) and standalone application implementing a channel strip. It chains 9 DSP stages, 7 of which are Airwindows algorithms, into a fixed-order stereo-only signal path (input gain → saturation → filters → EQ → compressor → output gain).
+Nine-Strip is a JUCE-based audio plugin (VST3/AU/CLAP/LV2, optional AAX) and standalone application implementing a channel strip. It chains 9 DSP stages, 7 of which are Airwindows algorithms, into a fixed-order stereo-only signal path (input gain → saturation → filters → EQ → compressor → output gain).
 
 ## Build Commands
 
@@ -17,7 +17,7 @@ ninja -C build
 ./build/src/NineStrip_artefacts/Release/Standalone/NineStrip
 ```
 
-Artefacts land in `build/src/NineStrip_artefacts/<Config>/{VST3,AU,LV2,Standalone}/`. AAX is built only if `AAX_SDK_PATH` is set (env var or `-DAAX_SDK_PATH=`).
+Artefacts land in `build/src/NineStrip_artefacts/<Config>/{VST3,AU,CLAP,LV2,Standalone}/`. AAX is built only if `AAX_SDK_PATH` is set (env var or `-DAAX_SDK_PATH=`).
 
 `compile_commands.json` at the repo root is a symlink into `build/`, so the build directory must be named `build` for clangd/clang-tidy to work.
 
@@ -30,11 +30,14 @@ clang-tidy -p build src/PluginProcessor.cpp        # uses .clang-tidy; needs a c
 
 ### Validation
 
-There are no unit tests. CI validates with `pluginval` at strictness level 5; run it locally with:
+There are no unit tests. CI validates the VST3 with `pluginval` at strictness level 5 and the CLAP with [`clap-validator`](https://github.com/free-audio/clap-validator) (pluginval does not cover CLAP); run them locally with:
 
 ```bash
 pluginval --strictness-level 5 --validate-in-process --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+clap-validator validate build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap
 ```
+
+clap-validator fuzzes every parameter at its bounds with hot signals, which pluginval does not — it is the one that catches NaN/inf blow-ups in the Airwindows stages.
 
 ### Manual
 
@@ -59,7 +62,11 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 - `NineStripUI` (`src/ui/`) — custom JUCE widgets (`CircularKnob`, `NeedleVUMeter`, `GlowButton`, `VUMeterBallistics`, `KnobLookAndFeel`, `FaderLookAndFeel`).
 - `NineStripAssets` — PNGs from `assets/` embedded via `juce_add_binary_data` (the SVGs alongside are the sources).
 
+CLAP is not a native JUCE format: `lib/clap-juce-extensions/` (submodule, MIT) wraps the `NineStrip` target via `clap_juce_extensions_plugin()` right after `juce_add_plugin` and adds a `NineStrip_CLAP` target. It tracks JUCE releases, so bump it alongside JUCE.
+
 **Do not change the DSP in `src/airwindows/`.** The algorithms stay as ported; fixes and workarounds go in project code (e.g. `resetCapacitor2State()` in `PluginProcessor.cpp` uses placement-new to reset filter state rather than adding a reset method). The one existing exception is a read-only metering tap — `Pressure4::getGainReductionLinear()` backed by an atomic written in the process loop — which observes the signal without altering it.
+
+`Capacitor2` and `Channel9` have an input-amplitude-dependent IIR that goes unstable on hot signals; `guardStageOutput()` in `PluginProcessor.cpp` watches each of those stages for NaN/inf or absurd magnitude (`kStageSanityLimit`) and rebuilds the stage with placement-new (`resetCapacitor2State()` / `resetChannel9State()`).
 
 ### Signal chain (`NineStripProcessor::processBlockInternal`)
 
@@ -102,4 +109,4 @@ Base size 600×600, resizable up to 3× with a fixed aspect ratio; the chosen si
 
 ### JUCE
 
-JUCE is a git submodule in `lib/JUCE/` and is added with `add_subdirectory` (never `find_package`) to avoid picking up a system install. If missing after clone: `git submodule update --init`.
+JUCE is a git submodule in `lib/JUCE/` and is added with `add_subdirectory` (never `find_package`) to avoid picking up a system install. If missing after clone: `git submodule update --init --recursive` (`--recursive` is needed for clap-juce-extensions' own `clap`/`clap-helpers` submodules).
