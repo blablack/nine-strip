@@ -45,6 +45,11 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
 
     bool isPeakLit = false;
     int peakHoldCounter = 0;
+
+    // What the last repaint showed; the timer only repaints when the needle or LED would visibly change.
+    float lastPaintedLevel = -60.0f;
+    bool lastPaintedPeakLit = false;
+    static constexpr float kRepaintThresholdDb = 0.05f;
     const int peakHoldDuration = 5;  // 5 frames ≈ 83ms at 60Hz
     const float peakThreshold = 17.9f;
 

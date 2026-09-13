@@ -15,6 +15,9 @@ NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
     peakOnImage = juce::ImageCache::getFromMemory(BinaryData::peakon_png, BinaryData::peakon_pngSize);
     peakOffImage = juce::ImageCache::getFromMemory(BinaryData::peakoff_png, BinaryData::peakoff_pngSize);
 
+    // The background image is fully opaque and stretched to the bounds, so the parent never needs to paint behind us.
+    setOpaque(true);
+
     startTimerHz(60);
 }
 
@@ -27,7 +30,9 @@ void NeedleVUMeter::resized()
     scaledBackground = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
     juce::Graphics g(scaledBackground);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
-    g.drawImage(backgroundImage, getLocalBounds().toFloat(), juce::RectanglePlacement::centred);
+    // stretchToFit rather than centred: the bounds are aspect-constrained to within 1 px, and an opaque
+    // component must cover every pixel, so absorb the rounding as sub-pixel stretch instead of a transparent sliver.
+    g.drawImage(backgroundImage, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit);
 
     float scale =
         juce::jmin(static_cast<float>(getWidth()) / backgroundWidth, static_cast<float>(getHeight()) / backgroundHeight);
@@ -50,7 +55,7 @@ void NeedleVUMeter::paint(juce::Graphics& g)
     if (scaledBackground.isValid())
         g.drawImageAt(scaledBackground, 0, 0);
     else
-        g.drawImage(backgroundImage, bounds, juce::RectanglePlacement::centred);
+        g.drawImage(backgroundImage, bounds, juce::RectanglePlacement::stretchToFit);
 
     // 2. Calculate scaled border sizes based on image dimensions
     float scaleX = bounds.getWidth() / backgroundWidth;
@@ -177,5 +182,11 @@ void NeedleVUMeter::timerCallback()
         }
     }
 
+    // Skip the repaint while the needle sits still (idle transport, settled ballistics). Compare against
+    // the last *painted* level, not the previous tick, so a slow creep still repaints once it accumulates.
+    if (std::abs(currentLevel - lastPaintedLevel) < kRepaintThresholdDb && isPeakLit == lastPaintedPeakLit) return;
+
+    lastPaintedLevel = currentLevel;
+    lastPaintedPeakLit = isPeakLit;
     repaint();
 }
