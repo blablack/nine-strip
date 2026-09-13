@@ -47,6 +47,7 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 - Version lives in the top-level `CMakeLists.txt` (`project(... VERSION x.y.z)`).
 - Pushing a `v*` tag triggers `.github/workflows/build-release.yml`: builds Linux/macOS/Windows, runs pluginval (and `auval` on macOS), packages, and creates a GitHub release.
 - Release notes are extracted from `CHANGELOG.md` by matching a `## [vX.Y.Z]` heading against the tag name exactly — a release commit must add that heading.
+- **Every user-visible change must get a `CHANGELOG.md` entry in the same change**, under the unreleased `## [vX.Y.Z] - XXXX-XX-XX` heading at the top (create it if the top entry is already dated). Use `### Added` for new features, `### Changed` for behaviour/performance changes, `### Fixed` for bugs. Write it from the user's point of view, not the code's.
 
 ## Architecture
 
