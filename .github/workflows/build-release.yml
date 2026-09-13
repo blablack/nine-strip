@@ -191,7 +191,10 @@ jobs:
         run: |
           gh release download ${{ env.CLAP_VALIDATOR_VERSION }} --repo free-audio/clap-validator --pattern "*${{ runner.os == 'Linux' && 'ubuntu' || 'macos-universal' }}*" --output clap-validator.zip
           unzip -o clap-validator.zip
-          tar -xzf clap-validator-*.tar.gz
+          # The tarball layout differs per platform (Linux: top level, macOS: binaries/); normalise it.
+          mkdir -p clap-validator-extracted
+          tar -xzf clap-validator-*.tar.gz -C clap-validator-extracted
+          mv "$(find clap-validator-extracted -type f -name clap-validator)" ./clap-validator
           chmod +x clap-validator
 
       - name: Download clap-validator (Windows)
