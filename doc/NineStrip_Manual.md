@@ -83,7 +83,7 @@ The signal chain implements a conventional channel strip topology:
 - Dynamic range compression
 - Output gain
 
-Each processing stage can be independently bypassed, allowing for flexible configuration based on source material requirements.
+Each processing stage can be independently bypassed, allowing for flexible configuration based on source material requirements. Bypass switches — including Master Bypass and the saturation Pre/Post toggle — crossfade over 10 ms rather than switching instantly, so A/B comparisons while audio is playing are free of clicks and transients.
 
 # Installation
 

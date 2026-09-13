@@ -103,7 +103,10 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     std::unique_ptr<PresetManager> presetManager;
 
-    Channel9 channel9;
+    // Two Channel9 instances so the Pre/Post toggle can crossfade between the two
+    // placements (each keeps its own state) instead of hard-switching a single object.
+    Channel9 channel9Pre;
+    Channel9 channel9Post;
     Capacitor2 capacitor2;
     Baxandall2 baxandall2;
     Parametric parametric;
@@ -112,6 +115,15 @@ class NineStripProcessor : public juce::AudioProcessor,
     PurestGain outputPurestGain;
     DCBlocker dcBlocker;
     Interstage interstage;
+
+    // Click-free bypass: each switchable stage has a wet/dry mix ramped over
+    // kBypassRampSeconds (1 = active, 0 = bypassed). Stages keep processing into
+    // a scratch buffer while bypassed so their state stays warm for re-enable.
+    static constexpr double kBypassRampSeconds = 0.01;
+    juce::LinearSmoothedValue<float> masterMix, satPreMix, satPostMix, filterMix, dcMix, eqMix, compMix;
+
+    juce::AudioBuffer<float> stageScratchFloat, masterDryFloat;
+    juce::AudioBuffer<double> stageScratchDouble, masterDryDouble;
 
     // Level meters
     template <typename SampleType>

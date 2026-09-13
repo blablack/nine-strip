@@ -5,6 +5,7 @@
 ### Added
 - Juce 9.0.2
 - Velocity-based knob drag sensitivity, with a modifier key (Ctrl/Cmd/Alt) to switch to normal distance-based dragging
+- Click-free bypass switching: every section bypass, the master bypass and the saturation Pre/Post toggle now crossfade over 10 ms instead of hard-switching, and bypassed stages keep running so re-enabling them produces no transient
 
 ### Fixed
 - Reopening a saved session no longer re-loads the preset file from disk, which was discarding any parameter tweaks made after loading a preset. The host's saved state is now authoritative; the preset name and its modified marker are restored for display only.

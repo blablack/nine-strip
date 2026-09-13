@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Nine-Strip is a JUCE-based audio plugin (VST3/AU/LV2, optional AAX) and standalone application implementing a channel strip. It chains 9 DSP stages, 7 of which are Airwindows algorithms, into a fixed-order stereo-only signal path (input gain → saturation → filters → EQ → compressor → output gain).
 
-Note: this `CLAUDE.md` is listed in `.gitignore` — it is local, not checked in.
-
 ## Build Commands
 
 ```bash
@@ -64,7 +62,7 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 
 ### Signal chain (`NineStripProcessor::processBlockInternal`)
 
-Fixed order, stereo only. `Channel9` runs either pre (after Interstage) or post (before output gain) depending on the `saturationInput` bool — never both.
+Fixed order, stereo only. There are two `Channel9` instances (`channel9Pre`/`channel9Post`, params kept in sync) so the Pre/Post toggle can crossfade between placements; only one is audible at a time once settled.
 
 1. `PurestGain` — input gain
 2. `Interstage` — analog conditioning (always on)
@@ -72,12 +70,14 @@ Fixed order, stereo only. `Channel9` runs either pre (after Interstage) or post 
 4. `Capacitor2` — hi-pass / low-pass (`filterBypass`) — has a NaN guard that resets filter state
 5. `Baxandall2` — bass/treble shelves (`eqBypass`)
 6. `Parametric` — high-mid band only (`eqBypass`); the treble/low-mid bands are commented out throughout
-7. `DCBlocker` — project-local, always on
+7. `DCBlocker` — project-local, tied to `filterBypass`
 8. `Pressure4` — compressor (`compressorBypass`)
 9. `Channel9` — (if `!saturationInput`)
 10. `PurestGain` — output gain
 
-`processBlock` is templated on `SampleType`; `if constexpr (std::is_same_v<SampleType, float>)` picks `processReplacing` vs `processDoubleReplacing`. `masterBypass` short-circuits everything.
+`processBlock` is templated on `SampleType`; `if constexpr (std::is_same_v<SampleType, float>)` picks `processReplacing` vs `processDoubleReplacing`.
+
+**Click-free bypass**: every switchable stage (and master bypass) goes through `processCrossfadedStage()` with a per-stage `juce::LinearSmoothedValue<float>` mix (1 = active, 0 = bypassed, `kBypassRampSeconds` = 10 ms, reset in `prepareToPlay`). While ramping, the stage runs on the live buffer and is blended against a dry copy in `stageScratch{Float,Double}`. While settled-bypassed, the stage still runs into the scratch buffer (discarded) so its state stays warm. `masterBypass`, once settled, short-circuits everything as before (chain is *not* kept warm). Scratch buffers are sized to `samplesPerBlock`; a larger block falls back to hard switching.
 
 ### Parameter flow
 

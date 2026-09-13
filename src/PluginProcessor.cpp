@@ -9,7 +9,8 @@ NineStripProcessor::NineStripProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts(*this, nullptr, "Parameters", createParameterLayout()),
-      channel9(44100.0),
+      channel9Pre(44100.0),
+      channel9Post(44100.0),
       capacitor2(44100.0),
       baxandall2(44100.0),
       parametric(44100.0),
@@ -59,9 +60,15 @@ void NineStripProcessor::parameterChanged(const juce::String &parameterID, float
 {
     // Channel9
     if (parameterID == "consoleType")
-        channel9.setParameter(Channel9::kParamA, newValue);
+    {
+        channel9Pre.setParameter(Channel9::kParamA, newValue);
+        channel9Post.setParameter(Channel9::kParamA, newValue);
+    }
     else if (parameterID == "drive")
-        channel9.setParameter(Channel9::kParamB, newValue);
+    {
+        channel9Pre.setParameter(Channel9::kParamB, newValue);
+        channel9Post.setParameter(Channel9::kParamB, newValue);
+    }
 
     // Capacitor2
     else if (parameterID == "lowpass")
@@ -263,7 +270,8 @@ void NineStripProcessor::changeProgramName(int index, const juce::String &newNam
 //==============================================================================
 void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    channel9.setSampleRate(sampleRate);
+    channel9Pre.setSampleRate(sampleRate);
+    channel9Post.setSampleRate(sampleRate);
     capacitor2.setSampleRate(sampleRate);
     baxandall2.setSampleRate(sampleRate);
     parametric.setSampleRate(sampleRate);
@@ -274,7 +282,8 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     dcBlocker.prepare(sampleRate);
 
-    channel9.setParameter(Channel9::kParamC, 1.0f);      // output gain
+    channel9Pre.setParameter(Channel9::kParamC, 1.0f);   // output gain
+    channel9Post.setParameter(Channel9::kParamC, 1.0f);  // output gain
     capacitor2.setParameter(Capacitor2::kParamD, 1.0f);  // wet/dry
 
     parametric.setParameter(Parametric::kParamA, 0.5f);  // high freq
@@ -293,8 +302,10 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     inputPurestGain.setParameter(PurestGain::kParamA, apvts.getRawParameterValue("inputGain")->load());
 
-    channel9.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
-    channel9.setParameter(Channel9::kParamB, apvts.getRawParameterValue("drive")->load());
+    channel9Pre.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
+    channel9Pre.setParameter(Channel9::kParamB, apvts.getRawParameterValue("drive")->load());
+    channel9Post.setParameter(Channel9::kParamA, apvts.getRawParameterValue("consoleType")->load());
+    channel9Post.setParameter(Channel9::kParamB, apvts.getRawParameterValue("drive")->load());
 
     capacitor2.setParameter(Capacitor2::kParamA, apvts.getRawParameterValue("lowpass")->load());
     capacitor2.setParameter(Capacitor2::kParamB, apvts.getRawParameterValue("hipass")->load());
@@ -329,6 +340,30 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     emptyMeterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
     emptyMeterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
+
+    stageScratchFloat.setSize(2, samplesPerBlock, false, false, true);
+    stageScratchDouble.setSize(2, samplesPerBlock, false, false, true);
+    masterDryFloat.setSize(2, samplesPerBlock, false, false, true);
+    masterDryDouble.setSize(2, samplesPerBlock, false, false, true);
+
+    // Bypass crossfades: start settled at the current switch positions so there is no fade-in on transport start.
+    const bool masterBypass = paramMasterBypass->load() > 0.5f;
+    const bool saturationInput = paramSaturationInput->load() > 0.5f;
+    const bool saturationBypass = paramSatBypass->load() > 0.5f;
+    const bool filterBypass = paramFilterBypass->load() > 0.5f;
+    const bool eqBypass = paramEqBypass->load() > 0.5f;
+    const bool compressorBypass = paramCompBypass->load() > 0.5f;
+
+    for (auto *mix : {&masterMix, &satPreMix, &satPostMix, &filterMix, &dcMix, &eqMix, &compMix})
+        mix->reset(sampleRate, kBypassRampSeconds);
+
+    masterMix.setCurrentAndTargetValue(masterBypass ? 0.0f : 1.0f);
+    satPreMix.setCurrentAndTargetValue(!saturationBypass && saturationInput ? 1.0f : 0.0f);
+    satPostMix.setCurrentAndTargetValue(!saturationBypass && !saturationInput ? 1.0f : 0.0f);
+    filterMix.setCurrentAndTargetValue(filterBypass ? 0.0f : 1.0f);
+    dcMix.setCurrentAndTargetValue(filterBypass ? 0.0f : 1.0f);
+    eqMix.setCurrentAndTargetValue(eqBypass ? 0.0f : 1.0f);
+    compMix.setCurrentAndTargetValue(compressorBypass ? 0.0f : 1.0f);
 }
 
 void NineStripProcessor::releaseResources() { dcBlocker.reset(); }
@@ -377,6 +412,65 @@ void NineStripProcessor::updateGRMeter(const float gainReductionLinear)
     gainReduction.store(grDb, std::memory_order_relaxed);
 }
 
+namespace
+{
+template <typename SampleType>
+void copyStereo(SampleType **dst, SampleType **src, int numSamples)
+{
+    juce::FloatVectorOperations::copy(dst[0], src[0], numSamples);
+    juce::FloatVectorOperations::copy(dst[1], src[1], numSamples);
+}
+
+template <typename SampleType>
+void crossfadeStereo(SampleType **live, SampleType **dry, juce::LinearSmoothedValue<float> &mix, int numSamples)
+{
+    // live holds the wet signal on entry; blend it against dry with the per-sample ramp
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const auto m = static_cast<SampleType>(mix.getNextValue());
+        live[0][i] = dry[0][i] + (live[0][i] - dry[0][i]) * m;
+        live[1][i] = dry[1][i] + (live[1][i] - dry[1][i]) * m;
+    }
+}
+
+// Runs one switchable stage with a click-free bypass.
+//   settled active   : process live in place (same cost as a hard switch)
+//   settled bypassed : process a copy and discard it, so the stage's state stays warm and re-enabling is transient-free
+//   ramping          : process live in place, then crossfade against the dry copy
+// If scratch is null (host delivered a block larger than prepared) the stage falls back to a hard switch.
+template <typename SampleType, typename Process>
+void processCrossfadedStage(juce::LinearSmoothedValue<float> &mix, bool active, SampleType **live, SampleType **scratch,
+                            int numSamples, Process &&process)
+{
+    mix.setTargetValue(active ? 1.0f : 0.0f);
+
+    if (scratch == nullptr)
+    {
+        mix.setCurrentAndTargetValue(mix.getTargetValue());
+        if (active) process(live);
+        return;
+    }
+
+    if (!mix.isSmoothing())
+    {
+        if (active)
+        {
+            process(live);
+        }
+        else
+        {
+            copyStereo(scratch, live, numSamples);
+            process(scratch);
+        }
+        return;
+    }
+
+    copyStereo(scratch, live, numSamples);
+    process(live);
+    crossfadeStereo(live, scratch, mix, numSamples);
+}
+}  // namespace
+
 template <typename SampleType>
 void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buffer)
 {
@@ -386,8 +480,33 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     const bool masterBypass = paramMasterBypass->load(std::memory_order_relaxed) > 0.5f;
     const bool meteringNeeded = editorOpen.load(std::memory_order_relaxed) && !isNonRealtime();
 
-    // Master bypass - skip all processing
-    if (masterBypass)
+    auto &stageScratchBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+            return stageScratchFloat;
+        else
+            return stageScratchDouble;
+    }();
+    auto &masterDryBuffer = [&]() -> juce::AudioBuffer<SampleType> &
+    {
+        if constexpr (std::is_same_v<SampleType, float>)
+            return masterDryFloat;
+        else
+            return masterDryDouble;
+    }();
+
+    // Scratch buffers are sized in prepareToPlay; a larger block than promised degrades to hard switching.
+    const bool scratchAvailable = numSamples <= stageScratchBuffer.getNumSamples();
+    SampleType *stageScratchPtrs[2] = {stageScratchBuffer.getWritePointer(0), stageScratchBuffer.getWritePointer(1)};
+    SampleType *masterDry[2] = {masterDryBuffer.getWritePointer(0), masterDryBuffer.getWritePointer(1)};
+    SampleType **scratch = scratchAvailable ? stageScratchPtrs : nullptr;
+
+    masterMix.setTargetValue(masterBypass ? 0.0f : 1.0f);
+    if (!scratchAvailable) masterMix.setCurrentAndTargetValue(masterMix.getTargetValue());
+    const bool masterRamping = masterMix.isSmoothing();
+
+    // Master bypass, once the crossfade has settled - skip all processing
+    if (masterBypass && !masterRamping)
     {
         if (meteringNeeded)
         {
@@ -422,6 +541,8 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     // Create raw pointer arrays for Airwindows processing
     SampleType *channels[2] = {buffer.getWritePointer(0), buffer.getWritePointer(1)};
 
+    if (masterRamping) copyStereo(masterDry, channels, numSamples);
+
     if constexpr (std::is_same_v<SampleType, float>)
         inputPurestGain.processReplacing(channels, channels, numSamples);
     else
@@ -434,81 +555,87 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     else
         interstage.processDoubleReplacing(channels, channels, numSamples);
 
-    // Process through the plugin chain
-    if (!saturationBypass && saturationInput)
+    // Process through the plugin chain. Each switchable stage crossfades in/out over kBypassRampSeconds;
+    // Pre/Post is two independent stages fading in opposite directions.
+    processCrossfadedStage(satPreMix, !saturationBypass && saturationInput, channels, scratch, numSamples,
+                           [&](SampleType **ch)
+                           {
+                               if constexpr (std::is_same_v<SampleType, float>)
+                                   channel9Pre.processReplacing(ch, ch, numSamples);
+                               else
+                                   channel9Pre.processDoubleReplacing(ch, ch, numSamples);
+                           });
+
+    processCrossfadedStage(filterMix, !filterBypass, channels, scratch, numSamples,
+                           [&](SampleType **ch)
+                           {
+                               if constexpr (std::is_same_v<SampleType, float>)
+                                   capacitor2.processReplacing(ch, ch, numSamples);
+                               else
+                                   capacitor2.processDoubleReplacing(ch, ch, numSamples);
+
+                               // Capacitor2's dielectric nonlinearity can make the IIR feedback coefficient
+                               // go negative (non_lin≈1 + lowpass≈1 + negative-peak audio), causing permanent
+                               // NaN in the filter state. Detect it, clear this block, and reset the state.
+                               bool nanDetected = false;
+                               for (int i = 0; i < numSamples && !nanDetected; ++i)
+                                   nanDetected = !std::isfinite(ch[0][i]) || !std::isfinite(ch[1][i]);
+                               if (nanDetected)
+                               {
+                                   resetCapacitor2State();
+                                   for (int i = 0; i < numSamples; ++i) ch[0][i] = ch[1][i] = SampleType(0);
+                               }
+                           });
+
+    processCrossfadedStage(eqMix, !eqBypass, channels, scratch, numSamples,
+                           [&](SampleType **ch)
+                           {
+                               if constexpr (std::is_same_v<SampleType, float>)
+                               {
+                                   baxandall2.processReplacing(ch, ch, numSamples);
+                                   parametric.processReplacing(ch, ch, numSamples);
+                               }
+                               else
+                               {
+                                   baxandall2.processDoubleReplacing(ch, ch, numSamples);
+                                   parametric.processDoubleReplacing(ch, ch, numSamples);
+                               }
+                           });
+
+    processCrossfadedStage(dcMix, !filterBypass, channels, scratch, numSamples,
+                           [&](SampleType **ch) { dcBlocker.processStereo(ch, numSamples); });
+
+    processCrossfadedStage(compMix, !compressorBypass, channels, scratch, numSamples,
+                           [&](SampleType **ch)
+                           {
+                               if constexpr (std::is_same_v<SampleType, float>)
+                                   pressure4.processReplacing(ch, ch, numSamples);
+                               else
+                                   pressure4.processDoubleReplacing(ch, ch, numSamples);
+                           });
+
+    if (meteringNeeded)
     {
-        if constexpr (std::is_same_v<SampleType, float>)
-            channel9.processReplacing(channels, channels, numSamples);
-        else
-            channel9.processDoubleReplacing(channels, channels, numSamples);
+        // The compressor keeps running while bypassed (to stay warm), but the meter should show no reduction then.
+        const bool compAudible = !compressorBypass || compMix.isSmoothing();
+        updateGRMeter(compAudible ? pressure4.getGainReductionLinear() : 1.0f);
     }
 
-    if (!filterBypass)
-    {
-        if constexpr (std::is_same_v<SampleType, float>)
-            capacitor2.processReplacing(channels, channels, numSamples);
-        else
-            capacitor2.processDoubleReplacing(channels, channels, numSamples);
-
-        // Capacitor2's dielectric nonlinearity can make the IIR feedback coefficient
-        // go negative (non_lin≈1 + lowpass≈1 + negative-peak audio), causing permanent
-        // NaN in the filter state. Detect it, clear this block, and reset the state.
-        bool nanDetected = false;
-        for (int i = 0; i < numSamples && !nanDetected; ++i)
-            nanDetected = !std::isfinite(channels[0][i]) || !std::isfinite(channels[1][i]);
-        if (nanDetected)
-        {
-            resetCapacitor2State();
-            for (int i = 0; i < numSamples; ++i)
-                channels[0][i] = channels[1][i] = SampleType(0);
-        }
-    }
-
-    if (!eqBypass)
-    {
-        if constexpr (std::is_same_v<SampleType, float>)
-        {
-            baxandall2.processReplacing(channels, channels, numSamples);
-            parametric.processReplacing(channels, channels, numSamples);
-        }
-        else
-        {
-            baxandall2.processDoubleReplacing(channels, channels, numSamples);
-            parametric.processDoubleReplacing(channels, channels, numSamples);
-        }
-    }
-
-    if (!filterBypass) dcBlocker.processStereo(channels, numSamples);
-
-    if (!compressorBypass)
-    {
-        if constexpr (std::is_same_v<SampleType, float>)
-            pressure4.processReplacing(channels, channels, numSamples);
-        else
-            pressure4.processDoubleReplacing(channels, channels, numSamples);
-
-        if (meteringNeeded)
-        {
-            updateGRMeter(pressure4.getGainReductionLinear());
-        }
-    }
-    else if (meteringNeeded)
-    {
-        updateGRMeter(1.0f);
-    }
-
-    if (!saturationBypass && !saturationInput)
-    {
-        if constexpr (std::is_same_v<SampleType, float>)
-            channel9.processReplacing(channels, channels, numSamples);
-        else
-            channel9.processDoubleReplacing(channels, channels, numSamples);
-    }
+    processCrossfadedStage(satPostMix, !saturationBypass && !saturationInput, channels, scratch, numSamples,
+                           [&](SampleType **ch)
+                           {
+                               if constexpr (std::is_same_v<SampleType, float>)
+                                   channel9Post.processReplacing(ch, ch, numSamples);
+                               else
+                                   channel9Post.processDoubleReplacing(ch, ch, numSamples);
+                           });
 
     if constexpr (std::is_same_v<SampleType, float>)
         outputPurestGain.processReplacing(channels, channels, numSamples);
     else
         outputPurestGain.processDoubleReplacing(channels, channels, numSamples);
+
+    if (masterRamping) crossfadeStereo(channels, masterDry, masterMix, numSamples);
 
     if (outputMeteringNeeded) updateMeters(buffer, numSamples);
 }
