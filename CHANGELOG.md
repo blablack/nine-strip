@@ -4,6 +4,7 @@
 
 ### Added
 - Juce 9.0.2
+- Velocity-based knob drag sensitivity, with a modifier key (Ctrl/Cmd/Alt) to switch to normal distance-based dragging
 
 ## [v0.1.3] - 2026-08-22
 

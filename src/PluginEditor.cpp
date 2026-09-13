@@ -268,6 +268,12 @@ void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, CircularKn
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 
+    // Velocity-based dragging: the knob moves in proportion to mouse speed rather than
+    // raw drag distance, giving fine control on slow drags. Holding Ctrl/Cmd/Alt while
+    // dragging switches to normal (distance-based) mode for fast, coarse changes.
+    slider.setVelocityBasedMode(true);
+    slider.setVelocityModeParameters(0.5, 1, 0.0, true);
+
     slider.setLookAndFeel(&knobSkeuomorphicLook);
 
     slider.setColour(juce::Slider::rotarySliderFillColourId, knobColor);

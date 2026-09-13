@@ -276,6 +276,10 @@ The interface uses color-coded knobs for quick visual identification: orange for
 
 ![NineStrip UI](../pics/screenshot.png)
 
+## Knob Drag Sensitivity
+
+Knobs use velocity-based dragging: turning the mouse slowly makes fine adjustments, while faster movement covers a wider range without needing a long drag. Hold Ctrl (Cmd or Alt also work) while dragging to switch to normal distance-based dragging for quick, coarse changes.
+
 # Signal Chain
 
 The diagram below shows the fixed processing order. Understanding the signal flow is useful when making decisions about gain staging, filter placement, and the Pre/Post console position.
