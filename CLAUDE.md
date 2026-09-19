@@ -105,6 +105,8 @@ Base size 600×600, resizable up to 3× with a fixed aspect ratio; the chosen si
 
 Layout constants are written in base-design pixels and go through `scaled()` (`uiScale = width / 600`, recomputed at the top of `resized()`); knob and meter sizes come from the grid and scale by themselves. The knob/fader drop-shadow paddings (40/30 px) are deliberately *not* scaled because `KnobLookAndFeel`/`FaderLookAndFeel` reserve fixed 20/15 px margins inside the component. Label fonts, `GlowButton::setUiScale()` and `ScaledLookAndFeel` (the preset bar's combo box/button fonts, which stock JUCE caps at 16 px) are all fed from `resized()`. A new fixed pixel size anywhere in the layout is a bug unless it is shadow-related.
 
+Two things that look like oversights are design decisions: the Gain panel has no title (the other six sections do), and `KnobLookAndFeel`'s "small mode" (`minDimension <= 60` *screen* pixels: no tick ring or min/max digits, larger body) is meant to kick in when the UI is small enough that the ring would be clutter — so at the default 600×600 every knob is compact and the ring appears as the window grows. Don't add a Gain title and don't make the threshold scale-aware.
+
 ### Presets
 
 `PresetManager` writes APVTS state as XML `.ninestrip` files under the user app-data dir (`~/.config/NineStrip/Presets` on Linux, `~/Library/Audio/Presets/NineStrip/Presets` on macOS).

@@ -22,6 +22,10 @@ void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     width -= static_cast<int>(shadowMargin * 2);
     height -= static_cast<int>(shadowMargin * 2);
 
+    // Design choice: below ~60 px the tick ring and min/max digits would only be clutter, so the knob goes compact
+    // (no ring, body drawn at 0.8 instead of 0.7 of the size). The threshold is deliberately in screen pixels, not in
+    // base-design pixels: in the resizable editor every knob is compact at the default 600 px window, the big knobs
+    // gain the ring from roughly 684 px and the small ones from roughly 870 px. Do not make this scale-aware.
     const auto minDimension = static_cast<float>(std::min(width, height));
     const bool smallMode{(minDimension <= 60)};
     constexpr auto dialSizeRatio{0.35f};
