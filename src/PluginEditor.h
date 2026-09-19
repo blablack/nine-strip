@@ -7,6 +7,7 @@
 #include "ui/FaderLookAndFeel.h"
 #include "ui/FineControlSlider.h"
 #include "ui/GlowButton.h"
+#include "ui/ImageScaling.h"
 #include "ui/KnobLookAndFeel.h"
 #include "ui/NeedleVUMeter.h"
 #include "ui/ScaledLookAndFeel.h"

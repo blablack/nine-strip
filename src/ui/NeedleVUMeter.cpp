@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "BinaryData.h"
+#include "ImageScaling.h"
 
 NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
     : meterType(type),
@@ -22,17 +23,6 @@ NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
 }
 
 NeedleVUMeter::~NeedleVUMeter() { stopTimer(); }
-
-// JUCE's "high" quality resample is plain bilinear: it only ever touches a 2x2 source neighbourhood, so a
-// large one-shot downscale (the 750 px meter face is ~4.8x wider than the meter at the default window size)
-// drops most of the source pixels and the 1 px scale ticks and digits alias into broken, shimmering lines.
-// Each 2:1 bilinear step is an exact 2x2 box filter, so halve until within 2x of the target, then resample.
-static juce::Image downscaleSmoothly(juce::Image img, int w, int h)
-{
-    while (img.getWidth() >= 2 * w && img.getHeight() >= 2 * h)
-        img = img.rescaled(img.getWidth() / 2, img.getHeight() / 2, juce::Graphics::highResamplingQuality);
-    return img.rescaled(w, h, juce::Graphics::highResamplingQuality);
-}
 
 void NeedleVUMeter::resized()
 {

@@ -28,6 +28,9 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
+    // The background PNG is fully opaque and covers the whole editor, so the host never needs to paint behind it.
+    setOpaque(true);
+
     setSize(width, height);
 
     setupPresetPanel();
@@ -296,6 +299,7 @@ void NineStripProcessorEditor::paint(juce::Graphics& g)
     }
     else
     {
+        g.fillAll(juce::Colours::black);  // opaque component: cover everything even without the artwork
         g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         g.drawImage(backgroundImage, getLocalBounds().toFloat());
     }
@@ -329,13 +333,10 @@ void NineStripProcessorEditor::resized()
         props->setValue("editorHeight", getHeight());
     }
 
-    if (backgroundImage.isValid())
-    {
-        scaledBackground = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
-        juce::Graphics bg(scaledBackground);
-        bg.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
-        bg.drawImage(backgroundImage, getLocalBounds().toFloat());
-    }
+    // The 1800 px artwork is shown at 600 px by default: the same box-filtered downscale as the meter faces keeps
+    // its thin panel lines from aliasing.
+    if (backgroundImage.isValid() && getWidth() > 0 && getHeight() > 0)
+        scaledBackground = downscaleSmoothly(backgroundImage, getWidth(), getHeight());
 
     // The aspect ratio is fixed, so the width alone gives the scale of the 600x600 base design. Knobs and meters
     // are sized from the grid and scale by themselves; margins, spacings, buttons, label heights and fonts are
