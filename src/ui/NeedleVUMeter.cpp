@@ -6,10 +6,11 @@
 #include "BinaryData.h"
 #include "ImageScaling.h"
 
-NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
+NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type, juce::Image glassOverlay)
     : meterType(type),
       ballistics(type == MeterType::Level ? -60.0f : 0.0f),
       getLevelFunc(std::move(levelGetter)),
+      glassImage(std::move(glassOverlay)),
       imageAspectRatio(backgroundWidth / backgroundHeight)
 {
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::needlevu_png, BinaryData::needlevu_pngSize);
@@ -31,6 +32,9 @@ void NeedleVUMeter::resized()
     // Stretched to the exact bounds rather than centred: the bounds are aspect-constrained to within 1 px, and an
     // opaque component must cover every pixel, so absorb the rounding as sub-pixel stretch instead of a transparent sliver.
     scaledBackground = downscaleSmoothly(backgroundImage, getWidth(), getHeight());
+
+    // Same 750x450 canvas as the face, so it goes through the same stretch to the bounds.
+    if (glassImage.isValid()) scaledGlass = downscaleSmoothly(glassImage, getWidth(), getHeight());
 
     float scale =
         juce::jmin(static_cast<float>(getWidth()) / backgroundWidth, static_cast<float>(getHeight()) / backgroundHeight);
@@ -100,6 +104,9 @@ void NeedleVUMeter::paint(juce::Graphics& g)
 
     // 4. Draw needle (won't appear over borders due to clipping)
     drawNeedle(g, bounds, scale);
+
+    // Dirty glass in front of the needle and LED. Still clipped to the window, so the grime stops at the bezel.
+    if (scaledGlass.isValid()) g.drawImageAt(scaledGlass, 0, 0);
 }
 
 void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds, float scale) const
@@ -154,7 +161,7 @@ void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds,
     float endY = pivotY - needleLength * std::cos(angle);
 
     // Draw needle
-    g.setColour(juce::Colours::black);
+    g.setColour(juce::Colour(10, 10, 10));
     juce::Line<float> needle(pivotX, pivotY, endX, endY);
     g.drawLine(needle, juce::jmax(1.0f, needleWidth * scale));
 }

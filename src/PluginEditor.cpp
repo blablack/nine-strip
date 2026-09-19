@@ -6,9 +6,13 @@
 NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
-      grMeter([&p]() { return p.getGainReduction(); }, NeedleVUMeter::MeterType::GainReduction),
-      needleVUMeterL([&p]() { return p.getMeasuredLevelL(); }, NeedleVUMeter::MeterType::Level),
-      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }, NeedleVUMeter::MeterType::Level)
+      // Each meter gets its own dirty-glass texture so the three panes don't read as copies of one another.
+      grMeter([&p]() { return p.getGainReduction(); }, NeedleVUMeter::MeterType::GainReduction,
+              juce::ImageCache::getFromMemory(BinaryData::dirty_glass_3_png, BinaryData::dirty_glass_3_pngSize)),
+      needleVUMeterL([&p]() { return p.getMeasuredLevelL(); }, NeedleVUMeter::MeterType::Level,
+                     juce::ImageCache::getFromMemory(BinaryData::dirty_glass_1_png, BinaryData::dirty_glass_1_pngSize)),
+      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }, NeedleVUMeter::MeterType::Level,
+                     juce::ImageCache::getFromMemory(BinaryData::dirty_glass_2_png, BinaryData::dirty_glass_2_pngSize))
 {
     audioProcessor.editorStateChanged(true);
 

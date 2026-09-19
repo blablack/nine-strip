@@ -79,6 +79,9 @@ juce_add_binary_data(NineStripAssets
     ${CMAKE_SOURCE_DIR}/assets/needlevu.png
     ${CMAKE_SOURCE_DIR}/assets/peakon.png
     ${CMAKE_SOURCE_DIR}/assets/peakoff.png
+    ${CMAKE_SOURCE_DIR}/assets/dirty_glass_1.png
+    ${CMAKE_SOURCE_DIR}/assets/dirty_glass_2.png
+    ${CMAKE_SOURCE_DIR}/assets/dirty_glass_3.png
 )
 
 add_subdirectory(airwindows)

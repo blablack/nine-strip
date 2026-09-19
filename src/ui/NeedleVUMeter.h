@@ -17,7 +17,8 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
         GainReduction  // GR meter: 0dB to -20dB, right to left
     };
 
-    NeedleVUMeter(std::function<float()> levelGetter, MeterType type);
+    // glassOverlay is drawn over the needle, inside the bezel; the editor gives each meter a different one.
+    NeedleVUMeter(std::function<float()> levelGetter, MeterType type, juce::Image glassOverlay);
     ~NeedleVUMeter() override;
 
     void paint(juce::Graphics& g) override;
@@ -42,6 +43,8 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
     juce::Image scaledPeakOnImage;
     juce::Image peakOffImage;
     juce::Image scaledPeakOffImage;
+    juce::Image glassImage;
+    juce::Image scaledGlass;
 
     bool isPeakLit = false;
     int peakHoldCounter = 0;

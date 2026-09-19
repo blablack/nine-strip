@@ -60,7 +60,7 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 
 - `AirwindowsDSP` (`src/airwindows/`) — plain C++ with no JUCE dependency. Each algorithm is split into `X.cpp` (ctor/params) and `XProc.cpp` (`processReplacing` for float, `processDoubleReplacing` for double). All parameters are normalised 0–1 floats addressed by `kParamA..` enums — except `Channel9::kParamA` (console type), which the port changed to take the denormalised choice index 0–4 (`setParameter` switches on `static_cast<int>(A)`); do not "fix" it back to 0–1.
 - `NineStripUI` (`src/ui/`) — custom JUCE widgets (`CircularKnob`, `FineControlSlider`, `NeedleVUMeter`, `GlowButton`, `VUMeterBallistics`, `KnobLookAndFeel`, `FaderLookAndFeel`, `ScaledLookAndFeel`) plus `ImageScaling.h` (`downscaleSmoothly()`, the box-filtered downscale used for every large embedded PNG — plain `Image::rescaled` aliases thin lines at these ratios).
-- `NineStripAssets` — PNGs from `assets/` embedded via `juce_add_binary_data` (the SVGs alongside are the sources).
+- `NineStripAssets` — PNGs from `assets/` embedded via `juce_add_binary_data` (the SVGs alongside are the sources; the `dirty_glass_*.png` textures are raster-only, on the same 750×450 canvas as the meter face).
 
 CLAP is not a native JUCE format: `lib/clap-juce-extensions/` (submodule, MIT) wraps the `NineStrip` target via `clap_juce_extensions_plugin()` right after `juce_add_plugin` and adds a `NineStrip_CLAP` target. It tracks JUCE releases, so bump it alongside JUCE.
 

@@ -6,6 +6,7 @@
 - Bypassing the plugin from the host (the VST3, AU or LV2 host's own bypass switch) now drives Master Bypass, so it gets the same 10 ms click-free crossfade and the MASTER BYPASS button follows it. CLAP hosts keep using their own bypass.
 
 ### Changed
+- The three needle meters now sit behind a pane of dirty glass, drawn over the needle and peak LED; each meter has its own smudges and scratches.
 - Saving a preset under a name that already exists asks before replacing it.
 - The meters' Input/Output selector is no longer offered to the host as an automatable parameter; it is a display preference and is still saved with the session and in presets.
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
