@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.6] - XXXX-XX-XX
+## [v0.1.6] - 2026-09-11
 
 ### Added
 - The host's own bypass switch (VST3, AU, LV2) now drives Master Bypass, with the same click-free crossfade. CLAP hosts keep using their own bypass.
