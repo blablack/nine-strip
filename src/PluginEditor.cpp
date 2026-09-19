@@ -6,9 +6,9 @@
 NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
+      grMeter([&p]() { return p.getGainReduction(); }, NeedleVUMeter::MeterType::GainReduction),
       needleVUMeterL([&p]() { return p.getMeasuredLevelL(); }, NeedleVUMeter::MeterType::Level),
-      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }, NeedleVUMeter::MeterType::Level),
-      grMeter([&p]() { return p.getGainReduction(); }, NeedleVUMeter::MeterType::GainReduction)
+      needleVUMeterR([&p]() { return p.getMeasuredLevelR(); }, NeedleVUMeter::MeterType::Level)
 {
     audioProcessor.editorStateChanged(true);
 

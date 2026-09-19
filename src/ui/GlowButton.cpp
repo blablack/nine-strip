@@ -1,11 +1,11 @@
 #include "GlowButton.h"
 
-GlowButton::GlowButton(const juce::String& text) : juce::ToggleButton(text) {}
+GlowButton::GlowButton(const juce::String& buttonText) : juce::ToggleButton(buttonText) {}
 
 void GlowButton::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
-    bool isOn = getToggleState();
+    const bool on = getToggleState();
     const float s = uiScale;  // all sizes below are in pixels of the 600x600 base design
 
     // Base/housing (dark, recessed look)
@@ -17,7 +17,7 @@ void GlowButton::paint(juce::Graphics& g)
                                            juce::Colours::transparentBlack, bounds.getCentre(), true));
     g.fillRoundedRectangle(bounds.reduced(1.0f * s), 4.0f * s);
 
-    if (isOn)
+    if (on)
     {
         // Glowing light underneath the cap
         auto glowBounds = bounds.reduced(3.0f * s);
@@ -28,11 +28,11 @@ void GlowButton::paint(juce::Graphics& g)
 
     // Plastic cap
     auto capBounds = bounds.reduced(2.0f * s);
-    g.setColour(isOn ? juce::Colour(0xff2a2a2a) : juce::Colour(0xff252525));
+    g.setColour(on ? juce::Colour(0xff2a2a2a) : juce::Colour(0xff252525));
     g.fillRoundedRectangle(capBounds, 4.0f * s);
 
     // Highlight on top of cap (makes it look glossy/plastic)
-    g.setGradientFill(juce::ColourGradient(juce::Colours::white.withAlpha(isOn ? 0.15f : 0.08f), capBounds.getTopLeft(),
+    g.setGradientFill(juce::ColourGradient(juce::Colours::white.withAlpha(on ? 0.15f : 0.08f), capBounds.getTopLeft(),
                                            juce::Colours::transparentBlack, capBounds.getCentre(), false));
     g.fillRoundedRectangle(capBounds.removeFromTop(capBounds.getHeight() * 0.5f), 4.0f * s);
 
@@ -41,7 +41,7 @@ void GlowButton::paint(juce::Graphics& g)
     g.drawRoundedRectangle(capBounds, 4.0f * s, 0.5f * s);
 
     // Text
-    g.setColour(isOn ? juce::Colour(0xffffaa66) : juce::Colours::grey);
+    g.setColour(on ? juce::Colour(0xffffaa66) : juce::Colours::grey);
     g.setFont(13.0f * s);
     g.setFont(g.getCurrentFont().boldened());
     g.drawText(getButtonText(), bounds, juce::Justification::centred);

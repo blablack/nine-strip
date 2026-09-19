@@ -8,7 +8,7 @@ FaderLookAndFeel::FaderLookAndFeel()
 }
 
 void FaderLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
-                                        float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style,
+                                        float /*minSliderPos*/, float /*maxSliderPos*/, juce::Slider::SliderStyle style,
                                         juce::Slider& slider)
 {
     if (style != juce::Slider::LinearVertical) return;

@@ -15,9 +15,9 @@ NineStripProcessor::NineStripProcessor()
       baxandall2(44100.0),
       parametric(44100.0),
       pressure4(44100.0),
-      interstage(44100.0),
       inputPurestGain(44100.0),
-      outputPurestGain(44100.0)
+      outputPurestGain(44100.0),
+      interstage(44100.0)
 {
     static const juce::String APP_FOLDER_NAME =
 #if JUCE_LINUX
@@ -279,9 +279,9 @@ double NineStripProcessor::getTailLengthSeconds() const { return 0.0; }
 
 int NineStripProcessor::getNumPrograms() { return 1; }
 int NineStripProcessor::getCurrentProgram() { return 0; }
-void NineStripProcessor::setCurrentProgram(int index) {}
+void NineStripProcessor::setCurrentProgram(int /*index*/) {}
 const juce::String NineStripProcessor::getProgramName(int /*index*/) { return "Default"; }
-void NineStripProcessor::changeProgramName(int index, const juce::String &newName) {}
+void NineStripProcessor::changeProgramName(int /*index*/, const juce::String & /*newName*/) {}
 
 //==============================================================================
 void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)

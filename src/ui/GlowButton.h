@@ -6,7 +6,7 @@
 class GlowButton : public juce::ToggleButton
 {
    public:
-    GlowButton(const juce::String& text);
+    GlowButton(const juce::String& buttonText);
 
     // Multiplies the base-design pixel sizes (font, corner radii, bevel); the editor sets it from resized().
     void setUiScale(float scale) { uiScale = scale; }
