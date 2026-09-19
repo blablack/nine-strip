@@ -19,7 +19,6 @@ target_link_libraries(NineStripUI
     PUBLIC
     juce::juce_gui_basics
     juce::juce_graphics
-    juce::juce_dsp
     PRIVATE
     NineStripAssets 
 )
