@@ -30,7 +30,7 @@ clang-tidy -p build src/PluginProcessor.cpp        # uses .clang-tidy; needs a c
 
 ### Validation
 
-There are no unit tests. CI validates the VST3 with `pluginval` at strictness level 5 and the CLAP with [`clap-validator`](https://github.com/free-audio/clap-validator) (pluginval does not cover CLAP); run them locally with:
+There are no unit tests. CI validates the VST3 with `pluginval` at strictness level 5 and the CLAP with [`clap-validator`](https://github.com/free-audio/clap-validator) (pluginval does not cover CLAP). `.github/workflows/ci.yml` runs the Linux build plus both validators on every push to `main` and every pull request; `build-release.yml` runs them on all three platforms when a tag is pushed. Both pin the validator versions (`PLUGINVAL_VERSION`, `CLAP_VALIDATOR_VERSION`) — bump them together. Run them locally with:
 
 ```bash
 pluginval --strictness-level 5 --validate-in-process --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3

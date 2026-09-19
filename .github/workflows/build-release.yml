@@ -39,6 +39,7 @@ jobs:
     needs: build-manual
     runs-on: ${{ matrix.os }}
     env:
+      PLUGINVAL_VERSION: "v1.0.4"
       CLAP_VALIDATOR_VERSION: "0.4.1"
     strategy:
       fail-fast: false
@@ -134,14 +135,14 @@ jobs:
       - name: Download pluginval
         if: runner.os == 'Linux'
         run: |
-          wget https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          wget https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_Linux.zip
           unzip pluginval_Linux.zip
           chmod +x pluginval
 
       - name: Download pluginval
         if: runner.os == 'macOS'
         run: |
-          wget https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          wget https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_macOS.zip
           unzip pluginval_macOS.zip
           chmod +x pluginval.app/Contents/MacOS/pluginval
 
@@ -149,7 +150,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip" -OutFile "pluginval.zip"
+          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/$env:PLUGINVAL_VERSION/pluginval_Windows.zip" -OutFile "pluginval.zip"
           Expand-Archive -Path pluginval.zip -DestinationPath .
 
       # Validate with pluginval

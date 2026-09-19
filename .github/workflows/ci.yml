@@ -1,0 +1,91 @@
+# Cheap pre-release check: build on Linux and run the same validators as the release workflow on every push to
+# main and every pull request, so a regression is caught before a v* tag is pushed. Packaging and the release
+# itself stay in build-release.yml.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Build and validate (Linux)
+    runs-on: ubuntu-24.04
+    env:
+      PLUGINVAL_VERSION: "v1.0.4"
+      CLAP_VALIDATOR_VERSION: "0.4.1"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v6
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev \
+            gcc \
+            g++ \
+            xvfb
+
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++
+
+      - name: Build
+        run: ninja -C build
+
+      - name: Download pluginval
+        run: |
+          wget -q https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_Linux.zip
+          unzip -q pluginval_Linux.zip
+          chmod +x pluginval
+
+      - name: Validate VST3 (pluginval)
+        run: xvfb-run -a ./pluginval --strictness-level 5 --validate-in-process --output-dir . --vst3 build/src/NineStrip_artefacts/Release/VST3/NineStrip.vst3
+
+      - name: Download clap-validator
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download ${{ env.CLAP_VALIDATOR_VERSION }} --repo free-audio/clap-validator --pattern "*ubuntu*" --output clap-validator.zip
+          unzip -o clap-validator.zip
+          mkdir -p clap-validator-extracted
+          tar -xzf clap-validator-*.tar.gz -C clap-validator-extracted
+          mv "$(find clap-validator-extracted -type f -name clap-validator)" ./clap-validator
+          chmod +x clap-validator
+
+      - name: Validate CLAP (clap-validator)
+        run: xvfb-run -a ./clap-validator validate build/src/NineStrip_artefacts/Release/CLAP/NineStrip.clap | tee clap-validator-log.txt
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-logs
+          path: "*.txt"
