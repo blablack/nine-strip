@@ -2,11 +2,16 @@
 
 #include <JuceHeader.h>
 
-class PresetManager : public juce::AudioProcessorValueTreeState::Listener
+// Saves and loads the APVTS state as XML preset files and remembers which preset is loaded.
+//
+// The "modified" flag is driven by NineStripProcessor::valueTreePropertyChanged, which runs when the APVTS
+// flushes parameter values to its tree (never on the audio thread). This class deliberately has no APVTS
+// parameter listener of its own: those fire synchronously from setValueNotifyingHost, i.e. on the audio
+// thread during host automation, where touching currentPreset would race the message thread.
+class PresetManager
 {
    public:
     explicit PresetManager(juce::AudioProcessorValueTreeState& apvts);
-    ~PresetManager() override;
 
     void savePreset(const juce::String& presetName);
     void deletePreset(const juce::String& presetName);
@@ -27,9 +32,6 @@ class PresetManager : public juce::AudioProcessorValueTreeState::Listener
         currentPreset = presetName;
         isModified = modified;
     }
-
-    // AudioProcessorValueTreeState::Listener
-    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
    private:
     [[nodiscard]] static juce::File getDefaultDirectory();

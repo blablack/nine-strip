@@ -2,37 +2,7 @@
 
 static const juce::String presetExtension = ".ninestrip";
 
-PresetManager::PresetManager(juce::AudioProcessorValueTreeState& apvts) : valueTreeState(apvts)
-{
-    for (auto* param : apvts.processor.getParameters())
-    {
-        if (auto* paramWithID = dynamic_cast<juce::RangedAudioParameter*>(param))
-        {
-            apvts.addParameterListener(paramWithID->paramID, this);
-        }
-    }
-}
-
-PresetManager::~PresetManager()
-{
-    // ✅ Clean up parameter listeners
-    for (auto* param : valueTreeState.processor.getParameters())
-    {
-        if (auto* paramWithID = dynamic_cast<juce::RangedAudioParameter*>(param))
-        {
-            valueTreeState.removeParameterListener(paramWithID->paramID, this);
-        }
-    }
-}
-
-void PresetManager::parameterChanged(const juce::String&, float)
-{
-    // ✅ Any parameter change marks preset as modified (if a preset is loaded)
-    if (!currentPreset.isEmpty())
-    {
-        isModified = true;
-    }
-}
+PresetManager::PresetManager(juce::AudioProcessorValueTreeState& apvts) : valueTreeState(apvts) {}
 
 juce::File PresetManager::getDefaultDirectory()
 {
