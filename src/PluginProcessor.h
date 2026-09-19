@@ -17,7 +17,8 @@
  */
 class NineStripProcessor : public juce::AudioProcessor,
                            private juce::AudioProcessorValueTreeState::Listener,
-                           private juce::ValueTree::Listener
+                           private juce::ValueTree::Listener,
+                           private juce::AsyncUpdater
 {
    public:
     //==============================================================================
@@ -91,6 +92,11 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     void parameterChanged(const juce::String &parameterID, float newValue) override;
     void valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &) override;
+
+    // The editor is only ever touched from handleAsyncUpdate() (message thread). valueTreePropertyChanged and
+    // setStateInformation run on whatever thread flushed the APVTS or called the host's state API.
+    void handleAsyncUpdate() override;
+    std::atomic<bool> presetListNeedsRefresh{false};
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void setupParameterListeners();

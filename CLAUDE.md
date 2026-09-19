@@ -97,7 +97,7 @@ Fixed order, stereo only. There are two `Channel9` instances (`channel9Pre`/`cha
 
 ### Threading
 
-Audio thread never touches UI. Meters are `std::atomic<float>` on the processor (dB values; GR from `Pressure4`), polled by `NeedleVUMeter` timers. Metering is skipped entirely when the editor is closed (`editorOpen` atomic set by the editor ctor/dtor) or when rendering offline. Editor callbacks from parameter listeners go through `MessageManager::callAsync` with a `Component::SafePointer`.
+Audio thread never touches UI. Meters are `std::atomic<float>` on the processor (dB values; GR from `Pressure4`), polled by `NeedleVUMeter` timers. Metering is skipped entirely when the editor is closed (`editorOpen` atomic set by the editor ctor/dtor) or when rendering offline. Editor callbacks from parameter listeners go through `MessageManager::callAsync` with a `Component::SafePointer`. The processor never calls into the editor directly either: `valueTreePropertyChanged` and `setStateInformation` run on whatever thread flushed the APVTS or called the host state API, so they only `triggerAsyncUpdate()` and the editor's preset display is refreshed from `handleAsyncUpdate()`.
 
 ### Editor
 

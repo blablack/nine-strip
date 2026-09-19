@@ -42,6 +42,7 @@ NineStripProcessor::NineStripProcessor()
 
 NineStripProcessor::~NineStripProcessor()
 {
+    cancelPendingUpdate();
     apvts.state.removeListener(this);
     removeParameterListeners();
 }
@@ -121,12 +122,25 @@ void NineStripProcessor::parameterChanged(const juce::String &parameterID, float
 
 void NineStripProcessor::valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &)
 {
+    // Fires when the APVTS flushes a parameter value to its tree: from its message-thread timer, but also from
+    // copyState()/replaceState() inside get/setStateInformation, which hosts may call from another thread.
     if (presetManager)
     {
         presetManager->markAsModified();
+        triggerAsyncUpdate();
+    }
+}
 
-        // Notify editor to update display
-        if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetDisplay();
+void NineStripProcessor::handleAsyncUpdate()
+{
+    const bool refreshList = presetListNeedsRefresh.exchange(false);
+
+    if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor()))
+    {
+        if (refreshList)
+            editor->updatePresetComboBox();
+        else
+            editor->updatePresetDisplay();
     }
 }
 
@@ -710,8 +724,9 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes)
                 const bool modified = static_cast<bool>(valueTree.getProperty("presetModified", false));
                 presetManager->setCurrentPreset(presetName, modified);
 
-                // Notify editor to update UI
-                if (auto *editor = dynamic_cast<NineStripProcessorEditor *>(getActiveEditor())) editor->updatePresetComboBox();
+                // Rebuild the editor's preset list on the message thread (see handleAsyncUpdate).
+                presetListNeedsRefresh.store(true);
+                triggerAsyncUpdate();
             }
 
             // Wrappers that don't watch individual parameters (CLAP) need to be told that every

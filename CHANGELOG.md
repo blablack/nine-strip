@@ -6,6 +6,7 @@
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
 
 ### Fixed
+- Hosts that save or restore the session from a background thread could make the plugin update its preset display from that thread, a possible crash. The display is now always refreshed on the interface thread.
 - Automating any parameter could, in rare cases, crash the host: the preset "modified" tracking read shared data on the audio thread while the interface was changing it. That tracking now happens only on the message thread.
 - The Delete button now asks for confirmation before removing a preset, as the manual has always described; it used to delete immediately, one click away from Save.
 - The manual gave the wrong macOS preset folder; it is `~/Library/Audio/Presets/NineStrip/Presets/`.
