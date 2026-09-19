@@ -772,7 +772,8 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
 
     if (button == &savePresetButton)
     {
-        auto* alert = new juce::AlertWindow("Save Preset", "Enter preset name:", juce::AlertWindow::NoIcon);
+        // Associating the editor centres the dialog over the plugin window (and matches its display scale).
+        auto* alert = new juce::AlertWindow("Save Preset", "Enter preset name:", juce::MessageBoxIconType::NoIcon, this);
         alert->addTextEditor("presetName", "", "Preset Name:");
         alert->addButton("OK", 1);
         alert->addButton("Cancel", 0);
@@ -797,11 +798,25 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
     else if (button == &deletePresetButton)
     {
         auto currentPreset = presetManager.getCurrentPreset();
-        if (!currentPreset.isEmpty())
-        {
-            presetManager.deletePreset(currentPreset);
-            updatePresetComboBox();
-        }
+        if (currentPreset.isEmpty()) return;
+
+        // Same lifetime caveat as the Save dialog: the box is a desktop window, so capture a SafePointer.
+        juce::Component::SafePointer<NineStripProcessorEditor> safeThis(this);
+        juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                                         .withIconType(juce::MessageBoxIconType::QuestionIcon)
+                                         .withTitle("Delete Preset")
+                                         .withMessage("Delete the preset \"" + currentPreset + "\"? This cannot be undone.")
+                                         .withButton("Delete")
+                                         .withButton("Cancel")
+                                         .withAssociatedComponent(this),
+                                     [safeThis, currentPreset](int result)
+                                     {
+                                         // JUCE reports 1 for the first button and 0 for the cancel button.
+                                         if (result != 1 || safeThis == nullptr) return;
+
+                                         safeThis->audioProcessor.getPresetManager().deletePreset(currentPreset);
+                                         safeThis->updatePresetComboBox();
+                                     });
     }
     else if (button == &previousPresetButton)
     {

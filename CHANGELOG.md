@@ -2,7 +2,12 @@
 
 ## [v0.1.6] - XXXX-XX-XX
 
+### Changed
+- The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
+
 ### Fixed
+- The Delete button now asks for confirmation before removing a preset, as the manual has always described; it used to delete immediately, one click away from Save.
+- The manual gave the wrong macOS preset folder; it is `~/Library/Audio/Presets/NineStrip/Presets/`.
 - Closing the plugin window while the Save Preset dialog was open and then pressing OK in the dialog could crash the host. The dialog now checks that the plugin window still exists before saving.
 - Knob dragging is back to normal distance-based movement by default, with the mouse pointer staying visible. Hold Ctrl (Cmd on macOS) while dragging for fine control at one tenth of the speed; the key can be pressed or released mid-drag without the knob jumping. The velocity-based mode introduced in v0.1.4 made slow, fine movement the default, required the modifier for normal movement, and hid the pointer while dragging.
 - The input and output faders get the same fine control: Ctrl-drag (Cmd on macOS) moves them at one tenth of the speed with the pointer visible, and a Ctrl-click nudges from the current position instead of jumping to the mouse. Previously the modifier put the faders into a speed-based mode that hid the mouse pointer.

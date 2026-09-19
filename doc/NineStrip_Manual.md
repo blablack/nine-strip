@@ -714,7 +714,7 @@ Presets are stored as XML files in your system's standard plugin preset location
 
 **macOS:**
 ```
-~/Library/Audio/Presets/NineStrip/
+~/Library/Audio/Presets/NineStrip/Presets/
 ```
 
 **Windows:**
