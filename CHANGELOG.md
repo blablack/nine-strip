@@ -2,6 +2,9 @@
 
 ## [v0.1.6] - XXXX-XX-XX
 
+### Added
+- Bypassing the plugin from the host (the VST3, AU or LV2 host's own bypass switch) now drives Master Bypass, so it gets the same 10 ms click-free crossfade and the MASTER BYPASS button follows it. CLAP hosts keep using their own bypass.
+
 ### Changed
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
 

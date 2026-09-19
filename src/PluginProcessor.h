@@ -41,6 +41,10 @@ class NineStripProcessor : public juce::AudioProcessor,
 
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 
+    // Hands the host's own bypass (VST3 kIsBypass, AU BypassEffect, LV2 enabled port) to masterBypass, so it gets
+    // the same click-free crossfade and the MASTER BYPASS button follows it. clap-juce-extensions has no equivalent.
+    juce::AudioProcessorParameter *getBypassParameter() const override { return apvts.getParameter("masterBypass"); }
+
     void processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) override;
     void processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &midiMessages) override;
 

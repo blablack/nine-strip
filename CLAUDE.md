@@ -85,7 +85,7 @@ Fixed order, stereo only. There are two `Channel9` instances (`channel9Pre`/`cha
 
 `processBlock` is templated on `SampleType`; `if constexpr (std::is_same_v<SampleType, float>)` picks `processReplacing` vs `processDoubleReplacing`.
 
-**Click-free bypass**: every switchable stage (and master bypass) goes through `processCrossfadedStage()` with a per-stage `juce::LinearSmoothedValue<float>` mix (1 = active, 0 = bypassed, `kBypassRampSeconds` = 10 ms, reset in `prepareToPlay`). While ramping, the stage runs on the live buffer and is blended against a dry copy in `stageScratch{Float,Double}`. While settled-bypassed, the stage still runs into the scratch buffer (discarded) so its state stays warm. `masterBypass`, once settled, short-circuits everything as before (chain is *not* kept warm). Scratch buffers are sized to `samplesPerBlock`; a larger block falls back to hard switching.
+**Click-free bypass**: every switchable stage (and master bypass) goes through `processCrossfadedStage()` with a per-stage `juce::LinearSmoothedValue<float>` mix (1 = active, 0 = bypassed, `kBypassRampSeconds` = 10 ms, reset in `prepareToPlay`). While ramping, the stage runs on the live buffer and is blended against a dry copy in `stageScratch{Float,Double}`. While settled-bypassed, the stage still runs into the scratch buffer (discarded) so its state stays warm. `masterBypass`, once settled, short-circuits everything as before (chain is *not* kept warm). `getBypassParameter()` returns `masterBypass`, so the host's own bypass switch drives the same crossfade in VST3/AU/LV2 (the CLAP wrapper has no bypass mapping). Scratch buffers are sized to `samplesPerBlock`; a larger block falls back to hard switching.
 
 ### Parameter flow
 
