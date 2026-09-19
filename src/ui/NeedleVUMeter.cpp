@@ -6,10 +6,10 @@
 #include "BinaryData.h"
 
 NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
-    : getLevelFunc(std::move(levelGetter)),
-      meterType(type),
-      imageAspectRatio(backgroundWidth / backgroundHeight),
-      ballistics(type == MeterType::Level ? -60.0f : 0.0f)
+    : meterType(type),
+      ballistics(type == MeterType::Level ? -60.0f : 0.0f),
+      getLevelFunc(std::move(levelGetter)),
+      imageAspectRatio(backgroundWidth / backgroundHeight)
 {
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::needlevu_png, BinaryData::needlevu_pngSize);
     peakOnImage = juce::ImageCache::getFromMemory(BinaryData::peakon_png, BinaryData::peakon_pngSize);
@@ -23,16 +23,24 @@ NeedleVUMeter::NeedleVUMeter(std::function<float()> levelGetter, MeterType type)
 
 NeedleVUMeter::~NeedleVUMeter() { stopTimer(); }
 
+// JUCE's "high" quality resample is plain bilinear: it only ever touches a 2x2 source neighbourhood, so a
+// large one-shot downscale (the 750 px meter face is ~4.8x wider than the meter at the default window size)
+// drops most of the source pixels and the 1 px scale ticks and digits alias into broken, shimmering lines.
+// Each 2:1 bilinear step is an exact 2x2 box filter, so halve until within 2x of the target, then resample.
+static juce::Image downscaleSmoothly(juce::Image img, int w, int h)
+{
+    while (img.getWidth() >= 2 * w && img.getHeight() >= 2 * h)
+        img = img.rescaled(img.getWidth() / 2, img.getHeight() / 2, juce::Graphics::highResamplingQuality);
+    return img.rescaled(w, h, juce::Graphics::highResamplingQuality);
+}
+
 void NeedleVUMeter::resized()
 {
-    if (backgroundImage.isNull()) return;
+    if (backgroundImage.isNull() || getWidth() <= 0 || getHeight() <= 0) return;
 
-    scaledBackground = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
-    juce::Graphics g(scaledBackground);
-    g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
-    // stretchToFit rather than centred: the bounds are aspect-constrained to within 1 px, and an opaque
-    // component must cover every pixel, so absorb the rounding as sub-pixel stretch instead of a transparent sliver.
-    g.drawImage(backgroundImage, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit);
+    // Stretched to the exact bounds rather than centred: the bounds are aspect-constrained to within 1 px, and an
+    // opaque component must cover every pixel, so absorb the rounding as sub-pixel stretch instead of a transparent sliver.
+    scaledBackground = downscaleSmoothly(backgroundImage, getWidth(), getHeight());
 
     float scale =
         juce::jmin(static_cast<float>(getWidth()) / backgroundWidth, static_cast<float>(getHeight()) / backgroundHeight);
@@ -40,8 +48,8 @@ void NeedleVUMeter::resized()
     int ps = juce::roundToInt(peakSize * scale);
     if (ps > 0)
     {
-        scaledPeakOnImage = peakOnImage.rescaled(ps, ps, juce::Graphics::highResamplingQuality);
-        scaledPeakOffImage = peakOffImage.rescaled(ps, ps, juce::Graphics::highResamplingQuality);
+        scaledPeakOnImage = downscaleSmoothly(peakOnImage, ps, ps);
+        scaledPeakOffImage = downscaleSmoothly(peakOffImage, ps, ps);
     }
 }
 
@@ -49,13 +57,16 @@ void NeedleVUMeter::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
-    g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
-
     // 1. Draw full background image maintaining aspect ratio
     if (scaledBackground.isValid())
+    {
         g.drawImageAt(scaledBackground, 0, 0);
+    }
     else
+    {
+        g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         g.drawImage(backgroundImage, bounds, juce::RectanglePlacement::stretchToFit);
+    }
 
     // 2. Calculate scaled border sizes based on image dimensions
     float scaleX = bounds.getWidth() / backgroundWidth;
@@ -98,14 +109,15 @@ void NeedleVUMeter::paint(juce::Graphics& g)
     g.reduceClipRegion(meterArea.toNearestInt());
 
     // 4. Draw needle (won't appear over borders due to clipping)
-    drawNeedle(g, bounds);
+    drawNeedle(g, bounds, scale);
 }
 
-void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds) const
+void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds, float scale) const
 {
-    // Needle pivot point
+    // Needle pivot point. The offset below the meter is in image pixels so the pivot moves with the printed
+    // scale when the meter is resized; the angle table below was calibrated against the artwork at that geometry.
     float pivotX = bounds.getCentreX();
-    float pivotY = bounds.getBottom() + 20.0f;
+    float pivotY = bounds.getBottom() + needlePivotBelowBottom * scale;
 
     float vuLevel = NAN;
     if (meterType == MeterType::Level)
@@ -154,7 +166,7 @@ void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds)
     // Draw needle
     g.setColour(juce::Colours::black);
     juce::Line<float> needle(pivotX, pivotY, endX, endY);
-    g.drawLine(needle, 2.0f);
+    g.drawLine(needle, juce::jmax(1.0f, needleWidth * scale));
 }
 
 void NeedleVUMeter::timerCallback()

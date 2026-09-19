@@ -31,7 +31,7 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
 
     VUMeterBallistics ballistics;
 
-    void drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds) const;
+    void drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds, float scale) const;
 
     std::function<float()> getLevelFunc;
     float currentLevel = -60.0f;
@@ -58,9 +58,11 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
     float borderWidth = 20.0f;
     float bottomBorderHeight = 10.0f;
 
-    float peakX = 280.0f;
-    float peakY = 20.0f;
     float peakSize = 100.0f;
+
+    // Needle geometry in background-image pixels (750x450), scaled with the meter.
+    float needlePivotBelowBottom = 99.0f;
+    float needleWidth = 10.0f;
 
     float imageAspectRatio;
 };

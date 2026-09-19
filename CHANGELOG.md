@@ -5,6 +5,8 @@
 ### Fixed
 - Knob dragging is back to normal distance-based movement by default, with the mouse pointer staying visible. Hold Ctrl (Cmd on macOS) while dragging for fine control at one tenth of the speed; the key can be pressed or released mid-drag without the knob jumping. The velocity-based mode introduced in v0.1.4 made slow, fine movement the default, required the modifier for normal movement, and hid the pointer while dragging.
 - The input and output faders get the same fine control: Ctrl-drag (Cmd on macOS) moves them at one tenth of the speed with the pointer visible, and a Ctrl-click nudges from the current position instead of jumping to the mouse. Previously the modifier put the faders into a speed-based mode that hid the mouse pointer.
+- The VU and gain-reduction meter faces no longer look jagged and broken at small window sizes: the scale ticks, digits and arc were being decimated by the downscale and would shimmer while resizing. They are now downscaled with a proper filter so the face stays clean at the default size.
+- The meter needles now read correctly against the printed scale at every window size. The needle pivot was fixed in screen pixels rather than scaling with the artwork, so at larger sizes the needle sat on the wrong part of the arc. The needle also scales its thickness with the window instead of staying a 2 px hairline.
 
 ## [v0.1.5] - 2026-09-13
 
