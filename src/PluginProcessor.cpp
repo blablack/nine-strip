@@ -719,17 +719,15 @@ void NineStripProcessor::setStateInformation(const void *data, int sizeInBytes)
 
             // Restore the preset name for display only. The parameter values just restored
             // from the host are authoritative; re-loading the preset file here would
-            // overwrite any tweaks made after the preset was loaded.
-            if (valueTree.hasProperty("currentPreset"))
-            {
-                auto presetName = valueTree.getProperty("currentPreset").toString();
-                const bool modified = static_cast<bool>(valueTree.getProperty("presetModified", false));
-                presetManager->setCurrentPreset(presetName, modified);
+            // overwrite any tweaks made after the preset was loaded. A state without a
+            // preset clears whatever name was showing before (e.g. after a host-side undo).
+            const auto presetName = valueTree.getProperty("currentPreset", juce::String()).toString();
+            const bool modified = static_cast<bool>(valueTree.getProperty("presetModified", false));
+            presetManager->setCurrentPreset(presetName, modified);
 
-                // Rebuild the editor's preset list on the message thread (see handleAsyncUpdate).
-                presetListNeedsRefresh.store(true);
-                triggerAsyncUpdate();
-            }
+            // Rebuild the editor's preset list on the message thread (see handleAsyncUpdate).
+            presetListNeedsRefresh.store(true);
+            triggerAsyncUpdate();
 
             // Wrappers that don't watch individual parameters (CLAP) need to be told that every
             // value may have changed; VST3/AU treat this as a harmless "preset changed" notice.

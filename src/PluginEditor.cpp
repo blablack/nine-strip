@@ -692,15 +692,16 @@ void NineStripProcessorEditor::updatePresetComboBox()
     }
 
     auto currentPreset = presetManager.getCurrentPreset();
-    if (!currentPreset.isEmpty())
-    {
-        int index = presets.indexOf(currentPreset);
-        if (index >= 0)
-        {
-            presetComboBox.setSelectedId(index + 1, juce::dontSendNotification);
-            if (presetManager.isPresetModified()) presetComboBox.setText(currentPreset + " *", juce::dontSendNotification);
-        }
-    }
+    if (currentPreset.isEmpty()) return;  // leaves "No Preset Selected"
+
+    const int index = presets.indexOf(currentPreset);
+    if (index >= 0) presetComboBox.setSelectedId(index + 1, juce::dontSendNotification);
+
+    // Show the name even when the file is not in this machine's preset folder (a session saved elsewhere), and
+    // the modified marker either way; updatePresetDisplay() keeps this text in step afterwards.
+    if (index < 0 || presetManager.isPresetModified())
+        presetComboBox.setText(presetManager.isPresetModified() ? currentPreset + " *" : currentPreset,
+                               juce::dontSendNotification);
 }
 
 void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title)

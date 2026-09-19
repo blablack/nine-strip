@@ -11,6 +11,7 @@
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
 
 ### Fixed
+- Restoring a session state that has no preset selected (for example through the host's undo) no longer leaves the previous preset name in the preset bar, and a preset name restored from a session is shown even when that preset file is not present on this machine.
 - A file in the preset folder that is not a NineStrip preset (wrong contents behind a `.ninestrip` name) is now ignored when selected, instead of replacing the plugin state with something the next session load would then discard.
 - Saving a preset whose name contained characters that cannot appear in a file name (such as `/`, or `: ? * " < > |` on Windows) failed with "Save Failed" while the preset bar still showed the new name. Such characters are now dropped from the name, and a save that does fail leaves the previously selected preset in place.
 - The Pre/Post switch and the meter Input/Output buttons now register as automation gestures, so hosts in touch or latch automation modes record them like knob moves.
