@@ -136,17 +136,16 @@ class NineStripProcessor : public juce::AudioProcessor,
     juce::AudioBuffer<float> stageScratchFloat, masterDryFloat;
     juce::AudioBuffer<double> stageScratchDouble, masterDryDouble;
 
-    // Level meters
+    // Level meters (dB; kMeterFloorDb is "silence" for both the level and the gain-reduction readouts)
+    static constexpr float kMeterFloorDb = -60.0f;
+
     template <typename SampleType>
     void updateMeters(const juce::AudioBuffer<SampleType> &buffer, int numSamples);
 
-    juce::AudioBuffer<float> emptyMeterBufferFloat;
-    juce::AudioBuffer<double> emptyMeterBufferDouble;
-
     void updateGRMeter(float gainReductionLinear);
 
-    std::atomic<float> measuredLevelL{-60.0f};
-    std::atomic<float> measuredLevelR{-60.0f};
+    std::atomic<float> measuredLevelL{kMeterFloorDb};
+    std::atomic<float> measuredLevelR{kMeterFloorDb};
     std::atomic<float> gainReduction{0.0f};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NineStripProcessor)

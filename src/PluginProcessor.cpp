@@ -354,9 +354,6 @@ void NineStripProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     paramCompBypass = apvts.getRawParameterValue("compressorBypass");
     paramInputMeasured = apvts.getRawParameterValue("inputMeasured");
 
-    emptyMeterBufferFloat.setSize(2, samplesPerBlock, false, false, true);
-    emptyMeterBufferDouble.setSize(2, samplesPerBlock, false, false, true);
-
     stageScratchFloat.setSize(2, samplesPerBlock, false, false, true);
     stageScratchDouble.setSize(2, samplesPerBlock, false, false, true);
     masterDryFloat.setSize(2, samplesPerBlock, false, false, true);
@@ -425,9 +422,8 @@ void NineStripProcessor::updateMeters(const juce::AudioBuffer<SampleType> &buffe
     const float rmsR = buffer.getRMSLevel(buffer.getNumChannels() > 1 ? 1 : 0, 0, numSamples);
 
     constexpr float kMinRms = 1e-6f;
-    constexpr float kFloor = -60.0f;
-    measuredLevelL.store(rmsL > kMinRms ? 20.0f * std::log10(rmsL) : kFloor, std::memory_order_relaxed);
-    measuredLevelR.store(rmsR > kMinRms ? 20.0f * std::log10(rmsR) : kFloor, std::memory_order_relaxed);
+    measuredLevelL.store(rmsL > kMinRms ? 20.0f * std::log10(rmsL) : kMeterFloorDb, std::memory_order_relaxed);
+    measuredLevelR.store(rmsR > kMinRms ? 20.0f * std::log10(rmsR) : kMeterFloorDb, std::memory_order_relaxed);
 }
 
 template void NineStripProcessor::updateMeters<float>(const juce::AudioBuffer<float> &, int);
@@ -435,7 +431,7 @@ template void NineStripProcessor::updateMeters<double>(const juce::AudioBuffer<d
 
 void NineStripProcessor::updateGRMeter(const float gainReductionLinear)
 {
-    const float grDb = (gainReductionLinear > 1e-6f) ? 20.0f * std::log10(gainReductionLinear) : -60.0f;
+    const float grDb = (gainReductionLinear > 1e-6f) ? 20.0f * std::log10(gainReductionLinear) : kMeterFloorDb;
     gainReduction.store(grDb, std::memory_order_relaxed);
 }
 
@@ -558,19 +554,10 @@ void NineStripProcessor::processBlockInternal(juce::AudioBuffer<SampleType> &buf
     {
         if (meteringNeeded)
         {
-            // Get reference to appropriate buffer (already sized)
-            auto &emptyMeterBuffer = [&]() -> juce::AudioBuffer<SampleType> &
-            {
-                if constexpr (std::is_same_v<SampleType, float>)
-                    return emptyMeterBufferFloat;
-                else
-                    return emptyMeterBufferDouble;
-            }();
-
-            emptyMeterBuffer.clear();
-            updateMeters(emptyMeterBuffer, numSamples);
-
-            updateGRMeter(1.0f);  // No gain reduction when bypassed
+            // Meters read silence and no gain reduction while bypassed
+            measuredLevelL.store(kMeterFloorDb, std::memory_order_relaxed);
+            measuredLevelR.store(kMeterFloorDb, std::memory_order_relaxed);
+            updateGRMeter(1.0f);
         }
 
         return;  // Early exit, pass audio through untouched
