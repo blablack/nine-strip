@@ -607,23 +607,13 @@ void NineStripProcessorEditor::layoutMeters()
     vuMeterInputButton.setBounds(startX, buttonY, buttonWidth, buttonHeight);
     vuMeterOutputButton.setBounds(startX + buttonWidth + spacing, buttonY, buttonWidth, buttonHeight);
 
+    // One needle meter per channel, side by side, each fitted to the artwork's aspect ratio
     auto meterArea = metersBounds;
-
-    // Split into left and right channels
     auto leftChannel = meterArea.removeFromLeft(meterArea.getWidth() / 2).reduced(scaled(2));
     auto rightChannel = meterArea.reduced(scaled(2));
 
-    // Left channel: needle on left, bar on right
-    auto leftNeedle = leftChannel.removeFromLeft(leftChannel.getWidth() * 1.0f);
-    // Constrain to aspect ratio
-    leftNeedle = constrainToAspectRatio(leftNeedle, needleVUMeterL.getAspectRatio());
-    needleVUMeterL.setBounds(leftNeedle);
-
-    // Right channel: needle on left, bar on right
-    auto rightNeedle = rightChannel.removeFromLeft(rightChannel.getWidth() * 1.0f);
-    // Constrain to aspect ratio
-    rightNeedle = constrainToAspectRatio(rightNeedle, needleVUMeterR.getAspectRatio());
-    needleVUMeterR.setBounds(rightNeedle);
+    needleVUMeterL.setBounds(constrainToAspectRatio(leftChannel, needleVUMeterL.getAspectRatio()));
+    needleVUMeterR.setBounds(constrainToAspectRatio(rightChannel, needleVUMeterR.getAspectRatio()));
 }
 
 juce::Rectangle<int> NineStripProcessorEditor::constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio)

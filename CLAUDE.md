@@ -58,7 +58,7 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 
 `src/CMakeLists.txt` defines the `NineStrip` plugin target (`juce_add_plugin`) and links two static libraries plus generated binary data:
 
-- `AirwindowsDSP` (`src/airwindows/`) — plain C++ with no JUCE dependency. Each algorithm is split into `X.cpp` (ctor/params) and `XProc.cpp` (`processReplacing` for float, `processDoubleReplacing` for double). All parameters are normalised 0–1 floats addressed by `kParamA..` enums.
+- `AirwindowsDSP` (`src/airwindows/`) — plain C++ with no JUCE dependency. Each algorithm is split into `X.cpp` (ctor/params) and `XProc.cpp` (`processReplacing` for float, `processDoubleReplacing` for double). All parameters are normalised 0–1 floats addressed by `kParamA..` enums — except `Channel9::kParamA` (console type), which the port changed to take the denormalised choice index 0–4 (`setParameter` switches on `static_cast<int>(A)`); do not "fix" it back to 0–1.
 - `NineStripUI` (`src/ui/`) — custom JUCE widgets (`CircularKnob`, `FineControlSlider`, `NeedleVUMeter`, `GlowButton`, `VUMeterBallistics`, `KnobLookAndFeel`, `FaderLookAndFeel`, `ScaledLookAndFeel`) plus `ImageScaling.h` (`downscaleSmoothly()`, the box-filtered downscale used for every large embedded PNG — plain `Image::rescaled` aliases thin lines at these ratios).
 - `NineStripAssets` — PNGs from `assets/` embedded via `juce_add_binary_data` (the SVGs alongside are the sources).
 
@@ -89,7 +89,7 @@ Fixed order, stereo only. There are two `Channel9` instances (`channel9Pre`/`cha
 
 ### Parameter flow
 
-- APVTS is the single source of truth. Continuous parameter IDs (all 0–1): `inputGain`, `consoleType`, `drive`, `lowpass`, `hipass`, `non_lin`, `treble`, `bass`, `hm_freq`, `highmid`, `hm_reso`, `pressure`, `speed`, `mewiness`, `outputGain`.
+- APVTS is the single source of truth. Continuous parameter IDs (all 0–1, except `consoleType`, an `AudioParameterChoice` whose denormalised index 0–4 is what `Channel9` expects): `inputGain`, `consoleType`, `drive`, `lowpass`, `hipass`, `non_lin`, `treble`, `bass`, `hm_freq`, `highmid`, `hm_reso`, `pressure`, `speed`, `mewiness`, `outputGain`.
 - Bool IDs: `masterBypass`, `saturationBypass`, `filterBypass`, `eqBypass`, `compressorBypass`, `saturationInput` (pre/post Channel9), `inputMeasured` (VU meters show input vs output).
 - Continuous params are pushed to the Airwindows objects through `NineStripProcessor::parameterChanged` (APVTS listener, registered for the IDs in `parameterIDs`). Adding a parameter means: add it to `createParameterLayout()`, to the `parameterIDs` list, to `parameterChanged`, and to the initial sync in `prepareToPlay`.
 - Bool params are read directly on the audio thread via cached `std::atomic<float>*` pointers set in `prepareToPlay`.
