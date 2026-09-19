@@ -11,6 +11,7 @@
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
 
 ### Fixed
+- A file in the preset folder that is not a NineStrip preset (wrong contents behind a `.ninestrip` name) is now ignored when selected, instead of replacing the plugin state with something the next session load would then discard.
 - Saving a preset whose name contained characters that cannot appear in a file name (such as `/`, or `: ? * " < > |` on Windows) failed with "Save Failed" while the preset bar still showed the new name. Such characters are now dropped from the name, and a save that does fail leaves the previously selected preset in place.
 - The Pre/Post switch and the meter Input/Output buttons now register as automation gestures, so hosts in touch or latch automation modes record them like knob moves.
 - Enlarging the window now scales the whole interface. Previously only the knobs and meters grew: the bypass buttons, the Pre/Post button, the preset bar, the labels and all text stayed at their 600x600 pixel sizes, and the section titles drifted above their panels, so a large window showed big knobs surrounded by tiny controls.

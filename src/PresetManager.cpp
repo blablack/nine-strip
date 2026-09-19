@@ -92,6 +92,10 @@ void PresetManager::loadPreset(const juce::String& presetName)
     // Convert XML to ValueTree
     auto valueTree = juce::ValueTree::fromXml(*xml);
 
+    // A foreign XML file with our extension would otherwise replace the APVTS root with a tree of the wrong type;
+    // the host state saved from that would then fail setStateInformation's tag check and be dropped on reload.
+    if (!valueTree.hasType(valueTreeState.state.getType())) return;
+
     // Replace the plugin state (thread-safe)
     valueTreeState.replaceState(valueTree);
 
