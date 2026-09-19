@@ -122,7 +122,7 @@ void NineStripProcessorEditor::setupConsoleSection()
     {
         auto* param = audioProcessor.getAPVTS().getParameter("saturationInput");
         bool newIsInput = !(param->getValue() > 0.5f);
-        param->setValueNotifyingHost(newIsInput ? 1.0f : 0.0f);
+        setParameterFromClick("saturationInput", newIsInput ? 1.0f : 0.0f);
         saturationInputButton.setButtonText(newIsInput ? "Pre" : "Post");
     };
 }
@@ -205,7 +205,7 @@ void NineStripProcessorEditor::setupMeters()
         // Turn this button on and the other off
         vuMeterInputButton.setToggleState(true, juce::dontSendNotification);
         vuMeterOutputButton.setToggleState(false, juce::dontSendNotification);
-        audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(1.0f);
+        setParameterFromClick("inputMeasured", 1.0f);
     };
 
     // Setup Output button
@@ -219,7 +219,7 @@ void NineStripProcessorEditor::setupMeters()
         // Turn this button on and the other off
         vuMeterOutputButton.setToggleState(true, juce::dontSendNotification);
         vuMeterInputButton.setToggleState(false, juce::dontSendNotification);
-        audioProcessor.getAPVTS().getParameter("inputMeasured")->setValueNotifyingHost(0.0f);
+        setParameterFromClick("inputMeasured", 0.0f);
     };
 
     // Initialize button states based on current parameter value
@@ -711,6 +711,18 @@ void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce:
     label.setText(title, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
     label.setColour(juce::Label::textColourId, juce::Colours::white);
+}
+
+void NineStripProcessorEditor::setParameterFromClick(const juce::String& paramID, float newValue)
+{
+    // Bracket the change in a gesture, as ButtonAttachment does for the toggle buttons: hosts in touch/latch
+    // automation modes only record parameter changes that arrive inside one.
+    if (auto* param = audioProcessor.getAPVTS().getParameter(paramID))
+    {
+        param->beginChangeGesture();
+        param->setValueNotifyingHost(newValue);
+        param->endChangeGesture();
+    }
 }
 
 void NineStripProcessorEditor::layoutBypassButton(GlowButton& button, juce::Rectangle<int> groupBounds)
