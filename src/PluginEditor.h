@@ -5,6 +5,7 @@
 #include "PluginProcessor.h"
 #include "ui/CircularKnob.h"
 #include "ui/FaderLookAndFeel.h"
+#include "ui/FineControlSlider.h"
 #include "ui/GlowButton.h"
 #include "ui/KnobLookAndFeel.h"
 #include "ui/NeedleVUMeter.h"
@@ -123,7 +124,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Gain
     juce::Component gainGroup;
     juce::Label gainLabel;
-    juce::Slider inputGainSlider, outputGainSlider;
+    FineControlSlider inputGainSlider, outputGainSlider;
     juce::Label inputGainLabel, outputGainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment, outputGainAttachment;
     GlowButton masterBypassButton{"MASTER BYPASS"};

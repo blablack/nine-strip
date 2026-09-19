@@ -54,7 +54,7 @@ header-includes: |
 
 \vspace{0.5cm}
 
-{\large Version 0.1.5}
+{\large Version 0.1.6}
 
 \vspace{1cm}
 
@@ -308,9 +308,11 @@ The interface uses color-coded knobs for quick visual identification: orange for
 
 ![NineStrip UI](../pics/screenshot.png)
 
-## Knob Drag Sensitivity
+## Knob and Fader Drag Sensitivity
 
-Knobs use velocity-based dragging: turning the mouse slowly makes fine adjustments, while faster movement covers a wider range without needing a long drag. Hold Ctrl (Cmd or Alt also work) while dragging to switch to normal distance-based dragging for quick, coarse changes.
+Knobs follow the mouse: drag up or to the right to increase a value, down or to the left to decrease it. The input and output faders follow the mouse along their track, and a click on the track jumps the fader to that position.
+
+Hold Ctrl (Cmd on macOS) while dragging any knob or fader for fine control, which moves it at one tenth of the normal speed. The key can be pressed or released at any point during a drag; the control carries on from where it is without jumping. A Ctrl-click on a fader starts a fine adjustment from its current position instead of jumping to the mouse.
 
 # Signal Chain
 
