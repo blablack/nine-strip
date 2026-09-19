@@ -131,8 +131,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> vuMeterModeAttachment;
 
     // Gain
-    juce::Component gainGroup;
-    juce::Label gainLabel;
+    juce::Component gainGroup;  // title-less by design, unlike the other sections
     FineControlSlider inputGainSlider, outputGainSlider;
     juce::Label inputGainLabel, outputGainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainAttachment, outputGainAttachment;

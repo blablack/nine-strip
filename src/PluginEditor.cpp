@@ -235,7 +235,7 @@ void NineStripProcessorEditor::setupMeters()
 
 void NineStripProcessorEditor::setupGain()
 {
-    setupGroupComponent(gainGroup, gainLabel, "GAIN");
+    addAndMakeVisible(gainGroup);  // no title label: the Gain panel is title-less by design
 
     gainGroup.addAndMakeVisible(inputGainSlider);
     inputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
@@ -344,7 +344,7 @@ void NineStripProcessorEditor::resized()
     const juce::Font labelFont(withDefaultMetrics(juce::FontOptions{kBaseLabelFontHeight * uiScale}));
     for (auto* label : {&consoleSatLabel, &consoleTypeValueLabel, &driveLabel, &filterLabel, &hipassLabel, &nonLinLabel,
                         &lowpassLabel, &highShelfLabel, &trebleLabel, &highMidLabel, &hmFreqLabel, &hmGainLabel, &hmResoLabel,
-                        &lowShelfLabel, &bassLabel, &compressorLabel, &pressureLabel, &speedLabel, &mewinessLabel, &gainLabel,
+                        &lowShelfLabel, &bassLabel, &compressorLabel, &pressureLabel, &speedLabel, &mewinessLabel,
                         &inputGainLabel, &outputGainLabel})
         label->setFont(labelFont);
 
@@ -639,7 +639,9 @@ juce::Rectangle<int> NineStripProcessorEditor::constrainToAspectRatio(juce::Rect
 void NineStripProcessorEditor::layoutGain()
 {
     auto gainBounds = gainGroup.getLocalBounds().reduced(scaled(2));
-    gainBounds.removeFromTop(scaled(18));  // Space for group title
+    // Top padding. The panel is title-less by design; this keeps the fader tops roughly level with the content of
+    // the titled sections next to it.
+    gainBounds.removeFromTop(scaled(18));
 
     // Reserve space for button at bottom
     masterBypassButton.setBounds(gainBounds.removeFromBottom(scaled(30)).reduced(scaled(4), scaled(2)));
