@@ -713,6 +713,39 @@ void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce:
     label.setColour(juce::Label::textColourId, juce::Colours::white);
 }
 
+void NineStripProcessorEditor::savePresetNamed(const juce::String& storedName)
+{
+    juce::Component::SafePointer<NineStripProcessorEditor> safeThis(this);
+    auto save = [safeThis, storedName]
+    {
+        if (safeThis == nullptr) return;
+
+        if (!safeThis->audioProcessor.getPresetManager().savePreset(storedName))
+            juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Save Failed",
+                                                   "Could not save preset: " + storedName, {}, safeThis.getComponent());
+
+        safeThis->updatePresetComboBox();
+    };
+
+    if (!PresetManager::presetExists(storedName))
+    {
+        save();
+        return;
+    }
+
+    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                                     .withIconType(juce::MessageBoxIconType::QuestionIcon)
+                                     .withTitle("Replace Preset")
+                                     .withMessage("A preset called \"" + storedName + "\" already exists. Replace it?")
+                                     .withButton("Replace")
+                                     .withButton("Cancel")
+                                     .withAssociatedComponent(this),
+                                 [save](int result)
+                                 {
+                                     if (result == 1) save();  // 1 = first button
+                                 });
+}
+
 void NineStripProcessorEditor::setParameterFromClick(const juce::String& paramID, float newValue)
 {
     // Bracket the change in a gesture, as ButtonAttachment does for the toggle buttons: hosts in touch/latch
@@ -839,11 +872,11 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
                                    {
                                        if (result != 1 || safeThis == nullptr) return;
 
-                                       auto presetName = alert->getTextEditorContents("presetName");
+                                       const auto presetName =
+                                           PresetManager::toStoredName(alert->getTextEditorContents("presetName"));
                                        if (presetName.isEmpty()) return;
 
-                                       safeThis->audioProcessor.getPresetManager().savePreset(presetName);
-                                       safeThis->updatePresetComboBox();
+                                       safeThis->savePresetNamed(presetName);
                                    }),
                                true);
     }

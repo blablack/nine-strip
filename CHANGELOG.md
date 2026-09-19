@@ -6,10 +6,12 @@
 - Bypassing the plugin from the host (the VST3, AU or LV2 host's own bypass switch) now drives Master Bypass, so it gets the same 10 ms click-free crossfade and the MASTER BYPASS button follows it. CLAP hosts keep using their own bypass.
 
 ### Changed
+- Saving a preset under a name that already exists asks before replacing it.
 - The meters' Input/Output selector is no longer offered to the host as an automatable parameter; it is a display preference and is still saved with the session and in presets.
 - The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
 
 ### Fixed
+- Saving a preset whose name contained characters that cannot appear in a file name (such as `/`, or `: ? * " < > |` on Windows) failed with "Save Failed" while the preset bar still showed the new name. Such characters are now dropped from the name, and a save that does fail leaves the previously selected preset in place.
 - The Pre/Post switch and the meter Input/Output buttons now register as automation gestures, so hosts in touch or latch automation modes record them like knob moves.
 - Enlarging the window now scales the whole interface. Previously only the knobs and meters grew: the bypass buttons, the Pre/Post button, the preset bar, the labels and all text stayed at their 600x600 pixel sizes, and the section titles drifted above their panels, so a large window showed big knobs surrounded by tiny controls.
 - The "Non-Linearity" and "Mewiness" knob labels were cut short ("Non-Li...", "Mewin..."). Knob labels now get the width of their section rather than of the knob.

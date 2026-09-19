@@ -27,32 +27,42 @@ juce::File PresetManager::getDefaultDirectory()
     return rootFolder;
 }
 
-void PresetManager::savePreset(const juce::String& presetName)
+juce::File PresetManager::getPresetFile(const juce::String& storedName)
 {
-    if (presetName.isEmpty()) return;
+    return getDefaultDirectory().getChildFile(storedName + presetExtension);
+}
 
-    currentPreset = presetName;
+juce::String PresetManager::toStoredName(const juce::String& presetName)
+{
+    return juce::File::createLegalFileName(presetName).trim();
+}
+
+bool PresetManager::presetExists(const juce::String& storedName)
+{
+    return storedName.isNotEmpty() && getPresetFile(storedName).existsAsFile();
+}
+
+bool PresetManager::savePreset(const juce::String& presetName)
+{
+    const auto storedName = toStoredName(presetName);
+    if (storedName.isEmpty()) return false;
 
     auto state = valueTreeState.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
 
-    juce::File presetFile = getDefaultDirectory().getChildFile(presetName + presetExtension);
+    if (!xml->writeTo(getPresetFile(storedName))) return false;
 
-    if (!xml->writeTo(presetFile))
-    {
-        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, "Save Failed",
-                                               "Could not save preset: " + presetName);
-        return;
-    }
-
-    isModified = false;  // Only mark unmodified if save succeeded
+    // Only adopt the name once the file exists, so a failed save cannot leave the UI naming a preset that isn't there.
+    currentPreset = storedName;
+    isModified = false;
+    return true;
 }
 
 void PresetManager::deletePreset(const juce::String& presetName)
 {
     if (presetName.isEmpty()) return;
 
-    juce::File presetFile = getDefaultDirectory().getChildFile(presetName + presetExtension);
+    juce::File presetFile = getPresetFile(presetName);
 
     if (presetFile.existsAsFile())
     {
@@ -70,7 +80,7 @@ void PresetManager::loadPreset(const juce::String& presetName)
 {
     if (presetName.isEmpty()) return;
 
-    juce::File presetFile = getDefaultDirectory().getChildFile(presetName + presetExtension);
+    juce::File presetFile = getPresetFile(presetName);
 
     if (!presetFile.existsAsFile()) return;
 

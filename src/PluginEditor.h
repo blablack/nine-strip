@@ -157,6 +157,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     void setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title);
     void setParameterFromClick(const juce::String& paramID, float newValue);
+    void savePresetNamed(const juce::String& storedName);
     void layoutBypassButton(GlowButton& button, juce::Rectangle<int> groupBounds);
 
     void addRotaryKnob(juce::Component& parent, CircularKnob& slider, juce::Label& label, const juce::String& paramID,
