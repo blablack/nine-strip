@@ -3,6 +3,7 @@
 ## [v0.1.6] - XXXX-XX-XX
 
 ### Fixed
+- Closing the plugin window while the Save Preset dialog was open and then pressing OK in the dialog could crash the host. The dialog now checks that the plugin window still exists before saving.
 - Knob dragging is back to normal distance-based movement by default, with the mouse pointer staying visible. Hold Ctrl (Cmd on macOS) while dragging for fine control at one tenth of the speed; the key can be pressed or released mid-drag without the knob jumping. The velocity-based mode introduced in v0.1.4 made slow, fine movement the default, required the modifier for normal movement, and hid the pointer while dragging.
 - The input and output faders get the same fine control: Ctrl-drag (Cmd on macOS) moves them at one tenth of the speed with the pointer visible, and a Ctrl-click nudges from the current position instead of jumping to the mouse. Previously the modifier put the faders into a speed-based mode that hid the mouse pointer.
 - The VU and gain-reduction meter faces no longer look jagged and broken at small window sizes: the scale ticks, digits and arc were being decimated by the downscale and would shimmer while resizing. They are now downscaled with a proper filter so the face stays clean at the default size.

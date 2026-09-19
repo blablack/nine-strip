@@ -777,19 +777,20 @@ void NineStripProcessorEditor::buttonClicked(juce::Button* button)
         alert->addButton("OK", 1);
         alert->addButton("Cancel", 0);
 
+        // The alert is its own desktop window: if the host closes the plugin window while it is open, this
+        // editor is destroyed first and the callback still fires, so it must not capture a raw `this`.
+        juce::Component::SafePointer<NineStripProcessorEditor> safeThis(this);
         alert->enterModalState(true,  // take keyboard focus
                                juce::ModalCallbackFunction::create(
-                                   [this, alert](int result)  // Capture alert ptr for getText
+                                   [safeThis, alert](int result)  // alert is alive until the callback returns
                                    {
-                                       if (result == 1)
-                                       {
-                                           auto presetName = alert->getTextEditorContents("presetName");
-                                           if (!presetName.isEmpty())
-                                           {
-                                               audioProcessor.getPresetManager().savePreset(presetName);
-                                               updatePresetComboBox();
-                                           }
-                                       }
+                                       if (result != 1 || safeThis == nullptr) return;
+
+                                       auto presetName = alert->getTextEditorContents("presetName");
+                                       if (presetName.isEmpty()) return;
+
+                                       safeThis->audioProcessor.getPresetManager().savePreset(presetName);
+                                       safeThis->updatePresetComboBox();
                                    }),
                                true);
     }
