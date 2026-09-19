@@ -12,14 +12,12 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 {
     audioProcessor.editorStateChanged(true);
 
+    // setSize() does not go through the constrainer, so clamp the stored size ourselves: a stale or hand-edited
+    // settings file must not open the window outside the 1x-3x range or off the fixed aspect ratio.
     int width = baseWidth;
-    int height = baseHeight;
-
     if (auto* props = audioProcessor.getAppProperties().getUserSettings())
-    {
-        width = props->getIntValue("editorWidth", baseWidth);
-        height = props->getIntValue("editorHeight", baseHeight);
-    }
+        width = juce::jlimit(baseWidth, baseWidth * 3, props->getIntValue("editorWidth", baseWidth));
+    const int height = width * baseHeight / baseWidth;
 
     constrainer.setFixedAspectRatio(static_cast<float>(baseWidth) / static_cast<float>(baseHeight));
     constrainer.setSizeLimits(baseWidth, baseHeight, baseWidth * 3, baseHeight * 3);
