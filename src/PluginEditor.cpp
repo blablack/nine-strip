@@ -471,23 +471,28 @@ void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKn
     int startY = groupBounds.getY() + verticalSpacing;
     int knobX = groupBounds.getCentreX() - bigKnobSize / 2;
 
+    // The knobs are centred in the group, so a group-wide label is centred on its knob and has room for the
+    // longer names ("Non-Linearity" was being cut to "Non-Li..." at a knob-wide label).
+    const int labelX = groupBounds.getX();
+    const int labelWidth = groupBounds.getWidth();
+
     // Hipass knob
     hipassSlider.setBounds(knobX - shadowPadding / 2, startY - shadowPadding / 2, bigKnobSize + shadowPadding,
                            bigKnobSize + shadowPadding);
-    hipassLabel.setBounds(knobX, hipassSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
+    hipassLabel.setBounds(labelX, hipassSlider.getBottom() - shadowPadding / 2, labelWidth, labelHeight);
 
     // NonLin knob
     int nonLinY = startY + bigKnobSize + labelHeight + verticalSpacing;
     int nonLinX = groupBounds.getCentreX() - smallKnobSize / 2;
     nonLinSlider.setBounds(nonLinX - shadowPadding / 2, nonLinY - shadowPadding / 2, smallKnobSize + shadowPadding,
                            smallKnobSize + shadowPadding);
-    nonLinLabel.setBounds(nonLinX, nonLinSlider.getBottom() - shadowPadding / 2, smallKnobSize, labelHeight);
+    nonLinLabel.setBounds(labelX, nonLinSlider.getBottom() - shadowPadding / 2, labelWidth, labelHeight);
 
     // Lowpass knob
     int lowpassY = nonLinY + smallKnobSize + labelHeight + verticalSpacing;
     lowpassSlider.setBounds(knobX - shadowPadding / 2, lowpassY - shadowPadding / 2, bigKnobSize + shadowPadding,
                             bigKnobSize + shadowPadding);
-    lowpassLabel.setBounds(knobX, lowpassSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
+    lowpassLabel.setBounds(labelX, lowpassSlider.getBottom() - shadowPadding / 2, labelWidth, labelHeight);
 
     // Bypass button
     filterBypassButton.setBounds(groupBounds.getRight() - 50, groupBounds.getBottom() - 20, 50, 20);
@@ -706,17 +711,20 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
     int triangleX = bounds.getX() + (bounds.getWidth() - triangleWidth) / 2;
     int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 - 20 : bounds.getY();
 
+    // Labels are centred on their knob but wider than it: the top pair shares the gap between the knobs and the
+    // bottom one spans the whole triangle, so names like "Mewiness" are not cut to "Mewin...".
+    const int topLabelWidth = bigKnobSize + horizontalSpacing;
+
     // Top left - add shadow padding to all sides
     topLeft.setBounds(triangleX - labelPadding / 2 - shadowPadding / 2, triangleY - shadowPadding / 2,
                       bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
-    topLeftLabel.setBounds(topLeft.getX() + labelPadding / 2 + shadowPadding / 2, topLeft.getBottom() - shadowPadding / 2,
-                           bigKnobSize, 20);
+    topLeftLabel.setBounds(triangleX - horizontalSpacing / 2, topLeft.getBottom() - shadowPadding / 2, topLabelWidth, 20);
 
     // Top right - add shadow padding to all sides
     topRight.setBounds(triangleX + bigKnobSize + horizontalSpacing - labelPadding / 2 - shadowPadding / 2,
                        triangleY - shadowPadding / 2, bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
-    topRightLabel.setBounds(topRight.getX() + labelPadding / 2 + shadowPadding / 2, topRight.getBottom() - shadowPadding / 2,
-                            bigKnobSize, 20);
+    topRightLabel.setBounds(triangleX + bigKnobSize + horizontalSpacing / 2, topRight.getBottom() - shadowPadding / 2,
+                            topLabelWidth, 20);
 
     // Bottom - small knob with shadow padding
     int bottomY = triangleY + bigKnobSize + verticalSpacing;
@@ -724,8 +732,7 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
 
     bottom.setBounds(bottomX - labelPadding / 2 - shadowPadding / 2, bottomY - shadowPadding / 2,
                      smallKnobSize + labelPadding + shadowPadding, smallKnobSize + shadowPadding);
-    bottomLabel.setBounds(bottom.getX() + labelPadding / 2 + shadowPadding / 2, bottom.getBottom() - shadowPadding / 2,
-                          smallKnobSize, 20);
+    bottomLabel.setBounds(triangleX, bottom.getBottom() - shadowPadding / 2, triangleWidth, 20);
 }
 
 void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label,
