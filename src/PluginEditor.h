@@ -9,6 +9,7 @@
 #include "ui/GlowButton.h"
 #include "ui/KnobLookAndFeel.h"
 #include "ui/NeedleVUMeter.h"
+#include "ui/ScaledLookAndFeel.h"
 
 class NineStripProcessorEditor : public juce::AudioProcessorEditor,
                                  public juce::ComboBox::Listener,
@@ -32,10 +33,17 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     const int baseMargin = 3;
 
+    // Layout constants are in pixels of the 600x600 base design and go through scaled(); knob and meter sizes
+    // derive from the grid and scale by themselves. uiScale is recomputed at the top of resized().
+    static constexpr float kBaseLabelFontHeight = 15.0f;  // juce::Label's default
+    float uiScale = 1.0f;
+    int scaled(float basePixels) const { return juce::roundToInt(basePixels * uiScale); }
+
     NineStripProcessor& audioProcessor;
 
     KnobLookAndFeel knobSkeuomorphicLook;
     FaderLookAndFeel faderSkeuomorphicLook;
+    ScaledLookAndFeel presetLook;  // preset bar: lifts the 16 px font cap on the combo box and buttons
 
     juce::Image backgroundImage;
     juce::Image scaledBackground;
@@ -148,17 +156,18 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     void layoutGain();
 
     void setupGroupComponent(juce::Component& group, juce::Label& label, const juce::String& title);
+    void layoutBypassButton(GlowButton& button, juce::Rectangle<int> groupBounds);
 
     void addRotaryKnob(juce::Component& parent, CircularKnob& slider, juce::Label& label, const juce::String& paramID,
                        const juce::String& labelText, juce::Colour knobColor,
                        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment);
 
-    static void layoutTriangleKnobs(juce::Rectangle<int> bounds, CircularKnob& topLeft, juce::Label& topLeftLabel,
-                                    CircularKnob& topRight, juce::Label& topRightLabel, CircularKnob& bottom,
-                                    juce::Label& bottomLabel, int bigKnobSize, int smallKnobSize,
-                                    bool centerVertically = true);  // Default to centered
+    void layoutTriangleKnobs(juce::Rectangle<int> bounds, CircularKnob& topLeft, juce::Label& topLeftLabel,
+                             CircularKnob& topRight, juce::Label& topRightLabel, CircularKnob& bottom,
+                             juce::Label& bottomLabel, int bigKnobSize, int smallKnobSize,
+                             bool centerVertically = true);  // Default to centered
 
-    static void layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label, int knobSize);
+    void layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label, int knobSize);
 
     static juce::Rectangle<int> constrainToAspectRatio(juce::Rectangle<int> bounds, float aspectRatio);
 

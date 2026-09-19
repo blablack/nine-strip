@@ -59,7 +59,7 @@ cd doc && pandoc NineStrip_Manual.md -o NineStrip_Manual.pdf --pdf-engine=xelate
 `src/CMakeLists.txt` defines the `NineStrip` plugin target (`juce_add_plugin`) and links two static libraries plus generated binary data:
 
 - `AirwindowsDSP` (`src/airwindows/`) — plain C++ with no JUCE dependency. Each algorithm is split into `X.cpp` (ctor/params) and `XProc.cpp` (`processReplacing` for float, `processDoubleReplacing` for double). All parameters are normalised 0–1 floats addressed by `kParamA..` enums.
-- `NineStripUI` (`src/ui/`) — custom JUCE widgets (`CircularKnob`, `NeedleVUMeter`, `GlowButton`, `VUMeterBallistics`, `KnobLookAndFeel`, `FaderLookAndFeel`).
+- `NineStripUI` (`src/ui/`) — custom JUCE widgets (`CircularKnob`, `FineControlSlider`, `NeedleVUMeter`, `GlowButton`, `VUMeterBallistics`, `KnobLookAndFeel`, `FaderLookAndFeel`, `ScaledLookAndFeel`).
 - `NineStripAssets` — PNGs from `assets/` embedded via `juce_add_binary_data` (the SVGs alongside are the sources).
 
 CLAP is not a native JUCE format: `lib/clap-juce-extensions/` (submodule, MIT) wraps the `NineStrip` target via `clap_juce_extensions_plugin()` right after `juce_add_plugin` and adds a `NineStrip_CLAP` target. It tracks JUCE releases, so bump it alongside JUCE.
@@ -102,6 +102,8 @@ Audio thread never touches UI. Meters are `std::atomic<float>` on the processor 
 ### Editor
 
 Base size 600×600, resizable up to 3× with a fixed aspect ratio; the chosen size persists in `ApplicationProperties` (`editorWidth`/`editorHeight`). The background is pre-scaled once in `resized()` into `scaledBackground`.
+
+Layout constants are written in base-design pixels and go through `scaled()` (`uiScale = width / 600`, recomputed at the top of `resized()`); knob and meter sizes come from the grid and scale by themselves. The knob/fader drop-shadow paddings (40/30 px) are deliberately *not* scaled because `KnobLookAndFeel`/`FaderLookAndFeel` reserve fixed 20/15 px margins inside the component. Label fonts, `GlowButton::setUiScale()` and `ScaledLookAndFeel` (the preset bar's combo box/button fonts, which stock JUCE caps at 16 px) are all fed from `resized()`. A new fixed pixel size anywhere in the layout is a bug unless it is shadow-related.
 
 ### Presets
 

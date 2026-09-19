@@ -44,6 +44,7 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
 void NineStripProcessorEditor::setupPresetPanel()
 {
     addAndMakeVisible(presetPanel);
+    presetPanel.setLookAndFeel(&presetLook);  // inherited by the combo box and buttons below
     presetPanel.addAndMakeVisible(presetComboBox);
     presetComboBox.setTextWhenNothingSelected("No Preset Selected");
     presetComboBox.addListener(this);
@@ -336,13 +337,31 @@ void NineStripProcessorEditor::resized()
         bg.drawImage(backgroundImage, getLocalBounds().toFloat());
     }
 
+    // The aspect ratio is fixed, so the width alone gives the scale of the 600x600 base design. Knobs and meters
+    // are sized from the grid and scale by themselves; margins, spacings, buttons, label heights and fonts are
+    // base-design pixels multiplied by uiScale (see scaled()).
+    uiScale = static_cast<float>(getWidth()) / static_cast<float>(baseWidth);
+
+    const juce::Font labelFont(withDefaultMetrics(juce::FontOptions{kBaseLabelFontHeight * uiScale}));
+    for (auto* label : {&consoleSatLabel, &consoleTypeValueLabel, &driveLabel, &filterLabel, &hipassLabel, &nonLinLabel,
+                        &lowpassLabel, &highShelfLabel, &trebleLabel, &highMidLabel, &hmFreqLabel, &hmGainLabel, &hmResoLabel,
+                        &lowShelfLabel, &bassLabel, &compressorLabel, &pressureLabel, &speedLabel, &mewinessLabel, &gainLabel,
+                        &inputGainLabel, &outputGainLabel})
+        label->setFont(labelFont);
+
+    for (auto* button : {&saturationBypassButton, &saturationInputButton, &filterBypassButton, &eqBypassButton,
+                         &compressorBypassButton, &vuMeterInputButton, &vuMeterOutputButton, &masterBypassButton})
+        button->setUiScale(uiScale);
+
+    presetLook.setUiScale(uiScale);
+
     // Window size
-    auto bounds = getLocalBounds().reduced(8);
+    auto bounds = getLocalBounds().reduced(scaled(8));
 
     // Knobs size
 
     int columnWidth = bounds.getWidth() / 5;
-    int bigKnobSize = (columnWidth - 10) / 2;  // Account for padding
+    int bigKnobSize = (columnWidth - scaled(10)) / 2;  // Account for padding
     int smallKnobSize = bigKnobSize * 0.8f;
 
     setupMainGrid(bounds);
@@ -363,7 +382,7 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
 
     // ========== MAIN GRID: 4 columns + preset row ==========
     mainGrid.templateRows = {
-        Track(Px(getHeight() * 30 / baseHeight)),  // Row 1: Preset
+        Track(Px(scaled(30))),  // Row 1: Preset
         Track(Fr(9)),                              // Row 2: Top sections
         Track(Fr(10)),                             // Row 3: Bottom sections
         Track(Fr(10))                              // Row 4: Bottom sections
@@ -399,31 +418,33 @@ void NineStripProcessorEditor::setupMainGrid(juce::Rectangle<int> bounds)
     // Gain - spans rows 3-4, column 4
     mainGrid.items.add(juce::GridItem(gainGroup).withArea(3, 4, 5, 5));
 
-    mainGrid.setGap(juce::Grid::Px(8));
+    mainGrid.setGap(juce::Grid::Px(scaled(8)));
     mainGrid.performLayout(bounds);
 }
 
 void NineStripProcessorEditor::layoutPresetPanel()
 {
-    auto presetBounds = presetPanel.getLocalBounds().reduced(40, 0);
-    previousPresetButton.setBounds(presetBounds.removeFromLeft(40).reduced(2));
-    deletePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
-    savePresetButton.setBounds(presetBounds.removeFromRight(60).reduced(2));
-    nextPresetButton.setBounds(presetBounds.removeFromRight(40).reduced(2));
-    presetComboBox.setBounds(presetBounds.reduced(2));
+    auto presetBounds = presetPanel.getLocalBounds().reduced(scaled(40), 0);
+    const int pad = scaled(2);
+    previousPresetButton.setBounds(presetBounds.removeFromLeft(scaled(40)).reduced(pad));
+    deletePresetButton.setBounds(presetBounds.removeFromRight(scaled(60)).reduced(pad));
+    savePresetButton.setBounds(presetBounds.removeFromRight(scaled(60)).reduced(pad));
+    nextPresetButton.setBounds(presetBounds.removeFromRight(scaled(40)).reduced(pad));
+    presetComboBox.setBounds(presetBounds.reduced(pad));
 }
 
 void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
 {
-    auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(baseMargin);
+    auto consoleBounds = consoleSatGroup.getLocalBounds().reduced(scaled(baseMargin));
 
-    consoleSatLabel.setBounds(consoleBounds.removeFromTop(20));
+    consoleSatLabel.setBounds(consoleBounds.removeFromTop(scaled(20)));
 
-    const int horizontalSpacing = 16;
-    const int shadowPadding = 40;
-    const int buttonHeight = 20;
-    const int buttonWidth = 60;
-    const int buttonMargin = 10;
+    const int horizontalSpacing = scaled(16);
+    const int shadowPadding = 40;  // not scaled: KnobLookAndFeel reserves a fixed 20 px per side for the drop shadow
+    const int buttonHeight = scaled(20);
+    const int buttonWidth = scaled(60);
+    const int buttonMargin = scaled(10);
+    const int labelHeight = scaled(18);
 
     // Pre/Post button centered at top, below label
     saturationInputButton.setBounds(consoleBounds.getCentreX() - buttonWidth / 2, consoleBounds.getY() + buttonMargin,
@@ -435,38 +456,37 @@ void NineStripProcessorEditor::layoutConsoleSection(int bigKnobSize)
     // Push knobY down to sit below the button
     int knobAreaTop = consoleBounds.getY() + buttonHeight + buttonMargin * 2;
     int knobAreaHeight = consoleBounds.getHeight() - buttonHeight - buttonMargin * 2;
-    int knobY = knobAreaTop + (knobAreaHeight - bigKnobSize - 40) / 2;
+    int knobY = knobAreaTop + (knobAreaHeight - bigKnobSize - scaled(40)) / 2;
 
     // Console type knob
     consoleTypeSlider.setBounds(startX - shadowPadding / 2, knobY - shadowPadding / 2, bigKnobSize + shadowPadding,
                                 bigKnobSize + shadowPadding);
-    consoleTypeValueLabel.setBounds(startX, consoleTypeSlider.getBottom() - shadowPadding / 2, bigKnobSize, 18);
+    consoleTypeValueLabel.setBounds(startX, consoleTypeSlider.getBottom() - shadowPadding / 2, bigKnobSize, labelHeight);
 
     // Drive knob
     driveSlider.setBounds(startX + bigKnobSize + horizontalSpacing - shadowPadding / 2, knobY - shadowPadding / 2,
                           bigKnobSize + shadowPadding, bigKnobSize + shadowPadding);
     driveLabel.setBounds(startX + bigKnobSize + horizontalSpacing, driveSlider.getBottom() - shadowPadding / 2, bigKnobSize,
-                         18);
+                         labelHeight);
 
-    // Bypass button at bottom-right
-    saturationBypassButton.setBounds(consoleBounds.getRight() - 50, consoleBounds.getBottom() - 20, 50, 20);
+    layoutBypassButton(saturationBypassButton, consoleBounds);
 }
 
 void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKnobSize)
 {
-    auto groupBounds = filterGroup.getLocalBounds().reduced(baseMargin);
+    auto groupBounds = filterGroup.getLocalBounds().reduced(scaled(baseMargin));
 
-    filterLabel.setBounds(groupBounds.removeFromTop(20));
+    filterLabel.setBounds(groupBounds.removeFromTop(scaled(20)));
 
-    const int shadowPadding = 40;
-    const int labelHeight = 18;
+    const int shadowPadding = 40;  // not scaled, see layoutConsoleSection
+    const int labelHeight = scaled(18);
 
     // Fixed content height (knobs + labels)
     int contentHeight = bigKnobSize + labelHeight + smallKnobSize + labelHeight + bigKnobSize + labelHeight;
 
     // Distribute leftover space as 3 gaps (top + 2 between knobs)
     int leftover = groupBounds.getHeight() - contentHeight;
-    int verticalSpacing = jmax(4, leftover / 5);
+    int verticalSpacing = jmax(scaled(4), leftover / 5);
 
     int startY = groupBounds.getY() + verticalSpacing;
     int knobX = groupBounds.getCentreX() - bigKnobSize / 2;
@@ -494,8 +514,7 @@ void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKn
                             bigKnobSize + shadowPadding);
     lowpassLabel.setBounds(labelX, lowpassSlider.getBottom() - shadowPadding / 2, labelWidth, labelHeight);
 
-    // Bypass button
-    filterBypassButton.setBounds(groupBounds.getRight() - 50, groupBounds.getBottom() - 20, 50, 20);
+    layoutBypassButton(filterBypassButton, groupBounds);
 }
 
 void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
@@ -505,30 +524,30 @@ void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSiz
     int headerHeightLarge = groupBounds.getHeight() * 0.15f;
 
     // High Shelf layout
-    auto hsBounds = highShelfGroup.getLocalBounds().reduced(baseMargin);
-    highShelfLabel.setBounds(hsBounds.removeFromTop(20));
+    auto hsBounds = highShelfGroup.getLocalBounds().reduced(scaled(baseMargin));
+    highShelfLabel.setBounds(hsBounds.removeFromTop(scaled(20)));
 
     layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
 
     // High-Mid layout
-    auto hmBounds = highMidGroup.getLocalBounds().reduced(baseMargin);
+    auto hmBounds = highMidGroup.getLocalBounds().reduced(scaled(baseMargin));
     highMidLabel.setBounds(hmBounds.removeFromTop(headerHeightLarge));
     layoutTriangleKnobs(hmBounds, hmFreqSlider, hmFreqLabel, hmGainSlider, hmGainLabel, hmResoSlider, hmResoLabel, bigKnobSize,
                         smallKnobSize);
 
     // Low Shelf layout
-    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(baseMargin);
+    auto lsBounds = lowShelfGroup.getLocalBounds().reduced(scaled(baseMargin));
     lowShelfLabel.setBounds(lsBounds.removeFromTop(headerHeightLarge));
     layoutCenteredKnob(lsBounds, bassSlider, bassLabel, bigKnobSize);
 
-    eqBypassButton.setBounds(lsBounds.getRight() - 50, lsBounds.getBottom() - 20, 50, 20);
+    layoutBypassButton(eqBypassButton, lsBounds);
 }
 
 void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
 {
     // Calculate proportional values
-    auto groupBounds = compressorGroup.getLocalBounds().reduced(baseMargin);
-    int headerHeight = jmax(20, static_cast<int>(groupBounds.getHeight() * 0.15f));
+    auto groupBounds = compressorGroup.getLocalBounds().reduced(scaled(baseMargin));
+    int headerHeight = jmax(scaled(20), static_cast<int>(groupBounds.getHeight() * 0.15f));
 
     compressorLabel.setBounds(groupBounds.removeFromTop(headerHeight));
 
@@ -538,19 +557,19 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
                         bigKnobSize, smallKnobSize, false);
 
     // Calculate proportional spacing for meter area
-    int knobBottomSpacing = jmax(20, static_cast<int>(groupBounds.getHeight() * 0.08f));  // 8% spacing after knobs
-    int buttonAreaHeight = jmax(25, static_cast<int>(groupBounds.getHeight() * 0.1f));    // 10% for button area
+    int knobBottomSpacing = jmax(scaled(20), static_cast<int>(groupBounds.getHeight() * 0.08f));  // 8% spacing after knobs
+    int buttonAreaHeight = jmax(scaled(25), static_cast<int>(groupBounds.getHeight() * 0.1f));    // 10% for button area
 
     int topY = mewinessSlider.getBottom() + knobBottomSpacing;
     int bottomY = groupBounds.getBottom() - buttonAreaHeight;
     int availableHeight = bottomY - topY;
 
     // Use proportional width for meter (e.g., 80% of available width)
-    int meterMaxWidth = jmax(100, static_cast<int>(groupBounds.getWidth() * 0.8f));
+    int meterMaxWidth = jmax(scaled(100), static_cast<int>(groupBounds.getWidth() * 0.8f));
 
     // Create area for the meter with proportional height
     juce::Rectangle<int> meterArea(groupBounds.getX(), topY, groupBounds.getWidth(),
-                                   jmax(50, static_cast<int>(availableHeight * 0.75f))  // Use 75% of available height
+                                   jmax(scaled(50), static_cast<int>(availableHeight * 0.75f))  // Use 75% of available height
     );
 
     // Constrain to aspect ratio and center
@@ -567,18 +586,17 @@ void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallK
     grMeterBounds.setCentre(groupBounds.getCentreX(), topY + availableHeight / 2);
     grMeter.setBounds(grMeterBounds);
 
-    // Bypass button at bottom-right
-    compressorBypassButton.setBounds(groupBounds.getRight() - 50, groupBounds.getBottom() - 20, 50, 20);
+    layoutBypassButton(compressorBypassButton, groupBounds);
 }
 
 void NineStripProcessorEditor::layoutMeters()
 {
-    auto metersBounds = metersGroup.getLocalBounds().reduced(baseMargin);
+    auto metersBounds = metersGroup.getLocalBounds().reduced(scaled(baseMargin));
 
-    auto buttonArea = metersBounds.removeFromBottom(30).reduced(4, 2);
+    auto buttonArea = metersBounds.removeFromBottom(scaled(30)).reduced(scaled(4), scaled(2));
 
     // Calculate button dimensions - two buttons side-by-side with spacing
-    const int spacing = 8;
+    const int spacing = scaled(8);
     const int buttonWidth = (buttonArea.getWidth() - spacing) / 4;
 
     // Center the button group horizontally
@@ -593,8 +611,8 @@ void NineStripProcessorEditor::layoutMeters()
     auto meterArea = metersBounds;
 
     // Split into left and right channels
-    auto leftChannel = meterArea.removeFromLeft(meterArea.getWidth() / 2).reduced(2);
-    auto rightChannel = meterArea.reduced(2);
+    auto leftChannel = meterArea.removeFromLeft(meterArea.getWidth() / 2).reduced(scaled(2));
+    auto rightChannel = meterArea.reduced(scaled(2));
 
     // Left channel: needle on left, bar on right
     auto leftNeedle = leftChannel.removeFromLeft(leftChannel.getWidth() * 1.0f);
@@ -631,29 +649,29 @@ juce::Rectangle<int> NineStripProcessorEditor::constrainToAspectRatio(juce::Rect
 
 void NineStripProcessorEditor::layoutGain()
 {
-    auto gainBounds = gainGroup.getLocalBounds().reduced(2);
-    gainBounds.removeFromTop(18);  // Space for group title
+    auto gainBounds = gainGroup.getLocalBounds().reduced(scaled(2));
+    gainBounds.removeFromTop(scaled(18));  // Space for group title
 
     // Reserve space for button at bottom
-    masterBypassButton.setBounds(gainBounds.removeFromBottom(30).reduced(4, 2));
+    masterBypassButton.setBounds(gainBounds.removeFromBottom(scaled(30)).reduced(scaled(4), scaled(2)));
 
     // Use remaining space for sliders
-    auto gainSliders = gainBounds.reduced(0, 4);
-    gainSliders.removeFromBottom(20);
+    auto gainSliders = gainBounds.reduced(0, scaled(4));
+    gainSliders.removeFromBottom(scaled(20));
 
     // Calculate fader width with shadow padding
-    const int shadowPadding = 30;  // Extra space for fader shadow
-    const int faderWidth = juce::jlimit(20, 50, gainSliders.getWidth() / 4);
+    const int shadowPadding = 30;  // not scaled: FaderLookAndFeel reserves a fixed 15 px per side for the thumb shadow
+    const int faderWidth = juce::jlimit(scaled(20), scaled(50), gainSliders.getWidth() / 4);
 
-    auto inputArea = gainSliders.removeFromLeft(gainSliders.getWidth() / 2).reduced(2);
-    inputGainLabel.setBounds(inputArea.removeFromBottom(20));
+    auto inputArea = gainSliders.removeFromLeft(gainSliders.getWidth() / 2).reduced(scaled(2));
+    inputGainLabel.setBounds(inputArea.removeFromBottom(scaled(20)));
 
     // Center the fader with shadow padding
     const int inputCenterX = inputArea.getX() + (inputArea.getWidth() - faderWidth - shadowPadding) / 2;
     inputGainSlider.setBounds(inputCenterX, inputArea.getY(), faderWidth + shadowPadding, inputArea.getHeight());
 
-    auto outputArea = gainSliders.reduced(2);
-    outputGainLabel.setBounds(outputArea.removeFromBottom(20));
+    auto outputArea = gainSliders.reduced(scaled(2));
+    outputGainLabel.setBounds(outputArea.removeFromBottom(scaled(20)));
 
     // Center the fader with shadow padding
     const int outputCenterX = outputArea.getX() + (outputArea.getWidth() - faderWidth - shadowPadding) / 2;
@@ -695,13 +713,24 @@ void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce:
     label.setColour(juce::Label::textColourId, juce::Colours::white);
 }
 
+void NineStripProcessorEditor::layoutBypassButton(GlowButton& button, juce::Rectangle<int> groupBounds)
+{
+    // Bottom-right corner of the section
+    const int width = scaled(50);
+    const int height = scaled(20);
+    button.setBounds(groupBounds.getRight() - width, groupBounds.getBottom() - height, width, height);
+}
+
 void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, CircularKnob& topLeft,
                                                    juce::Label& topLeftLabel, CircularKnob& topRight,
                                                    juce::Label& topRightLabel, CircularKnob& bottom, juce::Label& bottomLabel,
                                                    int bigKnobSize, int smallKnobSize, bool centerVertically)
 {
-    const int horizontalSpacing = 16;
-    const int verticalSpacing = 20;
+    const int horizontalSpacing = scaled(16);
+    const int verticalSpacing = scaled(20);
+    const int labelHeight = scaled(20);
+    // Neither padding scales: the min/max text is drawn at a capped font size and KnobLookAndFeel reserves a
+    // fixed 20 px per side for the drop shadow.
     const int labelPadding = 50;   // Extra width on each slider for min/max labels
     const int shadowPadding = 40;  // Extra space for shadow (30px radius + offset)
 
@@ -709,7 +738,8 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
     int triangleHeight = bigKnobSize + smallKnobSize + verticalSpacing;
 
     int triangleX = bounds.getX() + (bounds.getWidth() - triangleWidth) / 2;
-    int triangleY = centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 - 20 : bounds.getY();
+    int triangleY =
+        centerVertically ? bounds.getY() + (bounds.getHeight() - triangleHeight) / 2 - scaled(20) : bounds.getY();
 
     // Labels are centred on their knob but wider than it: the top pair shares the gap between the knobs and the
     // bottom one spans the whole triangle, so names like "Mewiness" are not cut to "Mewin...".
@@ -718,13 +748,14 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
     // Top left - add shadow padding to all sides
     topLeft.setBounds(triangleX - labelPadding / 2 - shadowPadding / 2, triangleY - shadowPadding / 2,
                       bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
-    topLeftLabel.setBounds(triangleX - horizontalSpacing / 2, topLeft.getBottom() - shadowPadding / 2, topLabelWidth, 20);
+    topLeftLabel.setBounds(triangleX - horizontalSpacing / 2, topLeft.getBottom() - shadowPadding / 2, topLabelWidth,
+                           labelHeight);
 
     // Top right - add shadow padding to all sides
     topRight.setBounds(triangleX + bigKnobSize + horizontalSpacing - labelPadding / 2 - shadowPadding / 2,
                        triangleY - shadowPadding / 2, bigKnobSize + labelPadding + shadowPadding, bigKnobSize + shadowPadding);
     topRightLabel.setBounds(triangleX + bigKnobSize + horizontalSpacing / 2, topRight.getBottom() - shadowPadding / 2,
-                            topLabelWidth, 20);
+                            topLabelWidth, labelHeight);
 
     // Bottom - small knob with shadow padding
     int bottomY = triangleY + bigKnobSize + verticalSpacing;
@@ -732,21 +763,23 @@ void NineStripProcessorEditor::layoutTriangleKnobs(juce::Rectangle<int> bounds, 
 
     bottom.setBounds(bottomX - labelPadding / 2 - shadowPadding / 2, bottomY - shadowPadding / 2,
                      smallKnobSize + labelPadding + shadowPadding, smallKnobSize + shadowPadding);
-    bottomLabel.setBounds(triangleX, bottom.getBottom() - shadowPadding / 2, triangleWidth, 20);
+    bottomLabel.setBounds(triangleX, bottom.getBottom() - shadowPadding / 2, triangleWidth, labelHeight);
 }
 
 void NineStripProcessorEditor::layoutCenteredKnob(juce::Rectangle<int> bounds, CircularKnob& knob, juce::Label& label,
                                                   int knobSize)
 {
-    const int labelPadding = 50;
+    const int labelPadding = 50;   // not scaled, see layoutTriangleKnobs
     const int shadowPadding = 40;  // Extra space for shadow (30px radius + offset)
+    const int labelHeight = scaled(20);
 
     int centerX = bounds.getX() + (bounds.getWidth() - knobSize) / 2;
-    int centerY = bounds.getY() + (bounds.getHeight() - knobSize - 40) / 2;
+    int centerY = bounds.getY() + (bounds.getHeight() - knobSize - scaled(40)) / 2;
 
     knob.setBounds(centerX - labelPadding / 2 - shadowPadding / 2, centerY - shadowPadding / 2,
                    knobSize + labelPadding + shadowPadding, knobSize + shadowPadding);
-    label.setBounds(knob.getX() + labelPadding / 2 + shadowPadding / 2, knob.getBottom() - shadowPadding / 2, knobSize, 20);
+    label.setBounds(knob.getX() + labelPadding / 2 + shadowPadding / 2, knob.getBottom() - shadowPadding / 2, knobSize,
+                    labelHeight);
 }
 
 void NineStripProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
