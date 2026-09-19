@@ -23,6 +23,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    void parentHierarchyChanged() override;
     void updatePresetDisplay();
     void updatePresetComboBox();
 
@@ -37,6 +38,7 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     // Layout constants are in pixels of the 600x600 base design and go through scaled(); knob and meter sizes
     // derive from the grid and scale by themselves. uiScale is recomputed at the top of resized().
     static constexpr float kBaseLabelFontHeight = 15.0f;  // juce::Label's default
+    static constexpr float kLabelFontGrowth = 0.6f;       // fraction of the window's growth the label font follows
     float uiScale = 1.0f;
     int scaled(float basePixels) const { return juce::roundToInt(basePixels * uiScale); }
 
@@ -50,6 +52,8 @@ class NineStripProcessorEditor : public juce::AudioProcessorEditor,
     juce::Image scaledBackground;
 
     juce::ComponentBoundsConstrainer constrainer;
+    [[nodiscard]] int maxWidthForDisplay() const;
+    void applyDisplaySizeLimit();
 
     // Main layout grid
     juce::Grid mainGrid;

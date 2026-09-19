@@ -70,7 +70,6 @@ void NeedleVUMeter::paint(juce::Graphics& g)
     float scale = juce::jmin(scaleX, scaleY);
 
     float scaledBorderWidth = borderWidth * scale;
-    float scaledBottomBorder = bottomBorderHeight * scale;
 
     if (meterType == MeterType::Level)
     {
@@ -97,15 +96,14 @@ void NeedleVUMeter::paint(juce::Graphics& g)
         }
     }
 
-    // 3. Set clipping region to exclude borders
-    auto meterArea = bounds.reduced(scaledBorderWidth);
-    meterArea.removeFromBottom(scaledBottomBorder);
-    g.reduceClipRegion(meterArea.toNearestInt());
+    // 3. Draw the needle clipped to the window so it never crosses the frame
+    {
+        juce::Graphics::ScopedSaveState clip(g);
+        g.reduceClipRegion(bounds.reduced(scaledBorderWidth).toNearestInt());
+        drawNeedle(g, bounds, scale);
+    }
 
-    // 4. Draw needle (won't appear over borders due to clipping)
-    drawNeedle(g, bounds, scale);
-
-    // Dirty glass in front of the needle and LED. Still clipped to the window, so the grime stops at the bezel.
+    // 4. Dirty glass in front of everything, frame included: the pane covers the whole meter
     if (scaledGlass.isValid()) g.drawImageAt(scaledGlass, 0, 0);
 }
 
@@ -161,7 +159,7 @@ void NeedleVUMeter::drawNeedle(juce::Graphics& g, juce::Rectangle<float> bounds,
     float endY = pivotY - needleLength * std::cos(angle);
 
     // Draw needle
-    g.setColour(juce::Colour(10, 10, 10));
+    g.setColour(juce::Colour(40, 40, 40));
     juce::Line<float> needle(pivotX, pivotY, endX, endY);
     g.drawLine(needle, juce::jmax(1.0f, needleWidth * scale));
 }

@@ -3,31 +3,24 @@
 ## [v0.1.6] - XXXX-XX-XX
 
 ### Added
-- Bypassing the plugin from the host (the VST3, AU or LV2 host's own bypass switch) now drives Master Bypass, so it gets the same 10 ms click-free crossfade and the MASTER BYPASS button follows it. CLAP hosts keep using their own bypass.
+- The host's own bypass switch (VST3, AU, LV2) now drives Master Bypass, with the same click-free crossfade. CLAP hosts keep using their own bypass.
+- The needle meters sit behind a pane of dirty glass.
 
 ### Changed
-- The three needle meters now sit behind a pane of dirty glass, drawn over the needle and peak LED; each meter has its own smudges and scratches.
-- Saving a preset under a name that already exists asks before replacing it.
-- The meters' Input/Output selector is no longer offered to the host as an automatable parameter; it is a display preference and is still saved with the session and in presets.
-- The Save and Delete preset dialogs open centred over the plugin window instead of the middle of the screen.
+- Knob dragging is back to normal distance-based movement, with the pointer staying visible. Hold Ctrl (Cmd on macOS) while dragging for fine control.
+- Saving a preset under an existing name asks before replacing it, and Delete asks for confirmation.
+- The meters' Input/Output selector is no longer exposed to the host as an automatable parameter; it is still saved with the session and in presets.
+- Enlarging the window now scales the whole interface, not just the knobs and meters.
 
 ### Fixed
-- The panel background (an 1800 px image shown at 600 px by default) is now downscaled with the same filter as the meter faces, so its thin panel lines and brushed texture render evenly instead of slightly ragged.
-- Restoring a session state that has no preset selected (for example through the host's undo) no longer leaves the previous preset name in the preset bar, and a preset name restored from a session is shown even when that preset file is not present on this machine.
-- A file in the preset folder that is not a NineStrip preset (wrong contents behind a `.ninestrip` name) is now ignored when selected, instead of replacing the plugin state with something the next session load would then discard.
-- Saving a preset whose name contained characters that cannot appear in a file name (such as `/`, or `: ? * " < > |` on Windows) failed with "Save Failed" while the preset bar still showed the new name. Such characters are now dropped from the name, and a save that does fail leaves the previously selected preset in place.
-- The Pre/Post switch and the meter Input/Output buttons now register as automation gestures, so hosts in touch or latch automation modes record them like knob moves.
-- Enlarging the window now scales the whole interface. Previously only the knobs and meters grew: the bypass buttons, the Pre/Post button, the preset bar, the labels and all text stayed at their 600x600 pixel sizes, and the section titles drifted above their panels, so a large window showed big knobs surrounded by tiny controls.
-- The "Non-Linearity" and "Mewiness" knob labels were cut short ("Non-Li...", "Mewin..."). Knob labels now get the width of their section rather than of the knob.
-- Hosts that save or restore the session from a background thread could make the plugin update its preset display from that thread, a possible crash. The display is now always refreshed on the interface thread.
-- Automating any parameter could, in rare cases, crash the host: the preset "modified" tracking read shared data on the audio thread while the interface was changing it. That tracking now happens only on the message thread.
-- The Delete button now asks for confirmation before removing a preset, as the manual has always described; it used to delete immediately, one click away from Save.
+- The window could be resized taller than the screen in hosts that don't limit it themselves (Bitwig, for one), leaving the resize corner unreachable. The size is now capped to the screen.
+- Automating a parameter, or a host saving the session from a background thread, could in rare cases crash the host.
+- Pressing OK in the Save Preset dialog after closing the plugin window could crash the host.
+- The Pre/Post switch and the meter Input/Output buttons now register as automation gestures, so touch and latch automation modes record them.
+- Preset names containing characters not allowed in file names (such as `/`) failed to save; those characters are now dropped.
+- Restoring a session with no preset selected (e.g. via the host's undo) no longer leaves the previous preset name in the preset bar.
+- A `.ninestrip` file in the preset folder that is not a NineStrip preset is now ignored instead of replacing the plugin state.
 - The manual gave the wrong macOS preset folder; it is `~/Library/Audio/Presets/NineStrip/Presets/`.
-- Closing the plugin window while the Save Preset dialog was open and then pressing OK in the dialog could crash the host. The dialog now checks that the plugin window still exists before saving.
-- Knob dragging is back to normal distance-based movement by default, with the mouse pointer staying visible. Hold Ctrl (Cmd on macOS) while dragging for fine control at one tenth of the speed; the key can be pressed or released mid-drag without the knob jumping. The velocity-based mode introduced in v0.1.4 made slow, fine movement the default, required the modifier for normal movement, and hid the pointer while dragging.
-- The input and output faders get the same fine control: Ctrl-drag (Cmd on macOS) moves them at one tenth of the speed with the pointer visible, and a Ctrl-click nudges from the current position instead of jumping to the mouse. Previously the modifier put the faders into a speed-based mode that hid the mouse pointer.
-- The VU and gain-reduction meter faces no longer look jagged and broken at small window sizes: the scale ticks, digits and arc were being decimated by the downscale and would shimmer while resizing. They are now downscaled with a proper filter so the face stays clean at the default size.
-- The meter needles now read correctly against the printed scale at every window size. The needle pivot was fixed in screen pixels rather than scaling with the artwork, so at larger sizes the needle sat on the wrong part of the arc. The needle also scales its thickness with the window instead of staying a 2 px hairline.
 
 ## [v0.1.5] - 2026-09-13
 

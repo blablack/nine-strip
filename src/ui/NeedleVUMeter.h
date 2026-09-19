@@ -58,8 +58,7 @@ class NeedleVUMeter : public juce::Component, private juce::Timer
 
     float backgroundWidth = 750.0f;
     float backgroundHeight = 450.0f;
-    float borderWidth = 20.0f;
-    float bottomBorderHeight = 10.0f;
+    float borderWidth = 20.0f;  // the artwork's frame, same on all four sides
 
     float peakSize = 100.0f;
 

@@ -17,14 +17,15 @@ NineStripProcessorEditor::NineStripProcessorEditor(NineStripProcessor& p)
     audioProcessor.editorStateChanged(true);
 
     // setSize() does not go through the constrainer, so clamp the stored size ourselves: a stale or hand-edited
-    // settings file must not open the window outside the 1x-3x range or off the fixed aspect ratio.
+    // settings file must not open the window outside the 1x-3x range, bigger than the screen, or off the fixed
+    // aspect ratio.
     int width = baseWidth;
     if (auto* props = audioProcessor.getAppProperties().getUserSettings())
-        width = juce::jlimit(baseWidth, baseWidth * 3, props->getIntValue("editorWidth", baseWidth));
+        width = juce::jlimit(baseWidth, maxWidthForDisplay(), props->getIntValue("editorWidth", baseWidth));
     const int height = width * baseHeight / baseWidth;
 
     constrainer.setFixedAspectRatio(static_cast<float>(baseWidth) / static_cast<float>(baseHeight));
-    constrainer.setSizeLimits(baseWidth, baseHeight, baseWidth * 3, baseHeight * 3);
+    applyDisplaySizeLimit();
     setConstrainer(&constrainer);
     setResizable(false, true);
 
@@ -104,6 +105,7 @@ void NineStripProcessorEditor::setupConsoleSection()
     consoleSatGroup.addAndMakeVisible(consoleTypeValueLabel);
     consoleTypeValueLabel.setJustificationType(juce::Justification::centred);
     consoleTypeValueLabel.setText("Neve", juce::dontSendNotification);  // Initial value
+    consoleTypeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.7f));
 
     // Update label when slider changes
     consoleTypeSlider.onValueChange = [this]()
@@ -250,6 +252,7 @@ void NineStripProcessorEditor::setupGain()
     gainGroup.addAndMakeVisible(inputGainLabel);
     inputGainLabel.setText("Input", juce::dontSendNotification);
     inputGainLabel.setJustificationType(juce::Justification::centred);
+    inputGainLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.7f));
 
     gainGroup.addAndMakeVisible(outputGainSlider);
     outputGainSlider.setSliderStyle(juce::Slider::LinearVertical);
@@ -260,6 +263,7 @@ void NineStripProcessorEditor::setupGain()
     gainGroup.addAndMakeVisible(outputGainLabel);
     outputGainLabel.setText("Output", juce::dontSendNotification);
     outputGainLabel.setJustificationType(juce::Justification::centred);
+    outputGainLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.7f));
 
     gainGroup.addAndMakeVisible(masterBypassButton);
     masterBypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
@@ -284,6 +288,7 @@ void NineStripProcessorEditor::addRotaryKnob(juce::Component& parent, CircularKn
     parent.addAndMakeVisible(label);
     label.setText(labelText, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
+    label.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.7f));
 }
 
 NineStripProcessorEditor::~NineStripProcessorEditor()
@@ -327,6 +332,37 @@ void NineStripProcessorEditor::parameterChanged(const juce::String& parameterID,
         });
 }
 
+// The window must never outgrow the screen. Hosts such as Bitwig follow the editor's own resize corner without
+// clamping it to the display, so on a screen shorter than 1800 px the 3x limit let the window grow past the bottom
+// edge, taking the corner (the only way back down) with it, and the stored size then reopened it that way. The
+// allowance leaves room for the desktop's top bar, the window title bar and the host's own header above the
+// editor (roughly 30 + 40 + 50-75 px; the desktop bar is not always excluded from userBounds). It is in screen
+// pixels rather than base-design pixels because none of that chrome scales with us.
+int NineStripProcessorEditor::maxWidthForDisplay() const
+{
+    constexpr int kHostChromeAllowance = 160;
+
+    const auto& displays = juce::Desktop::getInstance().getDisplays();
+    const auto* display = getPeer() != nullptr ? displays.getDisplayForRect(getScreenBounds()) : displays.getPrimaryDisplay();
+    if (display == nullptr) return baseWidth * 3;
+
+    const auto screen = display->userBounds.toNearestInt();
+    const int fit = juce::jmin(screen.getWidth(), (screen.getHeight() - kHostChromeAllowance) * baseWidth / baseHeight);
+    return juce::jlimit(baseWidth, baseWidth * 3, fit);
+}
+
+// Applied at construction against the primary display, and again once the host has put the window on a display,
+// which may be a different, smaller one.
+void NineStripProcessorEditor::applyDisplaySizeLimit()
+{
+    const int maxWidth = maxWidthForDisplay();
+    constrainer.setSizeLimits(baseWidth, baseHeight, maxWidth, maxWidth * baseHeight / baseWidth);
+
+    if (getWidth() > maxWidth) setSize(maxWidth, maxWidth * baseHeight / baseWidth);
+}
+
+void NineStripProcessorEditor::parentHierarchyChanged() { applyDisplaySizeLimit(); }
+
 void NineStripProcessorEditor::resized()
 {
     if (auto* props = audioProcessor.getAppProperties().getUserSettings())
@@ -345,7 +381,10 @@ void NineStripProcessorEditor::resized()
     // base-design pixels multiplied by uiScale (see scaled()).
     uiScale = static_cast<float>(getWidth()) / static_cast<float>(baseWidth);
 
-    const juce::Font labelFont(withDefaultMetrics(juce::FontOptions{kBaseLabelFontHeight * uiScale}));
+    // Labels grow more slowly than the rest of the layout: scaled linearly, a 3x window gets 45 px labels that outgrow
+    // their knobs. Their boxes still scale linearly, so the text just gains breathing room.
+    const float labelFontScale = 1.0f + (uiScale - 1.0f) * kLabelFontGrowth;
+    const juce::Font labelFont(withDefaultMetrics(juce::FontOptions{kBaseLabelFontHeight * labelFontScale}));
     for (auto* label : {&consoleSatLabel, &consoleTypeValueLabel, &driveLabel, &filterLabel, &hipassLabel, &nonLinLabel,
                         &lowpassLabel, &highShelfLabel, &trebleLabel, &highMidLabel, &hmFreqLabel, &hmGainLabel, &hmResoLabel,
                         &lowShelfLabel, &bassLabel, &compressorLabel, &pressureLabel, &speedLabel, &mewinessLabel,
@@ -522,25 +561,25 @@ void NineStripProcessorEditor::layoutFiltersSection(int bigKnobSize, int smallKn
 
 void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSize)
 {
-    // Calculate proportional values
-    auto groupBounds = highShelfGroup.getLocalBounds();
-    int headerHeightLarge = groupBounds.getHeight() * 0.15f;
+    // Every section title sits in the same scaled(20) strip, so titles that share a grid row (FILTERS, HI-MID EQ,
+    // DYNAMICS) line up.
+    const int headerHeight = scaled(20);
 
     // High Shelf layout
     auto hsBounds = highShelfGroup.getLocalBounds().reduced(scaled(baseMargin));
-    highShelfLabel.setBounds(hsBounds.removeFromTop(scaled(20)));
+    highShelfLabel.setBounds(hsBounds.removeFromTop(headerHeight));
 
     layoutCenteredKnob(hsBounds, trebleSlider, trebleLabel, bigKnobSize);
 
     // High-Mid layout
     auto hmBounds = highMidGroup.getLocalBounds().reduced(scaled(baseMargin));
-    highMidLabel.setBounds(hmBounds.removeFromTop(headerHeightLarge));
+    highMidLabel.setBounds(hmBounds.removeFromTop(headerHeight));
     layoutTriangleKnobs(hmBounds, hmFreqSlider, hmFreqLabel, hmGainSlider, hmGainLabel, hmResoSlider, hmResoLabel, bigKnobSize,
                         smallKnobSize);
 
     // Low Shelf layout
     auto lsBounds = lowShelfGroup.getLocalBounds().reduced(scaled(baseMargin));
-    lowShelfLabel.setBounds(lsBounds.removeFromTop(headerHeightLarge));
+    lowShelfLabel.setBounds(lsBounds.removeFromTop(headerHeight));
     layoutCenteredKnob(lsBounds, bassSlider, bassLabel, bigKnobSize);
 
     layoutBypassButton(eqBypassButton, lsBounds);
@@ -548,11 +587,14 @@ void NineStripProcessorEditor::layoutEQSection(int bigKnobSize, int smallKnobSiz
 
 void NineStripProcessorEditor::layoutDynamicsSection(int bigKnobSize, int smallKnobSize)
 {
-    // Calculate proportional values
     auto groupBounds = compressorGroup.getLocalBounds().reduced(scaled(baseMargin));
-    int headerHeight = jmax(scaled(20), static_cast<int>(groupBounds.getHeight() * 0.15f));
 
-    compressorLabel.setBounds(groupBounds.removeFromTop(headerHeight));
+    // The title sits in the same scaled(20) strip as the other sections' (see layoutEQSection) so it lines up with
+    // FILTERS and HI-MID EQ, but the knobs and meter below keep being laid out under the taller 15% header, which is
+    // what spaces the knobs off the title.
+    const int headerHeight = jmax(scaled(20), static_cast<int>(groupBounds.getHeight() * 0.15f));
+    compressorLabel.setBounds(groupBounds.withHeight(scaled(20)));
+    groupBounds.removeFromTop(headerHeight);
 
     auto triangleBounds = groupBounds.withTrimmedTop(0);
     // Triangle knobs at top (not centered vertically)
@@ -706,7 +748,7 @@ void NineStripProcessorEditor::setupGroupComponent(juce::Component& group, juce:
     group.addAndMakeVisible(label);
     label.setText(title, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
-    label.setColour(juce::Label::textColourId, juce::Colours::white);
+    label.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.7f));
 }
 
 void NineStripProcessorEditor::savePresetNamed(const juce::String& storedName)
