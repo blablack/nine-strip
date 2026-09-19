@@ -262,7 +262,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout NineStripProcessor::createPa
     layout.add(std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("eqBypass", "EQ Bypass", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("compressorBypass", "Compressor Bypass", false));
-    layout.add(std::make_unique<juce::AudioParameterBool>("inputMeasured", "Input Measured", true));
+    // Which signal the VU meters show is a display preference: saved in the state, but not offered for automation.
+    layout.add(std::make_unique<juce::AudioParameterBool>("inputMeasured", "Input Measured", true,
+                                                          juce::AudioParameterBoolAttributes().withAutomatable(false)));
 
     return layout;
 }
